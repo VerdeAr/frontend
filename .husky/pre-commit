@@ -1,1 +1,2 @@
-npm run check
+npx @biomejs/biome check --write src/
+git update-index --again
