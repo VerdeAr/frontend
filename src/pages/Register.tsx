@@ -1,13 +1,7 @@
+import { Sprout } from "lucide-react";
 import { useEffect } from "react";
 import { useNavigate } from "react-router";
 import { RegisterForm } from "@/components/auth";
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card";
 import { useAuthStore } from "@/stores";
 
 export default function Register() {
@@ -21,21 +15,33 @@ export default function Register() {
 	}, [isAuthenticated, navigate]);
 
 	return (
-		<div className="flex min-h-[calc(100vh-14rem)] items-center justify-center px-4 py-8 sm:px-6">
-			<Card className="w-full max-w-xl shadow-sm border-border">
-				<CardHeader className="text-center sm:text-left space-y-1">
-					<CardTitle className="text-xl sm:text-2xl font-bold tracking-tight">
+		<div className="relative min-h-[calc(100vh-8rem)] flex items-center justify-center py-10 px-4 sm:px-6">
+			{/* Subtle Ambient Glow */}
+			<div
+				className="pointer-events-none absolute inset-x-0 -top-20 -z-10 h-80 bg-gradient-to-b from-emerald-500/10 via-emerald-500/5 to-transparent blur-3xl"
+				aria-hidden="true"
+			/>
+
+			<div className="w-full max-w-xl mx-auto flex flex-col items-center">
+				{/* Brand Emblem & Header */}
+				<div className="flex flex-col items-center text-center mb-8">
+					<div className="size-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-3 shadow-xs">
+						<Sprout className="size-6" />
+					</div>
+					<h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
 						Crie sua conta
-					</CardTitle>
-					<CardDescription className="text-sm text-muted-foreground">
-						Junte-se à comunidade do Verdear. Compre produtos frescos ou venda
-						sua colheita diretamente ao consumidor.
-					</CardDescription>
-				</CardHeader>
-				<CardContent>
+					</h1>
+					<p className="text-sm text-muted-foreground mt-1.5 max-w-md leading-relaxed">
+						Junte-se ao Verdear. Compre produtos frescos direto de quem planta
+						ou expanda a venda da sua colheita familiar.
+					</p>
+				</div>
+
+				{/* Open Form Flow */}
+				<div className="w-full bg-card/60 backdrop-blur-sm sm:border sm:border-border/60 sm:rounded-3xl sm:p-8 sm:shadow-xs">
 					<RegisterForm />
-				</CardContent>
-			</Card>
+				</div>
+			</div>
 		</div>
 	);
 }

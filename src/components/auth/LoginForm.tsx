@@ -4,8 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { FormInput } from "@/components/ui/form-input";
 import { cn } from "@/lib/utils";
 import { type LoginFormData, loginSchema } from "@/schemas";
 import { useAuthStore } from "@/stores";
@@ -63,56 +62,40 @@ export function LoginForm({ onSuccess, className }: LoginFormProps) {
 			{serverError && (
 				<div
 					role="alert"
-					className="flex items-start gap-2.5 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive dark:bg-destructive/20"
+					className="flex items-start gap-2.5 rounded-xl border border-destructive/30 bg-destructive/10 p-3.5 text-sm text-destructive dark:bg-destructive/20"
 				>
 					<AlertCircle className="size-4 shrink-0 mt-0.5" />
 					<span className="leading-tight">{serverError}</span>
 				</div>
 			)}
 
-			<div className="flex flex-col gap-1.5">
-				<Label htmlFor="email" className="text-sm font-medium">
-					E-mail
-				</Label>
-				<Input
-					id="email"
-					type="email"
-					autoComplete="email"
-					autoCapitalize="none"
-					placeholder="seu@email.com"
-					className="h-11 text-sm"
-					aria-invalid={!!errors.email}
-					disabled={isSubmitting}
-					{...register("email")}
-				/>
-				{errors.email && (
-					<span className="text-xs font-medium text-destructive">
-						{errors.email.message}
-					</span>
-				)}
-			</div>
+			<FormInput
+				id="email"
+				label="E-mail"
+				type="email"
+				autoComplete="email"
+				autoCapitalize="none"
+				placeholder="seu@email.com"
+				required
+				disabled={isSubmitting}
+				error={errors.email?.message}
+				{...register("email")}
+			/>
 
-			<div className="flex flex-col gap-1.5">
-				<div className="flex items-center justify-between">
-					<Label htmlFor="password" className="text-sm font-medium">
-						Senha
-					</Label>
-				</div>
-				<div className="relative flex items-center">
-					<Input
-						id="password"
-						type={showPassword ? "text" : "password"}
-						autoComplete="current-password"
-						placeholder="••••••••"
-						className="h-11 pr-11 text-sm"
-						aria-invalid={!!errors.password}
-						disabled={isSubmitting}
-						{...register("password")}
-					/>
+			<FormInput
+				id="password"
+				label="Senha"
+				type={showPassword ? "text" : "password"}
+				autoComplete="current-password"
+				placeholder="••••••••"
+				required
+				disabled={isSubmitting}
+				error={errors.password?.message}
+				rightElement={
 					<button
 						type="button"
 						onClick={() => setShowPassword((prev) => !prev)}
-						className="absolute right-0 h-11 w-11 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-r-lg"
+						className="h-11 w-11 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-r-xl"
 						aria-label={showPassword ? "Ocultar senha" : "Exibir senha"}
 						tabIndex={-1}
 					>
@@ -122,17 +105,13 @@ export function LoginForm({ onSuccess, className }: LoginFormProps) {
 							<Eye className="size-4" />
 						)}
 					</button>
-				</div>
-				{errors.password && (
-					<span className="text-xs font-medium text-destructive">
-						{errors.password.message}
-					</span>
-				)}
-			</div>
+				}
+				{...register("password")}
+			/>
 
 			<Button
 				type="submit"
-				className="h-11 w-full mt-2 font-medium text-sm transition-all"
+				className="h-12 w-full mt-2 font-semibold text-sm rounded-xl shadow-xs transition-all"
 				disabled={isSubmitting}
 			>
 				{isSubmitting ? (
@@ -145,11 +124,11 @@ export function LoginForm({ onSuccess, className }: LoginFormProps) {
 				)}
 			</Button>
 
-			<div className="text-center text-sm text-muted-foreground mt-2">
+			<div className="text-center text-sm text-muted-foreground mt-1">
 				Ainda não tem uma conta?{" "}
 				<Link
 					to="/cadastro"
-					className="font-medium text-primary underline-offset-4 hover:underline"
+					className="font-semibold text-primary underline-offset-4 hover:underline"
 				>
 					Cadastre-se
 				</Link>

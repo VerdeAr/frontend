@@ -11,7 +11,11 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import {
+	FormInput,
+	FormSelect,
+	FormTextarea,
+} from "@/components/ui/form-input";
 import { Label } from "@/components/ui/label";
 import { maskCnpj, maskCpf, maskPhone, unmask } from "@/lib/masks";
 import { cn } from "@/lib/utils";
@@ -142,12 +146,12 @@ export function RegisterForm({ onSuccess, className }: RegisterFormProps) {
 		<form
 			onSubmit={handleSubmit(onSubmit)}
 			noValidate
-			className={cn("flex flex-col gap-5 w-full", className)}
+			className={cn("flex flex-col gap-6 w-full", className)}
 		>
 			{serverError && (
 				<div
 					role="alert"
-					className="flex items-start gap-2.5 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive dark:bg-destructive/20"
+					className="flex items-start gap-2.5 rounded-xl border border-destructive/30 bg-destructive/10 p-3.5 text-sm text-destructive dark:bg-destructive/20"
 				>
 					<AlertCircle className="size-4 shrink-0 mt-0.5" />
 					<span className="leading-tight">{serverError}</span>
@@ -156,265 +160,183 @@ export function RegisterForm({ onSuccess, className }: RegisterFormProps) {
 
 			{/* Alternador de Perfil */}
 			<div className="flex flex-col gap-2">
-				<Label className="text-sm font-medium">Tipo de Conta</Label>
-				<div className="grid grid-cols-2 gap-2 p-1 bg-muted rounded-xl">
+				<Label className="text-sm font-medium text-foreground/90">
+					Como você deseja utilizar o Verdear?
+				</Label>
+				<div className="grid grid-cols-2 gap-2 p-1.5 bg-muted/40 border border-border/50 rounded-2xl">
 					<button
 						type="button"
 						onClick={() => handleRoleChange("CLIENTE")}
 						className={cn(
-							"h-11 flex items-center justify-center gap-2 rounded-lg text-sm font-medium transition-all select-none",
+							"h-12 flex items-center justify-center gap-2.5 rounded-xl text-sm font-medium transition-all select-none",
 							selectedRole === "CLIENTE"
-								? "bg-background text-foreground shadow-xs font-semibold"
+								? "bg-background text-foreground shadow-xs font-semibold ring-1 ring-border/60"
 								: "text-muted-foreground hover:text-foreground",
 						)}
 					>
-						<ShoppingBag className="size-4" />
-						<span>Consumidor</span>
+						<ShoppingBag className="size-4 text-primary" />
+						<span>Quero Comprar</span>
 					</button>
 					<button
 						type="button"
 						onClick={() => handleRoleChange("VENDEDOR")}
 						className={cn(
-							"h-11 flex items-center justify-center gap-2 rounded-lg text-sm font-medium transition-all select-none",
+							"h-12 flex items-center justify-center gap-2.5 rounded-xl text-sm font-medium transition-all select-none",
 							selectedRole === "VENDEDOR"
-								? "bg-background text-foreground shadow-xs font-semibold"
+								? "bg-background text-foreground shadow-xs font-semibold ring-1 ring-border/60"
 								: "text-muted-foreground hover:text-foreground",
 						)}
 					>
 						<Sprout className="size-4 text-emerald-600 dark:text-emerald-400" />
-						<span>Produtor Rural</span>
+						<span>Quero Vender</span>
 					</button>
 				</div>
 			</div>
 
-			{/* Dados Básicos */}
+			{/* Dados Pessoais / Conta */}
 			<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-				<div className="flex flex-col gap-1.5 md:col-span-2">
-					<Label htmlFor="name" className="text-sm font-medium">
-						Nome Completo *
-					</Label>
-					<Input
-						id="name"
-						placeholder="Seu nome ou razão social"
-						className="h-11 text-sm"
-						aria-invalid={!!errors.name}
-						disabled={isSubmitting}
-						{...register("name")}
-					/>
-					{errors.name && (
-						<span className="text-xs font-medium text-destructive">
-							{errors.name.message}
-						</span>
-					)}
-				</div>
+				<FormInput
+					id="name"
+					label="Nome Completo"
+					required
+					placeholder="Seu nome completo"
+					containerClassName="md:col-span-2"
+					error={errors.name?.message}
+					disabled={isSubmitting}
+					{...register("name")}
+				/>
 
-				<div className="flex flex-col gap-1.5">
-					<Label htmlFor="email" className="text-sm font-medium">
-						E-mail *
-					</Label>
-					<Input
-						id="email"
-						type="email"
-						autoComplete="email"
-						autoCapitalize="none"
-						placeholder="seu@email.com"
-						className="h-11 text-sm"
-						aria-invalid={!!errors.email}
-						disabled={isSubmitting}
-						{...register("email")}
-					/>
-					{errors.email && (
-						<span className="text-xs font-medium text-destructive">
-							{errors.email.message}
-						</span>
-					)}
-				</div>
+				<FormInput
+					id="email"
+					label="E-mail"
+					type="email"
+					required
+					autoComplete="email"
+					autoCapitalize="none"
+					placeholder="seu@email.com"
+					error={errors.email?.message}
+					disabled={isSubmitting}
+					{...register("email")}
+				/>
 
-				<div className="flex flex-col gap-1.5">
-					<Label htmlFor="cpf" className="text-sm font-medium">
-						CPF *
-					</Label>
-					<Input
-						id="cpf"
-						placeholder="000.000.000-00"
-						className="h-11 text-sm"
-						value={watch("cpf")}
-						onChange={handleCpfChange}
-						aria-invalid={!!errors.cpf}
-						disabled={isSubmitting}
-					/>
-					{errors.cpf && (
-						<span className="text-xs font-medium text-destructive">
-							{errors.cpf.message}
-						</span>
-					)}
-				</div>
+				<FormInput
+					id="cpf"
+					label="CPF"
+					required
+					placeholder="000.000.000-00"
+					value={watch("cpf")}
+					onChange={handleCpfChange}
+					error={errors.cpf?.message}
+					disabled={isSubmitting}
+				/>
 
-				<div className="flex flex-col gap-1.5">
-					<Label htmlFor="phone" className="text-sm font-medium">
-						Telefone / WhatsApp
-					</Label>
-					<Input
-						id="phone"
-						placeholder="(00) 00000-0000"
-						className="h-11 text-sm"
-						value={watch("phone") || ""}
-						onChange={handlePhoneChange}
-						aria-invalid={!!errors.phone}
-						disabled={isSubmitting}
-					/>
-					{errors.phone && (
-						<span className="text-xs font-medium text-destructive">
-							{errors.phone.message}
-						</span>
-					)}
-				</div>
+				<FormInput
+					id="phone"
+					label="Telefone / WhatsApp"
+					placeholder="(00) 00000-0000"
+					value={watch("phone") || ""}
+					onChange={handlePhoneChange}
+					error={errors.phone?.message}
+					disabled={isSubmitting}
+				/>
 
-				<div className="flex flex-col gap-1.5">
-					<Label htmlFor="neighborhood_id" className="text-sm font-medium">
-						Bairro
-					</Label>
-					<select
-						id="neighborhood_id"
-						className="h-11 w-full rounded-lg border border-input bg-transparent px-3 text-sm transition-colors outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50 dark:bg-input/30"
-						disabled={isSubmitting || isLoadingNeighborhoods}
-						{...register("neighborhood_id")}
-					>
-						<option value="" className="bg-background text-foreground">
-							{isLoadingNeighborhoods
-								? "Carregando bairros..."
-								: "Selecione seu bairro (opcional)"}
+				<FormSelect
+					id="neighborhood_id"
+					label="Bairro"
+					error={errors.neighborhood_id?.message}
+					disabled={isSubmitting || isLoadingNeighborhoods}
+					{...register("neighborhood_id")}
+				>
+					<option value="" className="bg-background text-foreground">
+						{isLoadingNeighborhoods
+							? "Carregando bairros..."
+							: "Selecione seu bairro (opcional)"}
+					</option>
+					{neighborhoods.map((n) => (
+						<option
+							key={n.id}
+							value={n.id}
+							className="bg-background text-foreground"
+						>
+							{n.name} ({n.city})
 						</option>
-						{neighborhoods.map((n) => (
-							<option
-								key={n.id}
-								value={n.id}
-								className="bg-background text-foreground"
-							>
-								{n.name} ({n.city})
-							</option>
-						))}
-					</select>
-					{errors.neighborhood_id && (
-						<span className="text-xs font-medium text-destructive">
-							{errors.neighborhood_id.message}
-						</span>
-					)}
-				</div>
+					))}
+				</FormSelect>
 
-				<div className="flex flex-col gap-1.5 md:col-span-2">
-					<Label htmlFor="address" className="text-sm font-medium">
-						Endereço / Logradouro
-					</Label>
-					<Input
-						id="address"
-						placeholder="Rua, número, complemento"
-						className="h-11 text-sm"
-						aria-invalid={!!errors.address}
-						disabled={isSubmitting}
-						{...register("address")}
-					/>
-					{errors.address && (
-						<span className="text-xs font-medium text-destructive">
-							{errors.address.message}
-						</span>
-					)}
-				</div>
+				<FormInput
+					id="address"
+					label="Endereço / Logradouro"
+					placeholder="Rua, número, complemento"
+					containerClassName="md:col-span-2"
+					error={errors.address?.message}
+					disabled={isSubmitting}
+					{...register("address")}
+				/>
 			</div>
 
-			{/* Campos Específicos para Produtor Rural */}
+			{/* Seção Produtor Rural */}
 			{selectedRole === "VENDEDOR" && (
-				<div className="flex flex-col gap-4 p-4 rounded-xl border border-emerald-500/20 bg-emerald-500/5 dark:bg-emerald-500/10">
-					<div className="flex items-center gap-2">
+				<div className="flex flex-col gap-4 p-5 rounded-2xl border border-emerald-500/25 bg-emerald-500/5 dark:bg-emerald-500/10 transition-all">
+					<div className="flex items-center gap-2 pb-1 border-b border-emerald-500/15">
 						<Sprout className="size-5 text-emerald-600 dark:text-emerald-400" />
 						<h3 className="text-sm font-semibold text-foreground">
-							Dados do Produtor Rural
+							Informações da Propriedade Rural
 						</h3>
 					</div>
 
 					<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-						<div className="flex flex-col gap-1.5 md:col-span-2">
-							<Label htmlFor="farm_name" className="text-sm font-medium">
-								Nome da Propriedade / Fazenda / Sítio *
-							</Label>
-							<Input
-								id="farm_name"
-								placeholder="Ex: Sítio Bela Vista"
-								className="h-11 text-sm bg-background"
-								aria-invalid={!!errors.farm_name}
-								disabled={isSubmitting}
-								{...register("farm_name")}
-							/>
-							{errors.farm_name && (
-								<span className="text-xs font-medium text-destructive">
-									{errors.farm_name.message}
-								</span>
-							)}
-						</div>
+						<FormInput
+							id="farm_name"
+							label="Nome da Propriedade / Sítio"
+							required
+							placeholder="Ex: Sítio Bela Vista"
+							containerClassName="md:col-span-2"
+							error={errors.farm_name?.message}
+							disabled={isSubmitting}
+							{...register("farm_name")}
+						/>
 
-						<div className="flex flex-col gap-1.5">
-							<Label htmlFor="cnpj" className="text-sm font-medium">
-								CNPJ (Opcional)
-							</Label>
-							<Input
-								id="cnpj"
-								placeholder="00.000.000/0000-00"
-								className="h-11 text-sm bg-background"
-								value={watch("cnpj") || ""}
-								onChange={handleCnpjChange}
-								aria-invalid={!!errors.cnpj}
-								disabled={isSubmitting}
-							/>
-							{errors.cnpj && (
-								<span className="text-xs font-medium text-destructive">
-									{errors.cnpj.message}
-								</span>
-							)}
-						</div>
+						<FormInput
+							id="cnpj"
+							label="CNPJ (Opcional)"
+							placeholder="00.000.000/0000-00"
+							containerClassName="md:col-span-2"
+							value={watch("cnpj") || ""}
+							onChange={handleCnpjChange}
+							error={errors.cnpj?.message}
+							disabled={isSubmitting}
+						/>
 
-						<div className="flex flex-col gap-1.5 md:col-span-2">
-							<Label htmlFor="description" className="text-sm font-medium">
-								Descrição da Produção (Opcional)
-							</Label>
-							<textarea
-								id="description"
-								rows={3}
-								placeholder="Conte um pouco sobre sua produção agrícola, colheitas sustentáveis e história familiar..."
-								className="w-full rounded-lg border border-input bg-background p-3 text-sm transition-colors outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50"
-								disabled={isSubmitting}
-								{...register("description")}
-							/>
-							{errors.description && (
-								<span className="text-xs font-medium text-destructive">
-									{errors.description.message}
-								</span>
-							)}
-						</div>
+						<FormTextarea
+							id="description"
+							label="Breve Descrição da Produção"
+							rows={3}
+							placeholder="Conte sobre suas culturas (hortaliças, frutas, laticínios), métodos sustentáveis..."
+							containerClassName="md:col-span-2"
+							error={errors.description?.message}
+							disabled={isSubmitting}
+							{...register("description")}
+						/>
 					</div>
 				</div>
 			)}
 
 			{/* Senhas */}
 			<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-				<div className="flex flex-col gap-1.5">
-					<Label htmlFor="password" className="text-sm font-medium">
-						Senha *
-					</Label>
-					<div className="relative flex items-center">
-						<Input
-							id="password"
-							type={showPassword ? "text" : "password"}
-							autoComplete="new-password"
-							placeholder="Mínimo 6 caracteres"
-							className="h-11 pr-11 text-sm"
-							aria-invalid={!!errors.password}
-							disabled={isSubmitting}
-							{...register("password")}
-						/>
+				<FormInput
+					id="password"
+					label="Senha"
+					required
+					type={showPassword ? "text" : "password"}
+					autoComplete="new-password"
+					placeholder="Mínimo 6 caracteres"
+					error={errors.password?.message}
+					disabled={isSubmitting}
+					rightElement={
 						<button
 							type="button"
 							onClick={() => setShowPassword((prev) => !prev)}
-							className="absolute right-0 h-11 w-11 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-r-lg"
+							className="h-11 w-11 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-r-xl"
 							aria-label={showPassword ? "Ocultar senha" : "Exibir senha"}
 							tabIndex={-1}
 						>
@@ -424,33 +346,24 @@ export function RegisterForm({ onSuccess, className }: RegisterFormProps) {
 								<Eye className="size-4" />
 							)}
 						</button>
-					</div>
-					{errors.password && (
-						<span className="text-xs font-medium text-destructive">
-							{errors.password.message}
-						</span>
-					)}
-				</div>
+					}
+					{...register("password")}
+				/>
 
-				<div className="flex flex-col gap-1.5">
-					<Label htmlFor="confirm_password" className="text-sm font-medium">
-						Confirmar Senha *
-					</Label>
-					<div className="relative flex items-center">
-						<Input
-							id="confirm_password"
-							type={showConfirmPassword ? "text" : "password"}
-							autoComplete="new-password"
-							placeholder="Repita a senha"
-							className="h-11 pr-11 text-sm"
-							aria-invalid={!!errors.confirm_password}
-							disabled={isSubmitting}
-							{...register("confirm_password")}
-						/>
+				<FormInput
+					id="confirm_password"
+					label="Confirmar Senha"
+					required
+					type={showConfirmPassword ? "text" : "password"}
+					autoComplete="new-password"
+					placeholder="Repita a senha"
+					error={errors.confirm_password?.message}
+					disabled={isSubmitting}
+					rightElement={
 						<button
 							type="button"
 							onClick={() => setShowConfirmPassword((prev) => !prev)}
-							className="absolute right-0 h-11 w-11 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-r-lg"
+							className="h-11 w-11 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-r-xl"
 							aria-label={
 								showConfirmPassword ? "Ocultar senha" : "Exibir senha"
 							}
@@ -462,18 +375,14 @@ export function RegisterForm({ onSuccess, className }: RegisterFormProps) {
 								<Eye className="size-4" />
 							)}
 						</button>
-					</div>
-					{errors.confirm_password && (
-						<span className="text-xs font-medium text-destructive">
-							{errors.confirm_password.message}
-						</span>
-					)}
-				</div>
+					}
+					{...register("confirm_password")}
+				/>
 			</div>
 
 			<Button
 				type="submit"
-				className="h-11 w-full mt-2 font-medium text-sm transition-all"
+				className="h-12 w-full mt-2 font-semibold text-sm rounded-xl shadow-xs transition-all"
 				disabled={isSubmitting}
 			>
 				{isSubmitting ? (
@@ -490,7 +399,7 @@ export function RegisterForm({ onSuccess, className }: RegisterFormProps) {
 				Já possui uma conta?{" "}
 				<Link
 					to="/login"
-					className="font-medium text-primary underline-offset-4 hover:underline"
+					className="font-semibold text-primary underline-offset-4 hover:underline"
 				>
 					Entrar
 				</Link>
