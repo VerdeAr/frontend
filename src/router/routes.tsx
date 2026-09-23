@@ -1,4 +1,5 @@
 import { createBrowserRouter } from "react-router";
+import { ProtectedRoute } from "@/components/auth";
 import RootLayout from "@/components/layout/RootLayout";
 import AccountSettingsPage from "@/pages/AccountSettingsPage";
 import Home from "@/pages/Home";
@@ -25,8 +26,13 @@ export const router = createBrowserRouter([
 				element: <Register />,
 			},
 			{
-				path: "minha-conta",
-				element: <AccountSettingsPage />,
+				element: <ProtectedRoute />,
+				children: [
+					{
+						path: "minha-conta",
+						element: <AccountSettingsPage />,
+					},
+				],
 			},
 		],
 	},
