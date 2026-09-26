@@ -21,7 +21,7 @@ export const productFormSchema = z.object({
 		.optional()
 		.or(z.literal(""))
 		.nullable(),
-	is_active: z.boolean().default(true),
+	is_active: z.boolean(),
 });
 
 export type ProductFormData = z.infer<typeof productFormSchema>;
