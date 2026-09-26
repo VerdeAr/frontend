@@ -17,3 +17,15 @@ export function formatStock(
 
 	return unitSymbol ? `${formatted} ${unitSymbol}` : formatted;
 }
+
+export function formatDate(
+	dateString: string | Date | null | undefined,
+): string {
+	if (!dateString) return "";
+	const date =
+		typeof dateString === "string" ? new Date(dateString) : dateString;
+	return new Intl.DateTimeFormat("pt-BR", {
+		dateStyle: "short",
+		timeStyle: "short",
+	}).format(date);
+}
