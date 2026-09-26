@@ -1,8 +1,19 @@
+import { useEffect } from "react";
 import { Outlet } from "react-router";
+import { useAuthStore, useCartStore } from "@/stores";
 import { Footer } from "./Footer";
 import { Header } from "./Header";
 
 export default function RootLayout() {
+	const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+	const fetchCart = useCartStore((s) => s.fetchCart);
+
+	useEffect(() => {
+		if (isAuthenticated) {
+			fetchCart();
+		}
+	}, [isAuthenticated, fetchCart]);
+
 	return (
 		<div className="min-h-screen flex flex-col bg-background text-foreground antialiased selection:bg-primary/20 selection:text-primary">
 			<Header />
