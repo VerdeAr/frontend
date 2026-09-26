@@ -1,20 +1,24 @@
-import { Lock, Sprout, Truck, User as UserIcon } from "lucide-react";
+import { Lock, Package, Sprout, Truck, User as UserIcon } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import {
 	PasswordChangeForm,
 	ProfileDataForm,
 	SellerShippingForm,
 } from "@/components/account";
+import { SellerCatalogView } from "@/components/seller";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores";
 
-type AccountTab = "profile" | "security" | "shipping";
+type AccountTab = "profile" | "security" | "shipping" | "products";
 
 export default function AccountSettingsPage() {
 	const navigate = useNavigate();
+	const [searchParams, setSearchParams] = useSearchParams();
 	const { user, isAuthenticated } = useAuthStore();
-	const [activeTab, setActiveTab] = useState<AccountTab>("profile");
+
+	const initialTab = (searchParams.get("aba") as AccountTab) || "profile";
+	const [activeTab, setActiveTab] = useState<AccountTab>(initialTab);
 
 	useEffect(() => {
 		if (!isAuthenticated) {
@@ -42,6 +46,11 @@ export default function AccountSettingsPage() {
 		...(isSeller
 			? [
 					{
+						id: "products" as AccountTab,
+						label: "Meus Produtos",
+						icon: Package,
+					},
+					{
 						id: "shipping" as AccountTab,
 						label: "Frete e Entrega",
 						icon: Truck,
@@ -50,11 +59,22 @@ export default function AccountSettingsPage() {
 			: []),
 	];
 
+	const handleTabChange = (tabId: AccountTab) => {
+		setActiveTab(tabId);
+		const nextParams = new URLSearchParams(searchParams);
+		if (tabId === "profile") {
+			nextParams.delete("aba");
+		} else {
+			nextParams.set("aba", tabId);
+		}
+		setSearchParams(nextParams, { replace: true });
+	};
+
 	return (
 		<div className="relative min-h-[calc(100vh-8rem)] py-8 px-4 sm:px-6 lg:px-8">
 			{/* Subtle Ambient Glow */}
 			<div
-				className="pointer-events-none absolute inset-x-0 -top-20 -z-10 h-80 bg-gradient-to-b from-emerald-500/10 via-emerald-500/5 to-transparent blur-3xl"
+				className="pointer-events-none absolute inset-x-0 -top-20 -z-10 h-80 bg-linear-to-b from-emerald-500/10 via-emerald-500/5 to-transparent blur-3xl"
 				aria-hidden="true"
 			/>
 
@@ -103,7 +123,7 @@ export default function AccountSettingsPage() {
 							<button
 								key={tab.id}
 								type="button"
-								onClick={() => setActiveTab(tab.id)}
+								onClick={() => handleTabChange(tab.id)}
 								className={cn(
 									"h-11 px-4 flex items-center gap-2 text-sm font-medium border-b-2 transition-all select-none whitespace-nowrap -mb-px",
 									isActive
@@ -123,6 +143,7 @@ export default function AccountSettingsPage() {
 					{activeTab === "profile" && <ProfileDataForm />}
 					{activeTab === "security" && <PasswordChangeForm />}
 					{activeTab === "shipping" && isSeller && <SellerShippingForm />}
+					{activeTab === "products" && isSeller && <SellerCatalogView />}
 				</div>
 			</div>
 		</div>
