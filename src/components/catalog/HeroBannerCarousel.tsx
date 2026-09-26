@@ -75,7 +75,7 @@ export function HeroBannerCarousel({ className }: HeroBannerCarouselProps) {
 	return (
 		<section
 			className={cn(
-				"relative w-full overflow-hidden rounded-2xl sm:rounded-3xl shadow-sm bg-muted/40 aspect-[16/9] sm:aspect-[21/9] min-h-[240px] sm:min-h-[340px] max-h-[460px] select-none group",
+				"relative w-full overflow-hidden rounded-2xl sm:rounded-3xl shadow-sm bg-muted/40 aspect-video sm:aspect-21/9 min-h-60 sm:min-h-85 max-h-115 select-none group",
 				className,
 			)}
 			onMouseEnter={() => setIsPaused(true)}
@@ -104,7 +104,7 @@ export function HeroBannerCarousel({ className }: HeroBannerCarouselProps) {
 						/>
 
 						{/* Gradient Overlay for Readability */}
-						<div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-transparent" />
+						<div className="absolute inset-0 bg-linear-to-r from-black/80 via-black/50 to-transparent" />
 
 						{/* Content */}
 						<div className="absolute inset-0 flex flex-col justify-center px-6 sm:px-12 md:px-16 max-w-xl sm:max-w-2xl text-white">

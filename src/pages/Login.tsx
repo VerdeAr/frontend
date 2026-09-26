@@ -18,7 +18,7 @@ export default function Login() {
 		<div className="relative min-h-[calc(100vh-8rem)] flex items-center justify-center py-10 px-4 sm:px-6">
 			{/* Subtle Ambient Glow */}
 			<div
-				className="pointer-events-none absolute inset-x-0 -top-20 -z-10 h-80 bg-gradient-to-b from-emerald-500/10 via-emerald-500/5 to-transparent blur-3xl"
+				className="pointer-events-none absolute inset-x-0 -top-20 -z-10 h-80 bg-linear-to-b from-emerald-500/10 via-emerald-500/5 to-transparent blur-3xl"
 				aria-hidden="true"
 			/>
 
