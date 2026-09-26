@@ -1,7 +1,15 @@
-import { Lock, Package, Sprout, Truck, User as UserIcon } from "lucide-react";
+import {
+	Lock,
+	Package,
+	ShoppingBag,
+	Sprout,
+	Truck,
+	User as UserIcon,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import {
+	CustomerPurchaseHistory,
 	PasswordChangeForm,
 	ProfileDataForm,
 	SellerShippingForm,
@@ -10,9 +18,16 @@ import { SellerCatalogView } from "@/components/seller";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores";
 
-type AccountTab = "profile" | "security" | "shipping" | "products";
+type AccountTab =
+	| "profile"
+	| "security"
+	| "shipping"
+	| "products"
+	| "purchases";
 
 function normalizeTab(tab: string | null): AccountTab {
+	if (tab === "purchases" || tab === "compras" || tab === "pedidos")
+		return "purchases";
 	if (tab === "products" || tab === "produtos") return "products";
 	if (tab === "shipping" || tab === "frete" || tab === "entrega")
 		return "shipping";
@@ -50,6 +65,11 @@ export default function AccountSettingsPage() {
 			id: "profile" as AccountTab,
 			label: "Dados Cadastrais",
 			icon: UserIcon,
+		},
+		{
+			id: "purchases" as AccountTab,
+			label: "Minhas Compras",
+			icon: ShoppingBag,
 		},
 		{
 			id: "security" as AccountTab,
@@ -154,6 +174,7 @@ export default function AccountSettingsPage() {
 				{/* Tab Content Panel (Decoupled Form Subcomponents) */}
 				<div className="bg-card/50 backdrop-blur-sm sm:border sm:border-border/60 sm:rounded-3xl sm:p-8 sm:shadow-xs">
 					{activeTab === "profile" && <ProfileDataForm />}
+					{activeTab === "purchases" && <CustomerPurchaseHistory />}
 					{activeTab === "security" && <PasswordChangeForm />}
 					{activeTab === "shipping" && isSeller && <SellerShippingForm />}
 					{activeTab === "products" && isSeller && <SellerCatalogView />}
