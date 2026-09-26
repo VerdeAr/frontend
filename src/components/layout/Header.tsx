@@ -19,7 +19,7 @@ export function Header() {
 	const handleSearch = (e: React.FormEvent) => {
 		e.preventDefault();
 		if (searchQuery.trim()) {
-			navigate(`/produtos/busca?q=${encodeURIComponent(searchQuery.trim())}`);
+			navigate(`/?q=${encodeURIComponent(searchQuery.trim())}#produtos`);
 		}
 	};
 
