@@ -1,12 +1,14 @@
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { useEffect } from "react";
 import { Link } from "react-router";
-import { CartItemList } from "@/components/cart";
-import { formatBRL } from "@/lib/formatters";
+import { CartItemList, CartSummary, DeliverySelector } from "@/components/cart";
 import {
 	selectCartItemCount,
 	selectCartItems,
+	selectCartShipping,
 	selectCartSubtotal,
+	selectCartTotal,
+	selectDeliveryType,
 	useCartStore,
 } from "@/stores";
 
@@ -14,12 +16,16 @@ export default function CartPage() {
 	const items = useCartStore(selectCartItems);
 	const itemCount = useCartStore(selectCartItemCount);
 	const subtotal = useCartStore(selectCartSubtotal);
+	const shipping = useCartStore(selectCartShipping);
+	const total = useCartStore(selectCartTotal);
+	const deliveryType = useCartStore(selectDeliveryType);
 	const isLoading = useCartStore((state) => state.isLoading);
 	const isUpdating = useCartStore((state) => state.isUpdating);
 	const fetchCart = useCartStore((state) => state.fetchCart);
 	const updateQuantity = useCartStore((state) => state.updateQuantity);
 	const removeItem = useCartStore((state) => state.removeItem);
 	const clearCart = useCartStore((state) => state.clearCart);
+	const setDeliveryType = useCartStore((state) => state.setDeliveryType);
 
 	useEffect(() => {
 		fetchCart();
@@ -91,26 +97,24 @@ export default function CartPage() {
 							/>
 						</div>
 
-						{/* Summary Placeholder / Column (Subtask 3.6 will connect DeliverySelector & CartSummary) */}
+						{/* Delivery Selection and Summary Column */}
 						{items.length > 0 && (
-							<div className="lg:col-span-5 xl:col-span-4 lg:sticky lg:top-24">
-								<div className="rounded-3xl border border-border/60 bg-card/60 p-6 backdrop-blur-sm shadow-xs flex flex-col gap-4">
-									<h2 className="text-lg font-bold text-foreground">
-										Resumo do Pedido
-									</h2>
+							<div className="lg:col-span-5 xl:col-span-4 flex flex-col gap-6 lg:sticky lg:top-24">
+								<DeliverySelector
+									deliveryType={deliveryType}
+									onSelect={setDeliveryType}
+									shipping={shipping}
+									isUpdating={isUpdating}
+								/>
 
-									<div className="flex items-center justify-between text-sm py-2 border-b border-border/40">
-										<span className="text-muted-foreground">Subtotal</span>
-										<span className="font-semibold text-foreground">
-											{formatBRL(subtotal)}
-										</span>
-									</div>
-
-									<p className="text-xs text-muted-foreground">
-										A modalidade de entrega e o cálculo do frete serão
-										selecionados na etapa seguinte.
-									</p>
-								</div>
+								<CartSummary
+									subtotal={subtotal}
+									shipping={shipping}
+									total={total}
+									deliveryType={deliveryType}
+									itemCount={itemCount}
+									isUpdating={isUpdating}
+								/>
 							</div>
 						)}
 					</div>
