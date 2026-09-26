@@ -42,6 +42,7 @@ export interface Seller {
 	description?: string | null;
 	cnpj?: string | null;
 	farm_name?: string | null;
+	user?: Partial<User> | null;
 	created_at?: string;
 	updated_at?: string;
 }
