@@ -16,6 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { sellerProductsService } from "@/services/seller-products.service";
 import type { Product } from "@/types";
+import { ProductFormDialog } from "./ProductFormDialog";
 import { SellerProductCard } from "./SellerProductCard";
 import { SellerProductTable } from "./SellerProductTable";
 
@@ -40,6 +41,8 @@ export function SellerCatalogView({
 	const [togglingId, setTogglingId] = useState<string | null>(null);
 	const [deletingId, setDeletingId] = useState<string | null>(null);
 	const [successNotice, setSuccessNotice] = useState<string | null>(null);
+	const [isDialogOpen, setIsDialogOpen] = useState(false);
+	const [productToEdit, setProductToEdit] = useState<Product | null>(null);
 
 	const loadProducts = useCallback(async () => {
 		try {
@@ -134,19 +137,31 @@ export function SellerCatalogView({
 	};
 
 	const handleEdit = (product: Product) => {
-		if (onOpenEditDialog) {
-			onOpenEditDialog(product);
-		} else {
-			alert(`Editar produto: ${product.name}`);
-		}
+		setProductToEdit(product);
+		setIsDialogOpen(true);
+		onOpenEditDialog?.(product);
 	};
 
 	const handleCreate = () => {
-		if (onOpenCreateDialog) {
-			onOpenCreateDialog();
-		} else {
-			alert("Cadastrar novo produto");
-		}
+		setProductToEdit(null);
+		setIsDialogOpen(true);
+		onOpenCreateDialog?.();
+	};
+
+	const handleProductSaved = (savedProduct: Product) => {
+		setProducts((prev) => {
+			const exists = prev.some((p) => p.id === savedProduct.id);
+			if (exists) {
+				return prev.map((p) => (p.id === savedProduct.id ? savedProduct : p));
+			}
+			return [savedProduct, ...prev];
+		});
+		setSuccessNotice(
+			productToEdit
+				? `Produto "${savedProduct.name}" atualizado com sucesso!`
+				: `Produto "${savedProduct.name}" cadastrado com sucesso!`,
+		);
+		setTimeout(() => setSuccessNotice(null), 3500);
 	};
 
 	return (
@@ -389,6 +404,14 @@ export function SellerCatalogView({
 					</div>
 				</>
 			)}
+
+			{/* Modal de Cadastro e Edição de Produtos */}
+			<ProductFormDialog
+				open={isDialogOpen}
+				onOpenChange={setIsDialogOpen}
+				productToEdit={productToEdit}
+				onSuccess={handleProductSaved}
+			/>
 		</div>
 	);
 }
