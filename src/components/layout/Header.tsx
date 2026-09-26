@@ -81,9 +81,9 @@ export function Header() {
 					{/* Ação Condicional: Pedidos do Vendedor OU Carrinho do Consumidor */}
 					{isSeller ? (
 						<Link
-							to="/minha-conta#pedidos"
+							to="/minha-conta?aba=produtos"
 							className="relative flex h-11 w-11 items-center justify-center rounded-lg text-foreground hover:bg-muted transition-colors"
-							aria-label="Controle de Pedidos"
+							aria-label="Meus Produtos & Estoque"
 						>
 							<ClipboardList className="size-5 text-primary" />
 						</Link>
