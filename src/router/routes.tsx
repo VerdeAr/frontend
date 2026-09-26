@@ -3,8 +3,10 @@ import { ProtectedRoute } from "@/components/auth";
 import RootLayout from "@/components/layout/RootLayout";
 import AccountSettingsPage from "@/pages/AccountSettingsPage";
 import CartPage from "@/pages/CartPage";
+import CheckoutPage from "@/pages/CheckoutPage";
 import Home from "@/pages/Home";
 import Login from "@/pages/Login";
+import OrderSuccessPage from "@/pages/OrderSuccessPage";
 import Register from "@/pages/Register";
 import { homeLoader } from "./loaders";
 
@@ -36,6 +38,14 @@ export const router = createBrowserRouter([
 					{
 						path: "carrinho",
 						element: <CartPage />,
+					},
+					{
+						path: "checkout",
+						element: <CheckoutPage />,
+					},
+					{
+						path: "pedido-confirmado/:id",
+						element: <OrderSuccessPage />,
 					},
 				],
 			},
