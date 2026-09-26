@@ -1,4 +1,5 @@
 import {
+	ClipboardList,
 	Lock,
 	Package,
 	ShoppingBag,
@@ -14,7 +15,7 @@ import {
 	ProfileDataForm,
 	SellerShippingForm,
 } from "@/components/account";
-import { SellerCatalogView } from "@/components/seller";
+import { SellerCatalogView, SellerOrdersManager } from "@/components/seller";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores";
 
@@ -23,11 +24,13 @@ type AccountTab =
 	| "security"
 	| "shipping"
 	| "products"
+	| "orders"
 	| "purchases";
 
 function normalizeTab(tab: string | null): AccountTab {
-	if (tab === "purchases" || tab === "compras" || tab === "pedidos")
-		return "purchases";
+	if (tab === "orders" || tab === "pedidos" || tab === "pedidos-vendedor")
+		return "orders";
+	if (tab === "purchases" || tab === "compras") return "purchases";
 	if (tab === "products" || tab === "produtos") return "products";
 	if (tab === "shipping" || tab === "frete" || tab === "entrega")
 		return "shipping";
@@ -78,6 +81,11 @@ export default function AccountSettingsPage() {
 		},
 		...(isSeller
 			? [
+					{
+						id: "orders" as AccountTab,
+						label: "Pedidos Recebidos",
+						icon: ClipboardList,
+					},
 					{
 						id: "products" as AccountTab,
 						label: "Meus Produtos",
@@ -175,6 +183,7 @@ export default function AccountSettingsPage() {
 				<div className="bg-card/50 backdrop-blur-sm sm:border sm:border-border/60 sm:rounded-3xl sm:p-8 sm:shadow-xs">
 					{activeTab === "profile" && <ProfileDataForm />}
 					{activeTab === "purchases" && <CustomerPurchaseHistory />}
+					{activeTab === "orders" && isSeller && <SellerOrdersManager />}
 					{activeTab === "security" && <PasswordChangeForm />}
 					{activeTab === "shipping" && isSeller && <SellerShippingForm />}
 					{activeTab === "products" && isSeller && <SellerCatalogView />}

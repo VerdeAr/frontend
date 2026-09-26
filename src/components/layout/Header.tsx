@@ -5,17 +5,30 @@ import {
 	ShoppingCart,
 	User as UserIcon,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { CartBadge } from "@/components/cart";
+import { saleService } from "@/services/sale.service";
 import { useAuthStore } from "@/stores/auth.store";
 
 export function Header() {
 	const navigate = useNavigate();
 	const { user, isAuthenticated } = useAuthStore();
 	const [searchQuery, setSearchQuery] = useState("");
+	const [pendingOrders, setPendingOrders] = useState(0);
 
 	const isSeller = user?.role === "VENDEDOR";
+
+	useEffect(() => {
+		if (isSeller) {
+			saleService
+				.getPendingOrdersCount()
+				.then((res) => setPendingOrders(res.count))
+				.catch(() => {});
+		} else {
+			setPendingOrders(0);
+		}
+	}, [isSeller]);
 
 	const handleSearch = (e: React.FormEvent) => {
 		e.preventDefault();
@@ -79,14 +92,19 @@ export function Header() {
 						<MessageCircle className="size-5" />
 					</Link>
 
-					{/* Atalho do Produtor Rural (gestão de produtos e estoque) */}
+					{/* Atalho do Produtor Rural (gestão de pedidos recebidos) */}
 					{isSeller && (
 						<Link
-							to="/minha-conta?aba=products"
+							to="/minha-conta?aba=orders"
 							className="relative flex h-11 w-11 items-center justify-center rounded-lg text-foreground hover:bg-muted transition-colors"
-							aria-label="Meus Produtos & Estoque"
+							aria-label="Pedidos Recebidos & Vendas"
 						>
 							<ClipboardList className="size-5 text-primary" />
+							{pendingOrders > 0 && (
+								<span className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-500 px-1 text-[10px] font-bold text-white shadow-xs pointer-events-none select-none">
+									{pendingOrders > 99 ? "99+" : pendingOrders}
+								</span>
+							)}
 						</Link>
 					)}
 
