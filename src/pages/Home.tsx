@@ -8,7 +8,7 @@ import {
 	Sparkles,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router";
+import { useLocation, useNavigate, useSearchParams } from "react-router";
 import {
 	CategorySelector,
 	HeroBannerCarousel,
@@ -17,9 +17,12 @@ import {
 } from "@/components/catalog";
 import { Button } from "@/components/ui/button";
 import { catalogService } from "@/services/catalog.service";
+import { useAuthStore, useCartStore } from "@/stores";
 import type { Category, Product } from "@/types";
 
 export default function Home() {
+	const navigate = useNavigate();
+	const location = useLocation();
 	const [searchParams, setSearchParams] = useSearchParams();
 
 	// Filtros sincronizados com a URL
@@ -139,11 +142,22 @@ export default function Home() {
 		setSearchParams(new URLSearchParams(), { replace: true });
 	};
 
-	const handleAddToCart = (product: Product) => {
-		setCartFeedback(`"${product.name}" adicionado à sua sacola!`);
-		setTimeout(() => {
-			setCartFeedback(null);
-		}, 3500);
+	const handleAddToCart = async (product: Product) => {
+		const { isAuthenticated } = useAuthStore.getState();
+		if (!isAuthenticated) {
+			navigate("/login", { state: { from: location } });
+			return;
+		}
+
+		try {
+			await useCartStore.getState().addItem(product.id, 1);
+			setCartFeedback(`"${product.name}" adicionado à sua sacola!`);
+			setTimeout(() => {
+				setCartFeedback(null);
+			}, 3500);
+		} catch (err) {
+			console.error("Erro ao adicionar produto:", err);
+		}
 	};
 
 	const selectedCategoryName = categories.find(

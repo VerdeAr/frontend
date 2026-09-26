@@ -12,13 +12,26 @@ import { useAuthStore } from "@/stores";
 
 type AccountTab = "profile" | "security" | "shipping" | "products";
 
+function normalizeTab(tab: string | null): AccountTab {
+	if (tab === "products" || tab === "produtos") return "products";
+	if (tab === "shipping" || tab === "frete" || tab === "entrega")
+		return "shipping";
+	if (tab === "security" || tab === "seguranca") return "security";
+	return "profile";
+}
+
 export default function AccountSettingsPage() {
 	const navigate = useNavigate();
 	const [searchParams, setSearchParams] = useSearchParams();
 	const { user, isAuthenticated } = useAuthStore();
 
-	const initialTab = (searchParams.get("aba") as AccountTab) || "profile";
-	const [activeTab, setActiveTab] = useState<AccountTab>(initialTab);
+	const [activeTab, setActiveTab] = useState<AccountTab>(() =>
+		normalizeTab(searchParams.get("aba")),
+	);
+
+	useEffect(() => {
+		setActiveTab(normalizeTab(searchParams.get("aba")));
+	}, [searchParams]);
 
 	useEffect(() => {
 		if (!isAuthenticated) {

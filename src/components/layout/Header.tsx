@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
+import { CartBadge } from "@/components/cart";
 import { useAuthStore } from "@/stores/auth.store";
 
 export function Header() {
@@ -24,7 +25,7 @@ export function Header() {
 	};
 
 	return (
-		<header className="sticky top-0 z-40 w-full border-b border-border/60 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+		<header className="sticky top-0 z-40 w-full border-b border-border/60 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/80">
 			<div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
 				{/* Logo */}
 				<Link
@@ -78,24 +79,26 @@ export function Header() {
 						<MessageCircle className="size-5" />
 					</Link>
 
-					{/* Ação Condicional: Pedidos do Vendedor OU Carrinho do Consumidor */}
-					{isSeller ? (
+					{/* Atalho do Produtor Rural (gestão de produtos e estoque) */}
+					{isSeller && (
 						<Link
-							to="/minha-conta?aba=produtos"
+							to="/minha-conta?aba=products"
 							className="relative flex h-11 w-11 items-center justify-center rounded-lg text-foreground hover:bg-muted transition-colors"
 							aria-label="Meus Produtos & Estoque"
 						>
 							<ClipboardList className="size-5 text-primary" />
 						</Link>
-					) : (
-						<Link
-							to="/carrinho"
-							className="relative flex h-11 w-11 items-center justify-center rounded-lg text-foreground hover:bg-muted transition-colors"
-							aria-label="Carrinho de Compras"
-						>
-							<ShoppingCart className="size-5" />
-						</Link>
 					)}
+
+					{/* Carrinho de Compras com Badge (disponível para todos os usuários) */}
+					<Link
+						to="/carrinho"
+						className="relative flex h-11 w-11 items-center justify-center rounded-lg text-foreground hover:bg-muted transition-colors"
+						aria-label="Carrinho de Compras"
+					>
+						<ShoppingCart className="size-5" />
+						<CartBadge />
+					</Link>
 
 					{/* Perfil / Login */}
 					<Link
