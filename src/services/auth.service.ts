@@ -32,7 +32,7 @@ export const authService = {
 			success: boolean;
 			message: string;
 			user: User;
-		}>("/pessoa/perfil", data);
+		}>("/pessoa/cadastro", data);
 		return response.data;
 	},
 
