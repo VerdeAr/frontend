@@ -2,6 +2,7 @@ import { Lock, Package, Sprout, Truck, User as UserIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import {
+	AccountTabsNav,
 	PasswordChangeForm,
 	ProfileDataForm,
 	SellerShippingForm,
@@ -128,28 +129,11 @@ export default function AccountSettingsPage() {
 				</div>
 
 				{/* Tabs Navigation (Mobile Scrollable) */}
-				<div className="flex items-center gap-2 border-b border-border/60 pb-px overflow-x-auto no-scrollbar">
-					{tabs.map((tab) => {
-						const Icon = tab.icon;
-						const isActive = activeTab === tab.id;
-						return (
-							<button
-								key={tab.id}
-								type="button"
-								onClick={() => handleTabChange(tab.id)}
-								className={cn(
-									"h-11 px-4 flex items-center gap-2 text-sm font-medium border-b-2 transition-all select-none whitespace-nowrap -mb-px",
-									isActive
-										? "border-primary text-foreground font-semibold"
-										: "border-transparent text-muted-foreground hover:text-foreground hover:border-border",
-								)}
-							>
-								<Icon className={cn("size-4", isActive && "text-primary")} />
-								<span>{tab.label}</span>
-							</button>
-						);
-					})}
-				</div>
+				<AccountTabsNav
+					tabs={tabs}
+					activeTab={activeTab}
+					onTabChange={handleTabChange}
+				/>
 
 				{/* Tab Content Panel (Decoupled Form Subcomponents) */}
 				<div className="bg-card/50 backdrop-blur-sm sm:border sm:border-border/60 sm:rounded-3xl sm:p-8 sm:shadow-xs">

@@ -1,7 +1,8 @@
 import { ArrowLeft, Loader2 } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { CartItemList, CartSummary, DeliverySelector } from "@/components/cart";
+import { ConfirmDialog } from "@/components/common";
 import {
 	selectCartItemCount,
 	selectCartItems,
@@ -27,14 +28,29 @@ export default function CartPage() {
 	const clearCart = useCartStore((state) => state.clearCart);
 	const setDeliveryType = useCartStore((state) => state.setDeliveryType);
 
+	const [isConfirmClearOpen, setIsConfirmClearOpen] = useState(false);
+	const [isClearingCart, setIsClearingCart] = useState(false);
+
 	useEffect(() => {
 		fetchCart();
 	}, [fetchCart]);
 
-	const handleClearCart = async () => {
-		if (window.confirm("Deseja realmente esvaziar todo o seu carrinho?")) {
+	const handleClearCartRequest = () => {
+		setIsConfirmClearOpen(true);
+	};
+
+	const handleConfirmClear = async () => {
+		try {
+			setIsClearingCart(true);
 			await clearCart();
+		} finally {
+			setIsClearingCart(false);
+			setIsConfirmClearOpen(false);
 		}
+	};
+
+	const handleCancelClear = () => {
+		setIsConfirmClearOpen(false);
 	};
 
 	return (
@@ -92,7 +108,9 @@ export default function CartPage() {
 								items={items}
 								onUpdateQuantity={updateQuantity}
 								onRemoveItem={removeItem}
-								onClearCart={items.length > 0 ? handleClearCart : undefined}
+								onClearCart={
+									items.length > 0 ? handleClearCartRequest : undefined
+								}
 								isUpdating={isUpdating}
 							/>
 						</div>
@@ -120,6 +138,18 @@ export default function CartPage() {
 					</div>
 				)}
 			</div>
+
+			{/* Diálogo de confirmação para esvaziar carrinho */}
+			<ConfirmDialog
+				open={isConfirmClearOpen}
+				title="Esvaziar carrinho"
+				message="Deseja realmente remover todos os itens do seu carrinho? Essa ação não pode ser desfeita."
+				confirmLabel="Esvaziar"
+				cancelLabel="Cancelar"
+				isLoading={isClearingCart}
+				onConfirm={handleConfirmClear}
+				onCancel={handleCancelClear}
+			/>
 		</div>
 	);
 }
