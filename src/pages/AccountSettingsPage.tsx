@@ -1,19 +1,37 @@
-import { Lock, Package, Sprout, Truck, User as UserIcon } from "lucide-react";
+import {
+	ClipboardList,
+	Lock,
+	Package,
+	ShoppingBag,
+	Sprout,
+	Truck,
+	User as UserIcon,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import {
 	AccountTabsNav,
+	CustomerPurchaseHistory,
 	PasswordChangeForm,
 	ProfileDataForm,
 	SellerShippingForm,
 } from "@/components/account";
-import { SellerCatalogView } from "@/components/seller";
+import { SellerCatalogView, SellerOrdersManager } from "@/components/seller";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores";
 
-type AccountTab = "profile" | "security" | "shipping" | "products";
+type AccountTab =
+	| "profile"
+	| "security"
+	| "shipping"
+	| "products"
+	| "orders"
+	| "purchases";
 
 function normalizeTab(tab: string | null): AccountTab {
+	if (tab === "orders" || tab === "pedidos" || tab === "pedidos-vendedor")
+		return "orders";
+	if (tab === "purchases" || tab === "compras") return "purchases";
 	if (tab === "products" || tab === "produtos") return "products";
 	if (tab === "shipping" || tab === "frete" || tab === "entrega")
 		return "shipping";
@@ -53,12 +71,22 @@ export default function AccountSettingsPage() {
 			icon: UserIcon,
 		},
 		{
+			id: "purchases" as AccountTab,
+			label: "Minhas Compras",
+			icon: ShoppingBag,
+		},
+		{
 			id: "security" as AccountTab,
 			label: "Segurança e Senha",
 			icon: Lock,
 		},
 		...(isSeller
 			? [
+					{
+						id: "orders" as AccountTab,
+						label: "Pedidos Recebidos",
+						icon: ClipboardList,
+					},
 					{
 						id: "products" as AccountTab,
 						label: "Meus Produtos",
@@ -138,6 +166,8 @@ export default function AccountSettingsPage() {
 				{/* Tab Content Panel (Decoupled Form Subcomponents) */}
 				<div className="bg-card/50 backdrop-blur-sm sm:border sm:border-border/60 sm:rounded-3xl sm:p-8 sm:shadow-xs">
 					{activeTab === "profile" && <ProfileDataForm />}
+					{activeTab === "purchases" && <CustomerPurchaseHistory />}
+					{activeTab === "orders" && isSeller && <SellerOrdersManager />}
 					{activeTab === "security" && <PasswordChangeForm />}
 					{activeTab === "shipping" && isSeller && <SellerShippingForm />}
 					{activeTab === "products" && isSeller && <SellerCatalogView />}
