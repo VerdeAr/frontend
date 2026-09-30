@@ -2,7 +2,16 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { CartItemList, CartSummary, DeliverySelector } from "@/components/cart";
-import { ConfirmDialog } from "@/components/common";
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
 	selectCartItemCount,
 	selectCartItems,
@@ -139,17 +148,36 @@ export default function CartPage() {
 				)}
 			</div>
 
-			{/* Diálogo de confirmação para esvaziar carrinho */}
-			<ConfirmDialog
+			{/* Diálogo de confirmação para esvaziar carrinho com ShadCN */}
+			<AlertDialog
 				open={isConfirmClearOpen}
-				title="Esvaziar carrinho"
-				message="Deseja realmente remover todos os itens do seu carrinho? Essa ação não pode ser desfeita."
-				confirmLabel="Esvaziar"
-				cancelLabel="Cancelar"
-				isLoading={isClearingCart}
-				onConfirm={handleConfirmClear}
-				onCancel={handleCancelClear}
-			/>
+				onOpenChange={(open) => !open && handleCancelClear()}
+			>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle>Esvaziar carrinho</AlertDialogTitle>
+						<AlertDialogDescription>
+							Deseja realmente remover todos os itens do seu carrinho? Essa ação
+							não pode ser desfeita.
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel
+							onClick={handleCancelClear}
+							disabled={isClearingCart}
+						>
+							Cancelar
+						</AlertDialogCancel>
+						<AlertDialogAction
+							variant="destructive"
+							onClick={handleConfirmClear}
+							disabled={isClearingCart}
+						>
+							{isClearingCart ? "Esvaziando..." : "Esvaziar"}
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
 		</div>
 	);
 }

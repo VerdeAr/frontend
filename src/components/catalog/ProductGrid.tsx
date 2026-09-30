@@ -1,5 +1,13 @@
 import { PackageSearch, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+	Empty,
+	EmptyContent,
+	EmptyDescription,
+	EmptyHeader,
+	EmptyMedia,
+	EmptyTitle,
+} from "@/components/ui/empty";
 import { cn } from "@/lib/utils";
 import type { Product } from "@/types";
 import { ProductCard } from "./ProductCard";
@@ -45,31 +53,31 @@ export function ProductGrid({
 		);
 	}
 
-	// Estado vazio (Empty state)
+	// Estado vazio (Empty state) com ShadCN
 	if (products.length === 0) {
 		return (
-			<div className="flex w-full flex-col items-center justify-center rounded-3xl border border-dashed border-border/80 bg-card/50 p-8 sm:p-12 text-center">
-				<div className="flex size-16 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 mb-4">
-					<PackageSearch className="size-8" />
-				</div>
-				<h3 className="text-base sm:text-lg font-semibold text-foreground mb-1">
-					{emptyTitle}
-				</h3>
-				<p className="max-w-md text-xs sm:text-sm text-muted-foreground mb-6">
-					{emptyMessage}
-				</p>
+			<Empty className="rounded-3xl border border-dashed border-border/80 bg-card/50 p-8 sm:p-12">
+				<EmptyHeader>
+					<EmptyMedia>
+						<PackageSearch className="size-8" />
+					</EmptyMedia>
+					<EmptyTitle>{emptyTitle}</EmptyTitle>
+					<EmptyDescription>{emptyMessage}</EmptyDescription>
+				</EmptyHeader>
 				{onResetFilters && (
-					<Button
-						type="button"
-						variant="outline"
-						onClick={onResetFilters}
-						className="h-11 rounded-2xl px-5 text-sm font-medium border-border/80 hover:bg-muted/60 gap-2"
-					>
-						<RotateCcw className="size-4" />
-						<span>Limpar Filtros</span>
-					</Button>
+					<EmptyContent>
+						<Button
+							type="button"
+							variant="outline"
+							onClick={onResetFilters}
+							className="h-11 rounded-2xl px-5 text-sm font-medium border-border/80 hover:bg-muted/60 gap-2"
+						>
+							<RotateCcw className="size-4" />
+							<span>Limpar Filtros</span>
+						</Button>
+					</EmptyContent>
 				)}
-			</div>
+			</Empty>
 		);
 	}
 

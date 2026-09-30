@@ -13,8 +13,14 @@ import {
 	ProductGrid,
 	SearchBar,
 } from "@/components/catalog";
-import { PaginationControls } from "@/components/common";
 import { Button } from "@/components/ui/button";
+import {
+	Pagination,
+	PaginationContent,
+	PaginationItem,
+	PaginationNext,
+	PaginationPrevious,
+} from "@/components/ui/pagination";
 import { catalogService } from "@/services/catalog.service";
 import { useAuthStore, useCartStore } from "@/stores";
 import type { Category, Product } from "@/types";
@@ -277,15 +283,43 @@ export default function Home() {
 					/>
 				)}
 
-				{/* Paginação Mobile-First */}
+				{/* Paginação Mobile-First com ShadCN */}
 				{totalPages > 1 && !isLoadingProducts && !error && (
-					<PaginationControls
-						currentPage={currentPage}
-						totalPages={totalPages}
-						totalItems={totalProducts}
-						itemLabel="produto"
-						onPageChange={handlePageChange}
-					/>
+					<div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-border/60 pt-6">
+						<p className="text-xs sm:text-sm text-muted-foreground order-2 sm:order-1">
+							Página{" "}
+							<span className="font-semibold text-foreground">
+								{currentPage}
+							</span>{" "}
+							de{" "}
+							<span className="font-semibold text-foreground">
+								{totalPages}
+							</span>{" "}
+							<span className="hidden sm:inline">
+								({totalProducts} {totalProducts === 1 ? "produto" : "produtos"}{" "}
+								no total)
+							</span>
+						</p>
+
+						<div className="order-1 sm:order-2 w-full sm:w-auto">
+							<Pagination className="justify-between sm:justify-end">
+								<PaginationContent>
+									<PaginationItem>
+										<PaginationPrevious
+											disabled={currentPage <= 1}
+											onClick={() => handlePageChange(currentPage - 1)}
+										/>
+									</PaginationItem>
+									<PaginationItem>
+										<PaginationNext
+											disabled={currentPage >= totalPages}
+											onClick={() => handlePageChange(currentPage + 1)}
+										/>
+									</PaginationItem>
+								</PaginationContent>
+							</Pagination>
+						</div>
+					</div>
 				)}
 			</section>
 
