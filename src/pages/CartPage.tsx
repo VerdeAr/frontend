@@ -44,7 +44,7 @@ export default function CartPage() {
 		fetchCart();
 	}, [fetchCart]);
 
-	const handleClearCartRequest = () => {
+	const handleClearCartRequest = async () => {
 		setIsConfirmClearOpen(true);
 	};
 

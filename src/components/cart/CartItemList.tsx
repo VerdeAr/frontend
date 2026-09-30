@@ -7,7 +7,7 @@ export interface CartItemListProps {
 	items: CartItemWithProduct[];
 	onUpdateQuantity: (itemId: string, quantity: number) => Promise<void>;
 	onRemoveItem: (itemId: string) => Promise<void>;
-	onClearCart?: () => Promise<void>;
+	onClearCart?: () => Promise<void> | void;
 	isUpdating?: boolean;
 }
 
