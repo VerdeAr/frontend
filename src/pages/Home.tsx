@@ -7,8 +7,15 @@ import {
 	RefreshCw,
 	Sparkles,
 } from "lucide-react";
-import { useEffect, useState } from "react";
-import { useLocation, useNavigate, useSearchParams } from "react-router";
+import { useState } from "react";
+import {
+	useLoaderData,
+	useLocation,
+	useNavigate,
+	useNavigation,
+	useRevalidator,
+	useSearchParams,
+} from "react-router";
 import {
 	CategorySelector,
 	HeroBannerCarousel,
@@ -16,14 +23,23 @@ import {
 	SearchBar,
 } from "@/components/catalog";
 import { Button } from "@/components/ui/button";
-import { catalogService } from "@/services/catalog.service";
+import type { HomeLoaderData } from "@/router/loaders";
 import { useAuthStore, useCartStore } from "@/stores";
-import type { Category, Product } from "@/types";
+import type { Product } from "@/types";
 
 export default function Home() {
 	const navigate = useNavigate();
 	const location = useLocation();
 	const [searchParams, setSearchParams] = useSearchParams();
+	const navigation = useNavigation();
+	const revalidator = useRevalidator();
+
+	// Dados carregados pelo router loader
+	const { categories, products, totalProducts, totalPages, error } =
+		useLoaderData<HomeLoaderData>();
+
+	// Estado derivado de navegação do React Router
+	const isLoadingProducts = navigation.state === "loading";
 
 	// Filtros sincronizados com a URL
 	const currentCategory = searchParams.get("categoria") || null;
@@ -31,76 +47,8 @@ export default function Home() {
 	const currentPage =
 		Number.parseInt(searchParams.get("pagina") || "1", 10) || 1;
 
-	// Estados locais
-	const [products, setProducts] = useState<Product[]>([]);
-	const [categories, setCategories] = useState<Category[]>([]);
-	const [totalProducts, setTotalProducts] = useState(0);
-	const [totalPages, setTotalPages] = useState(1);
-	const [isLoadingProducts, setIsLoadingProducts] = useState(true);
-	const [error, setError] = useState<string | null>(null);
+	// Feedback temporário de adição ao carrinho
 	const [cartFeedback, setCartFeedback] = useState<string | null>(null);
-
-	// Carrega lista de categorias na montagem
-	useEffect(() => {
-		let isMounted = true;
-		async function loadCategories() {
-			try {
-				const data = await catalogService.getCategories();
-				if (isMounted) {
-					setCategories(data);
-				}
-			} catch (err) {
-				console.error("Falha ao carregar categorias do catálogo:", err);
-			}
-		}
-		loadCategories();
-		return () => {
-			isMounted = false;
-		};
-	}, []);
-
-	// Carrega produtos com base nos filtros da URL
-	useEffect(() => {
-		let isMounted = true;
-		async function loadProducts() {
-			try {
-				setIsLoadingProducts(true);
-				setError(null);
-
-				const response = await catalogService.getProducts({
-					category_id: currentCategory || undefined,
-					categoriaId: currentCategory || undefined,
-					search: currentSearch || undefined,
-					termo: currentSearch || undefined,
-					page: currentPage,
-					limit: 12,
-					disponivel: true,
-				});
-
-				if (isMounted) {
-					setProducts(response.data);
-					setTotalProducts(response.total);
-					setTotalPages(response.totalPages);
-				}
-			} catch (err) {
-				if (isMounted) {
-					console.error("Erro ao consultar catálogo:", err);
-					setError(
-						"Não foi possível carregar os produtos rurais no momento. Verifique sua conexão e tente novamente.",
-					);
-				}
-			} finally {
-				if (isMounted) {
-					setIsLoadingProducts(false);
-				}
-			}
-		}
-
-		loadProducts();
-		return () => {
-			isMounted = false;
-		};
-	}, [currentCategory, currentSearch, currentPage]);
 
 	// Manipuladores de Filtros e Busca
 	const handleSelectCategory = (categoryId: string | null) => {
@@ -260,7 +208,7 @@ export default function Home() {
 						<Button
 							type="button"
 							variant="outline"
-							onClick={() => handleSelectCategory(currentCategory)}
+							onClick={() => revalidator.revalidate()}
 							className="h-11 rounded-2xl px-5 text-sm font-medium gap-2 border-border/80 hover:bg-muted/60"
 						>
 							<RefreshCw className="size-4" />
