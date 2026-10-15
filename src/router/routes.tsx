@@ -8,6 +8,7 @@ import Home from "@/pages/Home";
 import Login from "@/pages/Login";
 import OrderSuccessPage from "@/pages/OrderSuccessPage";
 import Register from "@/pages/Register";
+import { cartLoader } from "./loaders";
 
 export const router = createBrowserRouter([
 	{
@@ -36,6 +37,7 @@ export const router = createBrowserRouter([
 					{
 						path: "carrinho",
 						element: <CartPage />,
+						loader: cartLoader,
 					},
 					{
 						path: "checkout",
