@@ -1,83 +1,104 @@
 # Arquitetura do Frontend — Verdear
 
-Este repositório (`VerdeAr/frontend`) contém a aplicação web que substitui as views do monolito legado [`VerdeAr/Verdear`](https://github.com/VerdeAr/Verdear), como parte da separação entre frontend e backend do projeto. O monolito segue **ativo em paralelo** até que a migração seja concluída e validada.
+Este repositório (`VerdeAr/frontend`) contém a aplicação Single Page Application (SPA) que substitui integralmente a camada de visualização do monólito legado [`VerdeAr/Verdear`](https://github.com/VerdeAr/Verdear), consolidando uma interface moderna, responsiva e mobile-first para o ecossistema Verdear.
 
 A API consumida por este frontend é o repositório irmão [`VerdeAr/backend`](https://github.com/VerdeAr/backend).
 
 ---
 
-## 1. Stack
+## 1. Status da Migração do Monólito
 
-| Camada | Tecnologia |
-|---|---|
-| Build tool / gerenciador de pacotes | Vite + npm |
-| Linguagem | TypeScript |
-| Framework | React |
-| Estilização | TailwindCSS |
-| Componentes | ShadCN/UI (base BaseUI, template `base-nova`) |
-| Roteamento | React Router — Data Mode (loaders) |
-| Formulários | React Hook Form + Zod + `@hookform/resolvers` |
-| Validação de CPF/CNPJ | `cpf-cnpj-validator` |
-| Autenticação | JWT (`jwt-decode`) + `react-cookie` (persistência do token) |
-| Cliente HTTP | Axios |
-| Datas | `date-fns` |
-| Qualidade de código | Biome |
-| Git hooks | Husky |
-| Padrão de commits | Commitlint (Conventional Commits) |
-| Containerização | Docker |
-| Variáveis de ambiente | dotenv (`VITE_*`) |
+A migração das interfaces e fluxos de usuário a partir do monólito legado foi **concluída com sucesso**:
+- **Autenticação e Perfis:** Telas e formulários completos para Login, Registro (com suporte a papéis Cliente e Produtor Rural), Alteração de Senha e Gerenciamento de Frete Fixo.
+- **Catálogo e Vitrine Pública:** Página inicial (`Home`) com banner rotativo, pesquisa em tempo real, filtro por categorias agrícolas, listagem com paginação e cards de produtos com indicadores visuais.
+- **Painel do Produtor Rural:** Catálogo restrito ao vendedor com listagem de produtos, formulário modal de cadastro/edição de produtos (com upload/URL de foto e seleção de unidade de medida) e controle de disponibilidade (toggle ativo/inativo).
+- **Carrinho de Compras Persistente:** Gerenciamento multi-sessão com sincronização via Zustand e API, seletor de modalidade de entrega (Entrega domiciliar com frete ou Retirada no produtor) e cálculo dinâmico de valores.
+- **Checkout e Histórico de Pedidos:** Fluxo completo de checkout, tela de sucesso com instruções de pagamento via PIX/Dinheiro, histórico de compras do cliente e painel de pedidos do vendedor com filtros por status (Aberta, Finalizada, Cancelada).
 
 ---
 
-## 2. Estrutura de pastas
+## 2. Stack Tecnológica
+
+| Camada | Tecnologia |
+|---|---|
+| Build tool / Bundler | Vite 8 + npm |
+| Linguagem | TypeScript (Strict Mode) |
+| Framework | React 19 |
+| Estilização | Tailwind CSS v4 |
+| Componentes Visuais | ShadCN / Base-UI (primitivos acessíveis) |
+| Roteamento | React Router 8 (Data Mode com loaders) |
+| Formulários | React Hook Form + Zod + `@hookform/resolvers` |
+| Gerenciamento de Estado | Zustand (auth, cart) |
+| Validação de Documentos | `cpf-cnpj-validator` |
+| Cliente HTTP | Axios (com interceptor de Bearer Token e refresh) |
+| Qualidade de Código | Biome (linter e formatação estrita) |
+| Git hooks | Husky + Commitlint (Conventional Commits) |
+| Containerização | Docker (multi-stage build com Nginx Alpine) |
+
+---
+
+## 3. Estrutura de Pastas
 
 ```
 src/
 ├── components/
-│   ├── (modulo)/    # Componentes específicos de um domínio (ex.: produto, carrinho)
-│   ├── layout/       # Componentes estruturais (ex.: RootLayout)
-│   └── ui/            # Componentes de UI genéricos (ShadCN/UI)
-├── hooks/              # Hooks customizados reutilizáveis
-├── lib/                 # Integrações/config de bibliotecas de terceiros (ex.: api.ts, utils.ts)
-├── utils/
-│   └── masks.ts           # Máscaras de input (CPF/CNPJ, telefone, etc.)
-├── pages/                  # Componentes de página, associados às rotas
-├── router/
-│   ├── routes.tsx            # Definição das rotas (React Router Data Mode)
-│   └── loaders.ts             # Loaders de dados por rota
-├── services/                   # Chamadas à API (Axios)
-├── schemas/                     # Schemas de validação Zod (formulários/DTOs)
-├── stores/                       # Estado global da aplicação
-└── types/
-    └── dto/                        # Tipos/contratos de dados trocados com a API
+│   ├── account/        # Formulários de perfil, senha e frete do vendedor
+│   ├── cart/           # Lista de itens, resumo de valores e seletor de entrega
+│   ├── catalog/        # Vitrine de produtos, carrossel, filtros e busca
+│   ├── checkout/       # Resumo de checkout, endereço e instruções de pagamento
+│   ├── layout/         # Header, Footer e RootLayout
+│   ├── seller/         # Painel de pedidos e gerenciamento de produtos do produtor
+│   └── ui/             # Primitivos atômicos de interface (Button, Dialog, Input, Badge, etc.)
+├── hooks/              # Custom hooks reutilizáveis
+├── lib/                # Instância Axios (`api.ts`), utilitários (`utils.ts`) e máscaras (`masks.ts`)
+├── pages/              # Páginas orquestradoras das rotas (Home, Login, Register, Cart, Checkout, etc.)
+├── router/             # Definição de rotas (`routes.tsx`) e loaders de dados (`loaders.ts`)
+├── schemas/            # Schemas de validação Zod (auth, person, product)
+├── services/           # Comunicação com a API REST tipada
+├── stores/             # Estado global com Zustand (auth.store, cart.store)
+└── types/              # Modelos de dados e contratos TypeScript
 ```
 
-Aliases configurados (`components.json` / `tsconfig`): `@/components`, `@/components/ui`, `@/lib`, `@/hooks`.
+---
+
+## 4. Diretrizes Arquiteturais
+
+1. **Desenvolvimento Mobile-First:**
+   - Todo layout e componente é concebido inicialmente para telas móveis (viewport entre 375px e 430px) e enriquecido progressivamente com breakpoints (`md:`, `lg:`).
+   - Áreas de toque confortáveis (mínimo de 44px de altura para botões e inputs interativos).
+2. **Páginas Orquestradoras vs. Componentização Atômica:**
+   - Páginas em `src/pages/` não atuam como monólitos visuais; sua função é apenas compor subcomponentes isolados.
+   - Formulários complexos são desacoplados em componentes próprios com isolamento de validações e renders.
+3. **Type Safety e Integridade:**
+   - Uso de `any` proibido.
+   - Validação contínua com `npm run check` (`tsc --noEmit && biome check --error-on-warnings`).
 
 ---
 
-## 3. Estado atual do scaffold
+## 5. Setup Local e Execução
 
-Já implementado:
-- `main.tsx` — bootstrap da aplicação com `CookiesProvider` (react-cookie) e `RouterProvider`.
-- `router/routes.tsx` + `router/loaders.ts` — rota `/` com `RootLayout` e página `Home` (loader ainda placeholder, retorna `true`).
-- `lib/api.ts` — instância Axios com `baseURL` via `VITE_API_BASEURL`; interceptor de request injeta `Authorization: Bearer <token>` a partir do cookie `token`; interceptor de response limpa o cookie em respostas `401`.
-- `components/layout/RootLayout.tsx` e `components/ui/button.tsx` (ShadCN, estilo `base-nova`, cor base `mist`).
+### Pré-requisitos
+- Node.js (v20+)
+- Backend Verdear em execução (`http://localhost:3000`)
 
-Ainda não implementado: páginas e componentes de domínio (produto, carrinho, checkout, gestão de cadastro), `services/`, `schemas/`, `stores/`, `hooks/`, `types/dto/`, e o fluxo de autenticação (login/logout) em si.
-
----
-
-## 4. Convenções
-
-- **Commits:** Conventional Commits, validados via Commitlint no hook `commit-msg` (Husky).
-- **Lint/format:** Biome.
-- **Fluxo de branches:** GitLab Flow — ver [`docs/GITFLOW.md`](./GITFLOW.md).
-- **Idioma:** Código, comentários e documentação em Português (Brasil).
-
----
-
-## 5. Setup local
-
-- Variáveis de ambiente: copiar `.env.example` para `.env` e preencher `VITE_API_BASEURL` com a URL da API do repositório `backend`.
-- Ainda não há `Dockerfile`/`docker-compose.yml` neste repositório. Esta seção deve ser preenchida assim que a configuração de containerização for definida.
+### Passos de Instalação:
+1. Copie o arquivo de variáveis de ambiente:
+   ```bash
+   cp .env.example .env
+   ```
+2. Configure a URL da API no `.env`:
+   ```env
+   VITE_API_BASEURL=http://localhost:3000
+   ```
+3. Instale as dependências:
+   ```bash
+   npm install
+   ```
+4. Inicie o servidor de desenvolvimento:
+   ```bash
+   npm run dev
+   ```
+5. Para compilar a versão de produção:
+   ```bash
+   npm run build
+   ```

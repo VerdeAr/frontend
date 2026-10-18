@@ -7,7 +7,7 @@ import {
 	RefreshCw,
 	Sparkles,
 } from "lucide-react";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import {
 	useLoaderData,
 	useLocation,
@@ -51,27 +51,40 @@ export default function Home() {
 	const [cartFeedback, setCartFeedback] = useState<string | null>(null);
 
 	// Manipuladores de Filtros e Busca
-	const handleSelectCategory = (categoryId: string | null) => {
-		const nextParams = new URLSearchParams(searchParams);
-		if (categoryId) {
-			nextParams.set("categoria", categoryId);
-		} else {
-			nextParams.delete("categoria");
-		}
-		nextParams.set("pagina", "1");
-		setSearchParams(nextParams, { replace: true });
-	};
+	const handleSelectCategory = useCallback(
+		(categoryId: string | null) => {
+			const activeCategory = searchParams.get("categoria") || null;
+			if (activeCategory === categoryId) return;
 
-	const handleSearch = (term: string) => {
-		const nextParams = new URLSearchParams(searchParams);
-		if (term.trim()) {
-			nextParams.set("q", term.trim());
-		} else {
-			nextParams.delete("q");
-		}
-		nextParams.set("pagina", "1");
-		setSearchParams(nextParams, { replace: true });
-	};
+			const nextParams = new URLSearchParams(searchParams);
+			if (categoryId) {
+				nextParams.set("categoria", categoryId);
+			} else {
+				nextParams.delete("categoria");
+			}
+			nextParams.set("pagina", "1");
+			setSearchParams(nextParams, { replace: true });
+		},
+		[searchParams, setSearchParams],
+	);
+
+	const handleSearch = useCallback(
+		(term: string) => {
+			const activeQuery = searchParams.get("q") || "";
+			const trimmedTerm = term.trim();
+			if (activeQuery.trim() === trimmedTerm) return;
+
+			const nextParams = new URLSearchParams(searchParams);
+			if (trimmedTerm) {
+				nextParams.set("q", trimmedTerm);
+			} else {
+				nextParams.delete("q");
+			}
+			nextParams.set("pagina", "1");
+			setSearchParams(nextParams, { replace: true });
+		},
+		[searchParams, setSearchParams],
+	);
 
 	const handlePageChange = (newPage: number) => {
 		if (newPage < 1 || newPage > totalPages) return;

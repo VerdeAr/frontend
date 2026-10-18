@@ -26,11 +26,21 @@ export function SearchBar({
 	const [term, setTerm] = useState(controlledValue ?? defaultValue);
 	const isControlled = controlledValue !== undefined;
 	const isInitialMount = useRef(true);
+	const lastEmittedTerm = useRef(controlledValue ?? defaultValue);
+
+	const onSearchRef = useRef(onSearch);
+	const onChangeRef = useRef(onChange);
+
+	useEffect(() => {
+		onSearchRef.current = onSearch;
+		onChangeRef.current = onChange;
+	});
 
 	// Sincroniza com prop externa se for componente controlado
 	useEffect(() => {
-		if (isControlled) {
+		if (isControlled && controlledValue !== undefined) {
 			setTerm(controlledValue);
+			lastEmittedTerm.current = controlledValue;
 		}
 	}, [controlledValue, isControlled]);
 
@@ -41,35 +51,42 @@ export function SearchBar({
 			return;
 		}
 
+		if (term === lastEmittedTerm.current) {
+			return;
+		}
+
 		const handler = setTimeout(() => {
-			onChange?.(term);
-			onSearch?.(term);
+			lastEmittedTerm.current = term;
+			onChangeRef.current?.(term);
+			onSearchRef.current?.(term);
 		}, debounceMs);
 
 		return () => {
 			clearTimeout(handler);
 		};
-	}, [term, debounceMs, onChange, onSearch]);
+	}, [term, debounceMs]);
 
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const val = e.target.value;
 		setTerm(val);
 		if (isControlled) {
-			onChange?.(val);
+			onChangeRef.current?.(val);
 		}
 	};
 
 	const handleClear = () => {
 		setTerm("");
-		onChange?.("");
-		onSearch?.("");
+		lastEmittedTerm.current = "";
+		onChangeRef.current?.("");
+		onSearchRef.current?.("");
 	};
 
 	const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
 		if (e.key === "Enter") {
 			e.preventDefault();
-			onChange?.(term);
-			onSearch?.(term);
+			lastEmittedTerm.current = term;
+			onChangeRef.current?.(term);
+			onSearchRef.current?.(term);
 		}
 	};
 
