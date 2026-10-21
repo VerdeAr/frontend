@@ -7,8 +7,9 @@ import CheckoutPage from "@/pages/CheckoutPage";
 import Home from "@/pages/Home";
 import Login from "@/pages/Login";
 import OrderSuccessPage from "@/pages/OrderSuccessPage";
+import ProductDetailPage from "@/pages/ProductDetailPage";
 import Register from "@/pages/Register";
-import { cartLoader, homeLoader } from "./loaders";
+import { cartLoader, homeLoader, productDetailLoader } from "./loaders";
 
 export const router = createBrowserRouter([
 	{
@@ -27,6 +28,11 @@ export const router = createBrowserRouter([
 			{
 				path: "cadastro",
 				element: <Register />,
+			},
+			{
+				path: "produtos/:id",
+				element: <ProductDetailPage />,
+				loader: productDetailLoader,
 			},
 			{
 				element: <ProtectedRoute />,

@@ -1,7 +1,8 @@
 import type { LoaderFunctionArgs } from "react-router";
 import { catalogService } from "@/services/catalog.service";
+import { neighborhoodService } from "@/services/neighborhood.service";
 import { useCartStore } from "@/stores/cart.store";
-import type { CartResponse, Category, Product } from "@/types";
+import type { CartResponse, Category, Neighborhood, Product } from "@/types";
 
 export interface HomeLoaderData {
 	categories: Category[];
@@ -69,6 +70,47 @@ export async function cartLoader(): Promise<CartLoaderData> {
 		return {
 			cart: null,
 			error: "Não foi possível carregar os dados do carrinho.",
+		};
+	}
+}
+
+export interface ProductDetailLoaderData {
+	product: Product | null;
+	neighborhoods: Neighborhood[];
+	error: string | null;
+}
+
+export async function productDetailLoader({
+	params,
+}: LoaderFunctionArgs): Promise<ProductDetailLoaderData> {
+	const { id } = params;
+
+	if (!id) {
+		return {
+			product: null,
+			neighborhoods: [],
+			error: "Identificador do produto não informado.",
+		};
+	}
+
+	try {
+		const [product, neighborhoods] = await Promise.all([
+			catalogService.getProductById(id),
+			neighborhoodService.getAll().catch(() => [] as Neighborhood[]),
+		]);
+
+		return {
+			product,
+			neighborhoods,
+			error: null,
+		};
+	} catch (err) {
+		console.error("Erro ao carregar detalhes do produto:", err);
+		return {
+			product: null,
+			neighborhoods: [],
+			error:
+				"Não foi possível encontrar as informações deste produto. Ele pode estar indisponível ou ter sido removido.",
 		};
 	}
 }
