@@ -1,4 +1,4 @@
-import { AlertCircle, Leaf, Sprout } from "lucide-react";
+import { AlertCircle, Sprout } from "lucide-react";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -6,7 +6,6 @@ import { cn } from "@/lib/utils";
 export interface ProductGalleryProps {
 	imageUrl?: string | null;
 	productName: string;
-	categoryName?: string | null;
 	isOutOfStock?: boolean;
 	isLowStock?: boolean;
 	stock?: number;
@@ -16,7 +15,6 @@ export interface ProductGalleryProps {
 export function ProductGallery({
 	imageUrl,
 	productName,
-	categoryName,
 	isOutOfStock = false,
 	isLowStock = false,
 	stock,
@@ -51,15 +49,6 @@ export function ProductGallery({
 					</div>
 				)}
 
-				{/* Categoria do Produto em Pílula Flutuante */}
-				{categoryName && (
-					<div className="absolute top-3 left-3 z-10">
-						<span className="inline-flex items-center rounded-full border border-border/50 bg-background/85 px-3 py-1 text-xs font-medium text-foreground shadow-xs backdrop-blur-md">
-							{categoryName}
-						</span>
-					</div>
-				)}
-
 				{/* Badges de Estoque */}
 				<div className="absolute top-3 right-3 z-10 flex flex-col gap-1.5 items-end">
 					{isOutOfStock ? (
@@ -75,14 +64,6 @@ export function ProductGallery({
 							<span>Últimas {stock} un.</span>
 						</span>
 					) : null}
-				</div>
-
-				{/* Selo Agroecológico Inferior */}
-				<div className="absolute bottom-3 left-3 z-10">
-					<span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-600/20 bg-emerald-50/90 px-3 py-1 text-[11px] font-medium text-emerald-800 shadow-xs backdrop-blur-md dark:bg-emerald-950/80 dark:text-emerald-300">
-						<Leaf className="size-3 text-emerald-600 dark:text-emerald-400" />
-						<span>100% Local & Sustentável</span>
-					</span>
 				</div>
 			</div>
 		</div>

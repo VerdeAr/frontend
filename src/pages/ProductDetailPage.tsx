@@ -127,7 +127,6 @@ export default function ProductDetailPage() {
 					<ProductGallery
 						imageUrl={product.image_url}
 						productName={product.name}
-						categoryName={product.category?.name}
 						isOutOfStock={isOutOfStock}
 						isLowStock={isLowStock}
 						stock={product.stock}
@@ -146,7 +145,6 @@ export default function ProductDetailPage() {
 						price={product.price}
 						unitSymbol={product.measurement_unit?.symbol}
 						unitName={product.measurement_unit?.name}
-						categoryName={product.category?.name}
 						stock={product.stock}
 						isActive={product.is_active}
 						description={product.description}

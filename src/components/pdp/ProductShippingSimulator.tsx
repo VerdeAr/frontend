@@ -1,4 +1,4 @@
-import { CheckCircle2, Clock, MapPin, Store, Truck } from "lucide-react";
+import { CheckCircle2, MapPin, Store, Truck } from "lucide-react";
 import { useId, useState } from "react";
 import { formatBRL } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
@@ -87,11 +87,6 @@ export function ProductShippingSimulator({
 						<span className="font-bold text-emerald-700 dark:text-emerald-300">
 							{shippingPrice === 0 ? "Grátis" : formatBRL(shippingPrice)}
 						</span>
-					</div>
-
-					<div className="flex items-center gap-2 text-muted-foreground text-[11px] sm:text-xs">
-						<Clock className="size-3.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
-						<span>Previsão de 1 a 2 dias úteis após a colheita</span>
 					</div>
 
 					<div className="flex items-center gap-2 text-muted-foreground text-[11px] sm:text-xs">

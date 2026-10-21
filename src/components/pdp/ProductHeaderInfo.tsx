@@ -1,4 +1,4 @@
-import { AlertCircle, CheckCircle2, Sparkles, Star } from "lucide-react";
+import { AlertCircle, CheckCircle2, Star } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { formatBRL, formatStock } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
@@ -8,7 +8,6 @@ export interface ProductHeaderInfoProps {
 	price: number;
 	unitSymbol?: string | null;
 	unitName?: string | null;
-	categoryName?: string | null;
 	stock: number;
 	isActive: boolean;
 	description?: string | null;
@@ -22,7 +21,6 @@ export function ProductHeaderInfo({
 	price,
 	unitSymbol,
 	unitName,
-	categoryName,
 	stock,
 	isActive,
 	description,
@@ -37,19 +35,6 @@ export function ProductHeaderInfo({
 
 	return (
 		<div className={cn("flex w-full flex-col gap-4", className)}>
-			{/* Categoria e Tag Superior */}
-			<div className="flex flex-wrap items-center gap-2">
-				{categoryName && (
-					<span className="inline-flex items-center rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
-						{categoryName}
-					</span>
-				)}
-				<span className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground">
-					<Sparkles className="size-3.5 text-emerald-600 dark:text-emerald-400" />
-					<span>Origem Agroecológica</span>
-				</span>
-			</div>
-
 			{/* Título Principal do Produto */}
 			<h1 className="text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl leading-snug">
 				{name}

@@ -1,10 +1,4 @@
-import {
-	HeartHandshake,
-	MapPin,
-	ShieldCheck,
-	Sprout,
-	Store,
-} from "lucide-react";
+import { Store } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Seller } from "@/types";
 
@@ -37,11 +31,6 @@ export function ProductSellerCard({
 				</div>
 
 				<div className="flex flex-1 flex-col min-w-0">
-					<div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-						<Sprout className="size-3.5 shrink-0" />
-						<span className="uppercase tracking-wider">Produtor Familiar</span>
-					</div>
-
 					<h2 className="text-base font-bold text-foreground sm:text-lg truncate">
 						{farmName}
 					</h2>
@@ -56,22 +45,6 @@ export function ProductSellerCard({
 			<p className="text-xs leading-relaxed text-muted-foreground sm:text-sm">
 				{description}
 			</p>
-
-			{/* Selos de Confiança e Localidade */}
-			<div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-border/40 text-xs text-foreground/80">
-				<div className="flex items-center gap-2">
-					<ShieldCheck className="size-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
-					<span>Produtor verificado pela Verdear</span>
-				</div>
-				<div className="flex items-center gap-2">
-					<HeartHandshake className="size-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
-					<span>100% da renda ao pequeno produtor</span>
-				</div>
-				<div className="flex items-center gap-2 sm:col-span-2">
-					<MapPin className="size-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
-					<span>Produção regional fresca e colhida sob demanda</span>
-				</div>
-			</div>
 		</div>
 	);
 }
