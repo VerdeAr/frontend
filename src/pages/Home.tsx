@@ -121,6 +121,13 @@ export default function Home() {
 		}
 	};
 
+	const handleProductClick = useCallback(
+		(product: Product) => {
+			navigate(`/produtos/${product.id}`);
+		},
+		[navigate],
+	);
+
 	const selectedCategoryName = categories.find(
 		(cat) => cat.id === currentCategory,
 	)?.name;
@@ -235,6 +242,7 @@ export default function Home() {
 						isLoading={isLoadingProducts}
 						skeletonCount={8}
 						onAddToCart={handleAddToCart}
+						onProductClick={handleProductClick}
 						onResetFilters={handleResetFilters}
 					/>
 				)}

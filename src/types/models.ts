@@ -89,6 +89,8 @@ export interface Product {
 	image_url?: string | null;
 	stock: number;
 	description?: string | null;
+	average_rating?: number;
+	review_count?: number;
 	created_at?: string;
 	updated_at?: string;
 }
