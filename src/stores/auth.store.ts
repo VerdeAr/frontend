@@ -29,7 +29,7 @@ export const useAuthStore = create<AuthState>()(
 		(set, get) => ({
 			user: null,
 			isAuthenticated: false,
-			isLoading: false,
+			isLoading: true,
 
 			setAuth: (user) => {
 				set({
@@ -83,10 +83,10 @@ export const useAuthStore = create<AuthState>()(
 				set({ isLoading: true });
 				try {
 					await authService.logout();
-				} catch {
-					// Prossegue com a limpeza mesmo se houver falha de rede
-				} finally {
 					get().clearAuth();
+				} catch (error) {
+					set({ isLoading: false });
+					throw error;
 				}
 			},
 
