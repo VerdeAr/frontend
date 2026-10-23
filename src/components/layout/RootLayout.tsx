@@ -6,7 +6,12 @@ import { Header } from "./Header";
 
 export default function RootLayout() {
 	const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+	const checkAuth = useAuthStore((s) => s.checkAuth);
 	const fetchCart = useCartStore((s) => s.fetchCart);
+
+	useEffect(() => {
+		checkAuth();
+	}, [checkAuth]);
 
 	useEffect(() => {
 		if (isAuthenticated) {

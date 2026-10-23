@@ -1,4 +1,3 @@
-import { Cookies } from "react-cookie";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { setOnUnauthorizedCallback } from "@/lib/api";
@@ -10,49 +9,49 @@ import type {
 	User,
 } from "@/types";
 
-const cookies = new Cookies();
-
 interface AuthState {
 	user: User | null;
-	token: string | null;
 	isAuthenticated: boolean;
 	isLoading: boolean;
-	setAuth: (user: User, token: string) => void;
+	setAuth: (user: User) => void;
+	clearAuth: () => void;
 	setUser: (user: User) => void;
 	setLoading: (isLoading: boolean) => void;
 	login: (credentials: LoginCredentials) => Promise<AuthResponse>;
 	register: (data: RegisterData) => Promise<AuthResponse>;
-	logout: () => void;
+	logout: () => Promise<void>;
 	fetchProfile: () => Promise<User | null>;
+	checkAuth: () => Promise<User | null>;
 }
 
 export const useAuthStore = create<AuthState>()(
 	persist(
 		(set, get) => ({
 			user: null,
-			token: null,
 			isAuthenticated: false,
-			isLoading: false,
+			isLoading: true,
 
-			setAuth: (user, token) => {
-				cookies.set("token", token, {
-					path: "/",
-					maxAge: 7 * 24 * 60 * 60,
-					sameSite: "lax",
-				});
+			setAuth: (user) => {
 				set({
 					user,
-					token,
 					isAuthenticated: true,
 					isLoading: false,
 				});
 			},
 
+			clearAuth: () => {
+				set({
+					user: null,
+					isAuthenticated: false,
+					isLoading: false,
+				});
+			},
+
 			setUser: (user) =>
-				set((state) => ({
+				set({
 					user,
-					isAuthenticated: !!state.token,
-				})),
+					isAuthenticated: true,
+				}),
 
 			setLoading: (isLoading) => set({ isLoading }),
 
@@ -60,7 +59,7 @@ export const useAuthStore = create<AuthState>()(
 				set({ isLoading: true });
 				try {
 					const data = await authService.login(credentials);
-					get().setAuth(data.user, data.token);
+					get().setAuth(data.user);
 					return data;
 				} catch (error) {
 					set({ isLoading: false });
@@ -72,7 +71,7 @@ export const useAuthStore = create<AuthState>()(
 				set({ isLoading: true });
 				try {
 					const data = await authService.register(registerData);
-					get().setAuth(data.user, data.token);
+					get().setAuth(data.user);
 					return data;
 				} catch (error) {
 					set({ isLoading: false });
@@ -80,23 +79,35 @@ export const useAuthStore = create<AuthState>()(
 				}
 			},
 
-			logout: () => {
-				cookies.remove("token", { path: "/" });
-				set({
-					user: null,
-					token: null,
-					isAuthenticated: false,
-					isLoading: false,
-				});
+			logout: async () => {
+				set({ isLoading: true });
+				try {
+					await authService.logout();
+					get().clearAuth();
+				} catch (error) {
+					set({ isLoading: false });
+					throw error;
+				}
 			},
 
 			fetchProfile: async () => {
-				if (!get().token) return null;
 				try {
 					const user = await authService.getProfile();
-					set({ user });
+					set({ user, isAuthenticated: true });
 					return user;
 				} catch {
+					return null;
+				}
+			},
+
+			checkAuth: async () => {
+				set({ isLoading: true });
+				try {
+					const user = await authService.getProfile();
+					set({ user, isAuthenticated: true, isLoading: false });
+					return user;
+				} catch {
+					get().clearAuth();
 					return null;
 				}
 			},
@@ -104,7 +115,6 @@ export const useAuthStore = create<AuthState>()(
 		{
 			name: "@verdear/auth",
 			partialize: (state) => ({
-				token: state.token,
 				user: state.user,
 				isAuthenticated: state.isAuthenticated,
 			}),
@@ -114,5 +124,5 @@ export const useAuthStore = create<AuthState>()(
 
 // Register 401 automatic logout callback with Axios
 setOnUnauthorizedCallback(() => {
-	useAuthStore.getState().logout();
+	useAuthStore.getState().clearAuth();
 });
