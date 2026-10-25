@@ -151,7 +151,7 @@ O `homeLoader` lê esses parâmetros e busca categorias e produtos em paralelo. 
 - Subtotal, frete e total vêm calculados pela API; o frontend só exibe.
 
 ### Camada de serviços
-`src/services/` concentra as chamadas HTTP, uma função por endpoint: `auth`, `cart`, `catalog`, `neighborhood`, `sale` e `seller-products`. Páginas e componentes não chamam o Axios diretamente.
+`src/services/` concentra as chamadas HTTP, uma função por endpoint ou integração externa: `auth`, `cart`, `catalog`, `cep`, `neighborhood`, `sale` e `seller-products`. Páginas e componentes não chamam o Axios diretamente. Para integrações externas (como a consulta ao ViaCEP em `cep.service.ts`), é utilizado cliente Axios desacoplado, sem os interceptores de autenticação interna nem envio de cookies de sessão da aplicação.
 
 ### Cliente HTTP (`lib/api.ts`)
 - `baseURL` vem de `VITE_API_BASEURL`; se vazia, usa `http://localhost:3000`. Timeout de 15 s.
@@ -165,7 +165,8 @@ O `homeLoader` lê esses parâmetros e busca categorias e produtos em paralelo. 
 ## 7. Formulários e validação
 
 - Formulários usam React Hook Form com schemas Zod de `src/schemas/` (`auth`, `person`, `product`).
-- CPF e CNPJ são validados com `cpf-cnpj-validator`; máscaras de entrada ficam em `lib/masks.ts` e formatadores de moeda e data em `lib/formatters.ts`.
+- CPF e CNPJ são validados com `cpf-cnpj-validator`; máscaras de entrada (incluindo CEP `00000-000` via `maskCep`) ficam em `lib/masks.ts` e formatadores de moeda e data em `lib/formatters.ts`.
+- **Endereçamento estruturado com ViaCEP (VER-64):** O componente `ZipCodeInput` formata o CEP e dispara busca automática ao atingir 8 dígitos. Nos formulários de cadastro (`RegisterForm`) e edição de perfil (`ProfileDataForm`), o retorno preenche imediatamente logradouro, bairro, cidade e UF, substituindo a restrição de bairros pré-cadastrados por endereçamento completo nacional. O card de entrega no checkout (`DeliveryAddressCard`) formata e apresenta os dados de forma legível e completa.
 - Regras equivalentes são reaplicadas no backend, que é a autoridade final. O frontend valida para dar resposta imediata ao usuário.
 - Erros da API chegam em `response.data.message`, exibido no formulário ou no resumo do checkout.
 

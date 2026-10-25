@@ -49,6 +49,7 @@ Legenda dos status do Jira: **Feito**, **Revisão** (code review), **Fazendo**, 
 | VER-74 — Blindagem de autenticação com cookies HTTP-Only | Fazendo | VER-76 **Revisão** (remoção de tokens do client-side e `withCredentials`) | VER-75 Feito | VER-77 A fazer |
 | VER-58 — Mensagens e chat com WebSocket (Socket.io) | Fazendo | VER-60 A fazer (cliente Socket.io, `ChatInboxPage`, `ChatRoomPage` e stores) | VER-59 Revisão | VER-61 A fazer |
 | VER-66 — PDP | Feito | VER-68 Feito | VER-67 Feito | VER-69 **Fazendo** (QA ainda em curso) |
+| VER-62 — Endereços com CEP | Fazendo | VER-64 **Revisão** (`ZipCodeInput`, integração ViaCEP, cadastro, perfil e checkout) | VER-63 A fazer | VER-65 A fazer |
 
 A VER-48 (subcomponentização) já tem a branch `feature/VER-48-subcomponentizacao-reutilizacoes-frontend`, mas o Jira ainda a mostra como A fazer.
 
@@ -62,7 +63,6 @@ A VER-48 (subcomponentização) já tem a branch `feature/VER-48-subcomponentiza
 | VER-48 — Subcomponentização e reutilizações | VER-49: subcomponentização e reutilizações profundas. |
 | VER-51 — Data loaders do React Router | Frontend concluído (VER-53). Faltam o backend (VER-52) e o QA (VER-54). |
 | VER-55 — `errorElement` geral e 404 | VER-56: `RootErrorBoundary` e página 404. |
-| VER-62 — Endereços com CEP | VER-64: `ZipCodeInput`, integração ViaCEP e atualização de formulários. |
 | VER-70 — Perfil público do produtor | VER-72: `ProducerProfilePage`, vitrine do produtor e rota pública `/vendedores/:id`. |
 | VER-82 — E-mails transacionais com Resend | VER-84: avisos e feedbacks visuais dos e-mails disparados. |
 | VER-86 — Imagens na Cloudflare R2 | VER-88: `ImageUploadDropzone` e integração nos formulários. |

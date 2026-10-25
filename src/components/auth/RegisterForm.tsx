@@ -11,16 +11,13 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
-import {
-	FormInput,
-	FormSelect,
-	FormTextarea,
-} from "@/components/ui/form-input";
+import { FormInput, FormTextarea } from "@/components/ui/form-input";
 import { Label } from "@/components/ui/label";
+import { ZipCodeInput } from "@/components/ui/ZipCodeInput";
 import { maskCnpj, maskCpf, maskPhone, unmask } from "@/lib/masks";
 import { cn } from "@/lib/utils";
 import { type RegisterFormData, registerFormSchema } from "@/schemas";
-import { neighborhoodService } from "@/services";
+import { neighborhoodService, type ViaCepAddress } from "@/services";
 import { useAuthStore } from "@/stores";
 import type { Neighborhood, RegisterData, UserRole } from "@/types";
 
@@ -37,7 +34,6 @@ export function RegisterForm({ onSuccess, className }: RegisterFormProps) {
 	const [showPassword, setShowPassword] = useState(false);
 	const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 	const [neighborhoods, setNeighborhoods] = useState<Neighborhood[]>([]);
-	const [isLoadingNeighborhoods, setIsLoadingNeighborhoods] = useState(true);
 	const [serverError, setServerError] = useState<string | null>(null);
 
 	const {
@@ -58,6 +54,13 @@ export function RegisterForm({ onSuccess, className }: RegisterFormProps) {
 			phone: "",
 			address: "",
 			neighborhood_id: "",
+			cep: "",
+			street: "",
+			number: "",
+			complement: "",
+			neighborhood: "",
+			city: "",
+			state: "",
 			farm_name: "",
 			cnpj: "",
 			description: "",
@@ -71,8 +74,6 @@ export function RegisterForm({ onSuccess, className }: RegisterFormProps) {
 				setNeighborhoods(list);
 			} catch {
 				// Continua mesmo se a listagem falhar
-			} finally {
-				setIsLoadingNeighborhoods(false);
 			}
 		}
 		loadNeighborhoods();
@@ -98,9 +99,43 @@ export function RegisterForm({ onSuccess, className }: RegisterFormProps) {
 		setValue("phone", masked, { shouldValidate: true });
 	};
 
+	const handleAddressFound = (viaCep: ViaCepAddress) => {
+		setValue("cep", viaCep.cep, { shouldValidate: true });
+		setValue("street", viaCep.logradouro, { shouldValidate: true });
+		setValue("neighborhood", viaCep.bairro, { shouldValidate: true });
+		setValue("city", viaCep.localidade, { shouldValidate: true });
+		setValue("state", viaCep.uf, { shouldValidate: true });
+		setValue("address", viaCep.logradouro, { shouldValidate: true });
+
+		const matchedNeighborhood = neighborhoods.find(
+			(n) => n.name.trim().toLowerCase() === viaCep.bairro.trim().toLowerCase(),
+		);
+		if (matchedNeighborhood) {
+			setValue("neighborhood_id", matchedNeighborhood.id);
+		}
+	};
+
 	const onSubmit = async (data: RegisterFormData) => {
 		setServerError(null);
 		try {
+			const addressParts = [
+				data.street || data.address,
+				data.number ? `nº ${data.number}` : null,
+				data.complement || null,
+				data.neighborhood || null,
+				data.city && data.state
+					? `${data.city} - ${data.state}`
+					: data.city || null,
+				data.cep ? `CEP ${data.cep}` : null,
+			].filter(Boolean);
+
+			const formattedAddress =
+				addressParts.length > 0
+					? addressParts.join(", ")
+					: data.address
+						? data.address.trim()
+						: null;
+
 			const payload: RegisterData = {
 				name: data.name.trim(),
 				email: data.email.trim(),
@@ -108,7 +143,18 @@ export function RegisterForm({ onSuccess, className }: RegisterFormProps) {
 				cpf: unmask(data.cpf),
 				role: data.role,
 				phone: data.phone ? unmask(data.phone) : null,
-				address: data.address ? data.address.trim() : null,
+				address: formattedAddress,
+				cep: data.cep ? unmask(data.cep) : null,
+				street: data.street
+					? data.street.trim()
+					: data.address
+						? data.address.trim()
+						: null,
+				number: data.number ? data.number.trim() : null,
+				complement: data.complement ? data.complement.trim() : null,
+				neighborhood: data.neighborhood ? data.neighborhood.trim() : null,
+				city: data.city ? data.city.trim() : null,
+				state: data.state ? data.state.trim().toUpperCase() : null,
 				neighborhood_id:
 					data.neighborhood_id && data.neighborhood_id.trim() !== ""
 						? data.neighborhood_id
@@ -240,38 +286,89 @@ export function RegisterForm({ onSuccess, className }: RegisterFormProps) {
 					disabled={isSubmitting}
 				/>
 
-				<FormSelect
-					id="neighborhood_id"
-					label="Bairro"
-					error={errors.neighborhood_id?.message}
-					disabled={isSubmitting || isLoadingNeighborhoods}
-					{...register("neighborhood_id")}
-				>
-					<option value="" className="bg-background text-foreground">
-						{isLoadingNeighborhoods
-							? "Carregando bairros..."
-							: "Selecione seu bairro (opcional)"}
-					</option>
-					{neighborhoods.map((n) => (
-						<option
-							key={n.id}
-							value={n.id}
-							className="bg-background text-foreground"
-						>
-							{n.name} ({n.city})
-						</option>
-					))}
-				</FormSelect>
+				<div className="md:col-span-2 pt-2 border-t border-border/40">
+					<h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+						<span>Endereço de Entrega / Residência</span>
+						<span className="text-xs font-normal text-muted-foreground">
+							(Digite o CEP para autopreenchimento)
+						</span>
+					</h3>
+				</div>
+
+				<ZipCodeInput
+					id="cep"
+					label="CEP"
+					containerClassName="md:col-span-1"
+					value={watch("cep")}
+					onChange={(e) =>
+						setValue("cep", e.target.value, { shouldValidate: true })
+					}
+					onAddressFound={handleAddressFound}
+					error={errors.cep?.message}
+					disabled={isSubmitting}
+				/>
 
 				<FormInput
-					id="address"
-					label="Endereço / Logradouro"
-					placeholder="Rua, número, complemento"
-					containerClassName="md:col-span-2"
-					error={errors.address?.message}
+					id="street"
+					label="Rua / Logradouro"
+					placeholder="Ex: Rua das Flores"
+					containerClassName="md:col-span-1"
+					error={errors.street?.message}
 					disabled={isSubmitting}
-					{...register("address")}
+					{...register("street")}
 				/>
+
+				<FormInput
+					id="number"
+					label="Número"
+					placeholder="123"
+					containerClassName="md:col-span-1"
+					error={errors.number?.message}
+					disabled={isSubmitting}
+					{...register("number")}
+				/>
+
+				<FormInput
+					id="complement"
+					label="Complemento (Opcional)"
+					placeholder="Apto 101, Bloco B"
+					containerClassName="md:col-span-1"
+					error={errors.complement?.message}
+					disabled={isSubmitting}
+					{...register("complement")}
+				/>
+
+				<FormInput
+					id="neighborhood"
+					label="Bairro"
+					placeholder="Ex: Centro"
+					containerClassName="md:col-span-1"
+					error={errors.neighborhood?.message}
+					disabled={isSubmitting}
+					{...register("neighborhood")}
+				/>
+
+				<div className="grid grid-cols-3 gap-2 md:col-span-1">
+					<FormInput
+						id="city"
+						label="Cidade"
+						placeholder="São Paulo"
+						containerClassName="col-span-2"
+						error={errors.city?.message}
+						disabled={isSubmitting}
+						{...register("city")}
+					/>
+					<FormInput
+						id="state"
+						label="UF"
+						placeholder="SP"
+						maxLength={2}
+						containerClassName="col-span-1"
+						error={errors.state?.message}
+						disabled={isSubmitting}
+						{...register("state")}
+					/>
+				</div>
 			</div>
 
 			{/* Seção Produtor Rural */}
