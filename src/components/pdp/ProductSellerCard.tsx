@@ -1,14 +1,22 @@
-import { Store } from "lucide-react";
+import { Loader2, MessageCircle, Store } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { Seller } from "@/types";
 
 export interface ProductSellerCardProps {
 	seller?: Seller | null;
+	// Sem a ação (ex.: produto do próprio usuário), o botão de conversa não aparece
+	onContactSeller?: () => void;
+	isContacting?: boolean;
+	contactError?: string | null;
 	className?: string;
 }
 
 export function ProductSellerCard({
 	seller,
+	onContactSeller,
+	isContacting = false,
+	contactError,
 	className,
 }: ProductSellerCardProps) {
 	const farmName = seller?.farm_name || "Propriedade Agroecológica";
@@ -45,6 +53,29 @@ export function ProductSellerCard({
 			<p className="text-xs leading-relaxed text-muted-foreground sm:text-sm">
 				{description}
 			</p>
+
+			{onContactSeller && (
+				<div className="flex flex-col gap-1.5">
+					<Button
+						variant="outline"
+						onClick={onContactSeller}
+						disabled={isContacting}
+						className="h-11 w-full gap-2 rounded-xl text-sm font-semibold"
+					>
+						{isContacting ? (
+							<Loader2 className="size-4 animate-spin" />
+						) : (
+							<MessageCircle className="size-4" />
+						)}
+						Conversar com o produtor
+					</Button>
+					{contactError && (
+						<p role="alert" className="text-xs text-destructive">
+							{contactError}
+						</p>
+					)}
+				</div>
+			)}
 		</div>
 	);
 }

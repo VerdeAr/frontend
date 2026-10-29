@@ -3,6 +3,8 @@ import { ProtectedRoute } from "@/components/auth";
 import RootLayout from "@/components/layout/RootLayout";
 import AccountSettingsPage from "@/pages/AccountSettingsPage";
 import CartPage from "@/pages/CartPage";
+import ChatInboxPage from "@/pages/ChatInboxPage";
+import ChatRoomPage from "@/pages/ChatRoomPage";
 import CheckoutPage from "@/pages/CheckoutPage";
 import Home from "@/pages/Home";
 import Login from "@/pages/Login";
@@ -53,6 +55,14 @@ export const router = createBrowserRouter([
 					{
 						path: "pedido-confirmado/:id",
 						element: <OrderSuccessPage />,
+					},
+					{
+						path: "chat",
+						element: <ChatInboxPage />,
+					},
+					{
+						path: "chat/:id",
+						element: <ChatRoomPage />,
 					},
 				],
 			},
