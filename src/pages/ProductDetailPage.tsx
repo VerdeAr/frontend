@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import type { ProductDetailLoaderData } from "@/router/loaders";
 import { useAuthStore } from "@/stores/auth.store";
 import { useCartStore } from "@/stores/cart.store";
+import { useChatStore } from "@/stores/chat.store";
 
 export default function ProductDetailPage() {
 	const { product, neighborhoods, error } =
@@ -28,6 +29,36 @@ export default function ProductDetailPage() {
 	const [quantity, setQuantity] = useState(1);
 	const [isAdding, setIsAdding] = useState(false);
 	const [cartFeedback, setCartFeedback] = useState<string | null>(null);
+	const [isContacting, setIsContacting] = useState(false);
+	const [contactError, setContactError] = useState<string | null>(null);
+	const currentUserId = useAuthStore((state) => state.user?.id);
+
+	// O backend reaproveita a conversa ativa com o vendedor, se já existir (RN-48)
+	const handleContactSeller = async () => {
+		if (!product) return;
+
+		const { isAuthenticated } = useAuthStore.getState();
+		if (!isAuthenticated) {
+			navigate("/login", { state: { from: location } });
+			return;
+		}
+
+		try {
+			setIsContacting(true);
+			setContactError(null);
+			const chat = await useChatStore.getState().startChat(product.id);
+			navigate(`/chat/${chat.id}`);
+		} catch (err: unknown) {
+			console.error("Erro ao iniciar conversa com o produtor:", err);
+			const error = err as { response?: { data?: { message?: string } } };
+			setContactError(
+				error.response?.data?.message ||
+					"Não foi possível iniciar a conversa. Tente novamente.",
+			);
+		} finally {
+			setIsContacting(false);
+		}
+	};
 
 	const handleAddToCart = async () => {
 		if (!product) return;
@@ -82,6 +113,9 @@ export default function ProductDetailPage() {
 	}
 
 	const isOutOfStock = product.stock <= 0 || !product.is_active;
+	// Não é possível conversar consigo mesmo (RN-47)
+	const isOwnProduct =
+		Boolean(currentUserId) && product.seller?.user_id === currentUserId;
 	const isLowStock = !isOutOfStock && product.stock <= 5;
 	const unitSymbol =
 		product.measurement_unit?.symbol || product.measurement_unit?.name || "un";
@@ -134,7 +168,12 @@ export default function ProductDetailPage() {
 
 					{/* Card do Produtor visível na coluna esquerda em telas grandes */}
 					<div className="hidden lg:block">
-						<ProductSellerCard seller={product.seller} />
+						<ProductSellerCard
+							seller={product.seller}
+							onContactSeller={isOwnProduct ? undefined : handleContactSeller}
+							isContacting={isContacting}
+							contactError={contactError}
+						/>
 					</div>
 				</div>
 
@@ -172,7 +211,12 @@ export default function ProductDetailPage() {
 
 					{/* Card do Produtor visível abaixo das ações em telas mobile */}
 					<div className="block lg:hidden">
-						<ProductSellerCard seller={product.seller} />
+						<ProductSellerCard
+							seller={product.seller}
+							onContactSeller={isOwnProduct ? undefined : handleContactSeller}
+							isContacting={isContacting}
+							contactError={contactError}
+						/>
 					</div>
 				</div>
 			</div>
