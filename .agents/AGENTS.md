@@ -43,7 +43,7 @@ flowchart TD
 ```
 
 1. **Uma subtarefa por vez.** É proibido implementar várias subtarefas em um único prompt.
-2. **Verificação prévia obrigatória.** Antes de pedir validação, os arquivos alterados devem passar sem erros em `tsc --noEmit` e em `npm run check` (Biome com `--error-on-warnings`).
+2. **Verificação prévia obrigatória.** Antes de pedir validação, os arquivos alterados devem passar sem erros em `npm run check` (`tsc -b` + Biome com `--error-on-warnings`) e `npm test` (Vitest).
 3. **Pausa e solicitação de validação.** Apresente:
    - um resumo claro e conciso das alterações;
    - os arquivos modificados e criados;
@@ -118,7 +118,8 @@ Antes de sugerir `git checkout -b` ou `git commit`, valide a chave no Jira e mon
   export type ProductInput = z.infer<typeof productSchema>;
   ```
 - **Asserções seguras:** evite `as Tipo` quando houver `type guard` ou `z.nativeEnum`.
-- **Compilação limpa:** todo código entregue passa em `tsc --noEmit`.
+- **Compilação limpa:** todo código entregue passa em `tsc -b` (incluído no `npm run check`).
+- **Testes:** código novo de lógica (stores, `lib/`, componentes com regra de negócio) vem com teste `.test.ts(x)` ao lado do arquivo; serviços HTTP são simulados com `vi.mock`.
 
 ---
 

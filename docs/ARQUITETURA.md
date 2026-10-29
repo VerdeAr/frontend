@@ -204,7 +204,7 @@ Em Minha Conta, o vendedor cadastra e edita produtos (`/vendedor/produtos`), ati
 3. **Componentes por domínio:** cada pasta de `components/` tem um `index.ts` que reexporta o que é público.
 4. **Dados via loaders e stores:** dados de rota entram por loaders; estado compartilhado por Zustand; chamadas HTTP só em `services/`.
 5. **Type safety:** `any` é proibido. O `tsconfig.app.json` ativa `noUnusedLocals`, `noUnusedParameters`, `verbatimModuleSyntax` e `erasableSyntaxOnly` (sem `enum` ou `namespace`; use uniões de strings).
-6. **Qualidade:** `npm run check` (`tsc --noEmit` + Biome com `--error-on-warnings`) deve passar antes de abrir PR. `npm run format` corrige o estilo.
+6. **Qualidade:** `npm run check` (`tsc -b` + Biome com `--error-on-warnings`) e `npm test` (Vitest + Testing Library) devem passar antes de abrir PR. `npm run format` corrige o estilo.
 7. **Idioma:** textos de interface, comentários e rotas em português do Brasil.
 
 ---
