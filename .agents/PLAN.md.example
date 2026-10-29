@@ -1,8 +1,9 @@
 # PLAN — Modelo de Planejamento de Tarefa
 
 > Modelo do plano de execução exigido pelo protocolo em `.agents/AGENTS.md`.
-> Para cada nova tarefa, preencha este arquivo (ou copie a estrutura) **antes** de alterar qualquer código e só avance após a validação do desenvolvedor.
-> Regras do plano: uma subtarefa por vez, verificação (`tsc --noEmit` e `npm run check`) antes de cada pausa, e nenhum comando de escrita no Git executado pela IA.
+> **Como usar:** copie este arquivo para `.agents/PLAN.md` (que é ignorado pelo Git) e preencha-o para cada nova tarefa, **antes** de alterar qualquer código. Só avance após a validação do desenvolvedor.
+> Regras do plano: uma subtarefa por vez, verificação (`npm run check` e `npm test`) antes de cada pausa, e nenhum comando de escrita no Git executado pela IA.
+> Este modelo (`PLAN.md.example`) é versionado e deve permanecer em branco.
 
 ---
 
@@ -59,12 +60,12 @@ Legenda: `[ ]` a fazer, `[~]` em execução, `[x]` concluída e validada pelo de
 - [ ] **1.1** _subtarefa atômica_
   - **Arquivos:** `src/...`
   - **Entrega:** _resultado verificável_
-  - **Verificação:** `tsc --noEmit` e `npm run check` sem erros
+  - **Verificação:** `npm run check` e `npm test` sem erros
   - **Commit sugerido:** `feat(escopo): [VER-<ID>] descricao curta no imperativo`
 - [ ] **1.2** _subtarefa atômica_
   - **Arquivos:** `src/...`
   - **Entrega:** _resultado verificável_
-  - **Verificação:** `tsc --noEmit` e `npm run check` sem erros
+  - **Verificação:** `npm run check` e `npm test` sem erros
   - **Commit sugerido:** `feat(escopo): [VER-<ID>] descricao curta no imperativo`
 
 ### Fase 2 — _nome da fase_
@@ -72,7 +73,7 @@ Legenda: `[ ]` a fazer, `[~]` em execução, `[x]` concluída e validada pelo de
 - [ ] **2.1** _subtarefa atômica_
   - **Arquivos:** `src/...`
   - **Entrega:** _resultado verificável_
-  - **Verificação:** `tsc --noEmit` e `npm run check` sem erros
+  - **Verificação:** `npm run check` e `npm test` sem erros
   - **Commit sugerido:** `test(escopo): [VER-<ID>] descricao curta no imperativo`
 
 ### Fase final — Documentação
@@ -88,7 +89,7 @@ Legenda: `[ ]` a fazer, `[~]` em execução, `[x]` concluída e validada pelo de
 
 Preencha ao fim de cada subtarefa, antes de pedir a validação.
 
-| Subtarefa | Status | Verificação (`tsc` e `npm run check`) | Validada pelo desenvolvedor |
+| Subtarefa | Status | Verificação (`npm run check` e `npm test`) | Validada pelo desenvolvedor |
 |---|---|---|---|
 | 1.1 | A fazer | — | — |
 | 1.2 | A fazer | — | — |
@@ -112,7 +113,7 @@ git push -u origin <tipo>/VER-<ID>-<descricao-curta-em-portugues>
 ## 6. Encerramento da tarefa
 
 - [ ] Todos os critérios de aceite atendidos
-- [ ] `tsc --noEmit` e `npm run check` sem erros
+- [ ] `npm run check` e `npm test` sem erros
 - [ ] Documentação atualizada
 - [ ] Commits revisados com `git status` e `git diff`
 - [ ] Pull Request aberto e subtarefa movida no Jira para **Revisão**
