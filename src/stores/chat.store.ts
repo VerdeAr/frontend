@@ -44,6 +44,8 @@ interface ChatState {
 
 	// Tempo real
 	bindRealtime: () => void;
+	connect: () => void;
+	disconnect: () => void;
 	joinAllChats: () => Promise<void>;
 	receiveMessage: (payload: ChatMessagePayload) => void;
 	reset: () => void;
@@ -359,6 +361,21 @@ export const useChatStore = create<ChatState>((set, get) => ({
 				};
 			});
 		});
+	},
+
+	connect: () => {
+		get().bindRealtime();
+		if (socketService.isConnected()) {
+			return;
+		}
+		// Evita exibir "sem conexão" enquanto o primeiro handshake está em andamento
+		set({ connectionStatus: "reconectando" });
+		socketService.connect();
+	},
+
+	disconnect: () => {
+		socketService.disconnect();
+		get().reset();
 	},
 
 	reset: () => {
