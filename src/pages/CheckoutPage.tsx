@@ -68,11 +68,9 @@ export default function CheckoutPage() {
 			// Revalida o estado do carrinho no store global
 			await fetchCart();
 
-			// Redireciona para a tela de confirmação do pedido
-			navigate(`/pedido-confirmado/${sale.id}`, {
-				replace: true,
-				state: { sale },
-			});
+			// Redireciona para a tela de confirmação, que busca o pedido formatado pelo ID. A resposta
+			// do checkout é a entidade crua da venda (pagamento como objeto) e não serve de estado.
+			navigate(`/pedido-confirmado/${sale.id}`, { replace: true });
 		} catch (error: unknown) {
 			console.error("Erro ao realizar checkout:", error);
 			const msg =
