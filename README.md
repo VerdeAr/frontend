@@ -46,7 +46,7 @@ A vitrine pode ser navegada sem login. Ao tentar adicionar um produto ao carrinh
 | HTTP | Axios com `withCredentials` (sessão por cookie HTTP-Only) |
 | Validação de CPF/CNPJ | cpf-cnpj-validator |
 | Qualidade | Biome |
-| Testes | Vitest + Testing Library (jsdom) |
+| Testes | Vitest + Testing Library (jsdom) e Playwright (E2E) |
 | Git hooks | Husky + Commitlint |
 | Container | Docker multi-stage (Nginx Alpine) |
 
@@ -89,6 +89,7 @@ O backend libera por padrão a origem `http://localhost:5173` via `CORS_ORIGIN`.
 | `npm run check` | Type check (`tsc -b`) + Biome com `--error-on-warnings` |
 | `npm test` | Executa os testes automatizados uma vez (Vitest) |
 | `npm run test:watch` | Executa os testes em modo interativo, reexecutando ao salvar |
+| `npm run test:e2e` | Executa os testes E2E (Playwright); exige a API local com banco de testes no ar |
 | `npm run format` | Formata e corrige com Biome |
 
 ## Testes
@@ -122,6 +123,54 @@ Convenções:
 - Para componentes, consulte elementos pelo papel ou pelo texto que o usuário vê (`getByRole`, `getByLabelText`) e simule a interação com `userEvent`.
 - Serviços HTTP são simulados com `vi.mock("@/services/...")`; nenhum teste deve chamar a API real.
 
+## Testes E2E (Playwright)
+
+O teste de ponta a ponta percorre o caminho feliz no navegador (Chromium): cadastro, login, vitrine, página do produto, carrinho com entrega, checkout e pedido confirmado. O vendedor e o produto são criados por chamadas diretas à API, e o resto passa pela interface. Ele usa a API de verdade, então precisa de um **banco de testes** (nunca o de homologação).
+
+### Pré-requisitos
+
+- Docker (o PostgreSQL de testes roda em um contêiner) e o repositório do backend ao lado deste.
+- Chromium do Playwright, instalado uma vez: `npx playwright install chromium`.
+- A porta `5173` livre. O E2E sobe o preview do build nela, que é a origem liberada no CORS do backend. Feche o `npm run dev` antes.
+
+### Passo a passo
+
+```bash
+# 1. Banco de testes descartável (porta 5433, dados em memória), na pasta do backend
+cd ../backend
+docker compose -f docker-compose.test.yml up -d --wait
+
+# 2. Migrations e seed no banco de testes, e a API na porta 3000
+export DB_HOST=localhost DB_PORT=5433 DB_USER=postgres DB_PASS=postgres        DB_NAME=verdear_test JWT_SECRET=test_secret        CORS_ORIGIN=http://localhost:5173 PORT=3000
+npm run migration:run
+npm run seed
+npm run dev          # deixe rodando neste terminal
+
+# 3. Em outro terminal, na pasta do frontend
+npm run test:e2e
+```
+
+No PowerShell, defina as variáveis com `$env:DB_HOST="localhost"` (uma linha por variável) em vez de `export`.
+
+Defina **todas** as variáveis `DB_*`: o backend lê o `.env` apenas para o que faltar, e o `.env` do seu dia a dia pode apontar para a homologação. Para encerrar: `docker compose -f docker-compose.test.yml down` na pasta do backend.
+
+### Como funciona
+
+- O Playwright faz o build do frontend em `dist-e2e/` (sem tocar no `dist/`) e o serve com `vite preview` na porta 5173. O build embute a URL da API (`VITE_API_BASEURL`).
+- `E2E_API_URL` define a API usada (padrão `http://localhost:3000`). **Só aceita `localhost` ou `127.0.0.1`**: com qualquer outro endereço, o Playwright falha antes do build, para que o E2E nunca rode contra a homologação.
+- Antes dos testes, o `e2e/global-setup.ts` confere se a API responde em `/ready` (inclui a conexão com o banco).
+- Cada execução cria vendedor, produto e cliente com dados únicos (e-mail, CPF e CNPJ), então o banco não precisa ser limpo entre execuções.
+- No CI (variável `CI` definida), o Playwright tenta cada teste até 3 vezes e gera o relatório HTML em `playwright-report/`. O trace da falha fica em `test-results/`.
+- Para depurar: `npx playwright test --headed` ou `npx playwright test --ui`.
+
+| Caminho | Conteúdo |
+|---|---|
+| `playwright.config.ts` | Chromium, `webServer` (build e preview) e `globalSetup` |
+| `e2e/main-flow.spec.ts` | Fluxo do caminho feliz |
+| `e2e/helpers/api.ts` | Cadastro de vendedor, frete e produto por chamada à API |
+| `e2e/helpers/data.ts` | Dados únicos de teste (e-mail, CPF, CNPJ numérico) |
+| `e2e/helpers/env.ts` | Leitura de `E2E_API_URL` com a trava contra ambientes remotos |
+
 ## Docker
 
 ```bash
@@ -152,6 +201,8 @@ src/
 ├── stores/         # Zustand (auth.store, cart.store)
 ├── test/           # Setup do Vitest e dados de exemplo dos testes
 └── types/          # Modelos e contratos TypeScript
+
+e2e/                # Testes de ponta a ponta (Playwright) e seus helpers
 ```
 
 ### Diretrizes
@@ -169,7 +220,7 @@ src/
   feat(carrinho): [VER-105] descricao concisa da alteracao
   ```
   Redigidos em português, no imperativo, com no máximo 100 caracteres. Prefixos: `feat`, `fix`, `refactor`, `chore`, `docs`, `test`.
-- **Pull Request:** revisado por pares (responsáveis no `CODEOWNERS`) e com `npm run check` e `npm test` passando.
+- **Pull Request:** revisado por pares (responsáveis no `CODEOWNERS`) e com `npm run check` e `npm test` passando. Mudanças no fluxo de compra também devem passar no `npm run test:e2e`.
 - **Segurança:** nunca comite tokens, senhas ou URLs fixas; use o `.env`.
 - **Definition of Done:** critérios de aceite do Jira atendidos, commits no padrão, sem credenciais expostas, testes validados pelo QA com evidências, subtarefas concluídas e PR aprovado.
 
