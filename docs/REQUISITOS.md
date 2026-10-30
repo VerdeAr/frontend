@@ -152,7 +152,7 @@ Requisitos do produto, com o estado de cada um. O VerdeAr é um marketplace que 
 | RNF-15 | Manutenibilidade | Camadas separadas no backend (rota, controller, service, repository) e componentes por domínio no frontend. | Implementado |
 | RNF-16 | Manutenibilidade | Commits no padrão Conventional Commits com o ID da tarefa, validados por Commitlint e Husky. | Implementado |
 | RNF-17 | Documentação | A API é documentada em OpenAPI/Swagger (`/docs`, `/api-docs`, `/api-docs.json`). | Parcial (faltam logout e avaliações) |
-| RNF-18 | Testabilidade | Há testes automatizados do caminho feliz do fluxo principal, executados no pipeline e com instrução de execução local. | Planejado (VER-17) |
+| RNF-18 | Testabilidade | Há testes automatizados do caminho feliz do fluxo principal, executados no pipeline e com instrução de execução local. | Implementado (VER-17): testes unitários (VER-103), E2E do caminho feliz (VER-104) e pipeline de CI no GitHub Actions (VER-105), que bloqueia o merge quando falham |
 | RNF-19 | Implantação | Backend e frontend rodam em containers Docker na VPS; o backend aplica as migrations ao iniciar. | Implementado (VER-45) |
 | RNF-20 | Implantação | O schema do banco evolui apenas por migrations versionadas. | Implementado |
 | RNF-21 | Observabilidade | Cada requisição HTTP é registrada com método, URL, status e duração. | Implementado |

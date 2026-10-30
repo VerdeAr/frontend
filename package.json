@@ -10,6 +10,7 @@
 		"check": "tsc -b && biome check --error-on-warnings",
 		"test": "vitest run",
 		"test:watch": "vitest",
+		"test:e2e": "playwright test",
 		"format": "biome check --write --unsafe",
 		"prepare": "husky"
 	},
@@ -39,6 +40,7 @@
 		"@biomejs/biome": "^2.5.14",
 		"@commitlint/cli": "^21.2.3",
 		"@commitlint/config-conventional": "^21.2.3",
+		"@playwright/test": "^1.64.1",
 		"@testing-library/dom": "^10.4.2",
 		"@testing-library/jest-dom": "^7.0.1",
 		"@testing-library/react": "^16.3.3",

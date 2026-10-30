@@ -68,7 +68,7 @@ A VER-48 (subcomponentização) já tem a branch `feature/VER-48-subcomponentiza
 | VER-86 — Imagens na Cloudflare R2 | VER-88: `ImageUploadDropzone` e integração nos formulários. |
 | VER-90 — Frete dinâmico com OpenRouteService e Leaflet | VER-92: mapa interativo com Leaflet.js e exibição da rota. |
 | VER-94 — Painel do vendedor e workflow de pedidos | VER-96: `SellerOrderDetailPage`, modal de ajuste e banner de aprovação. |
-| VER-17 — Testes do fluxo principal | Criar os testes automatizados do fluxo principal. |
+| VER-17 — Testes do fluxo principal | VER-103 (Vitest e Testing Library) já está no `main`. VER-104 (E2E com Playwright) e VER-105 (workflows de CI, deploy, monitoramento, Dependabot e `CICD.md`) estão implementadas, aguardando revisão. |
 
 ---
 
@@ -95,7 +95,7 @@ Quando as tarefas abaixo forem entregues, revise estas partes de `ARQUITETURA.md
 | VER-90 | Mapa com Leaflet, nova dependência e nova regra de exibição do frete. |
 | VER-94 | Nova página de detalhe de pedido do vendedor. |
 | VER-48 | Nova organização de componentes. Atualizar a estrutura de pastas. |
-| VER-17 | Ao existirem testes e CI, remover os itens correspondentes de "Limitações conhecidas". |
+| VER-17 | Os testes e o CI já constam na stack, na seção de qualidade e em "Limitações conhecidas". Depois do merge, ajustar o texto de revisão para "no `main`" e conferir os Environments do GitHub (ver `CICD.md`). |
 
 ---
 
