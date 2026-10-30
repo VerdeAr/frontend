@@ -24,7 +24,7 @@ RUN npm run build
 # =============================================================
 # Stage 2 — Runner: Nginx Alpine servindo os arquivos estáticos
 # =============================================================
-FROM nginx:1.27-alpine AS runner
+FROM nginx:1.29-alpine AS runner
 
 # Remove a configuração padrão do Nginx
 RUN rm /etc/nginx/conf.d/default.conf
