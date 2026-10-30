@@ -60,3 +60,106 @@ jobs:
 
       - name: Rodar os testes unitários e de componentes (npm test)
         run: npm test
+
+  e2e:
+    name: E2E
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          # Banco exclusivo de testes, descartado junto com o runner
+          POSTGRES_DB: verdear_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d verdear_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      # Variáveis da API do backend, que roda neste mesmo runner
+      NODE_ENV: test
+      PORT: 3000
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASS: postgres
+      DB_NAME: verdear_test
+      JWT_SECRET: segredo-somente-para-ci
+      # Origem do preview do frontend, definida no playwright.config.ts
+      CORS_ORIGIN: http://localhost:5173
+    steps:
+      - name: Baixar o código do frontend
+        uses: actions/checkout@v7
+
+      # A API real é parte do teste. O repositório do backend é público; por padrão usa a main.
+      # Para fixar outra versão, defina a variável E2E_BACKEND_REF no repositório.
+      - name: Baixar o código do backend
+        uses: actions/checkout@v7
+        with:
+          repository: VerdeAr/backend
+          ref: ${{ vars.E2E_BACKEND_REF || 'main' }}
+          path: backend
+
+      - name: Configurar o Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            backend/package-lock.json
+
+      - name: Instalar dependências do frontend
+        run: npm ci
+
+      - name: Instalar dependências do backend
+        run: npm ci
+        working-directory: backend
+
+      - name: Aplicar as migrations e o seed no banco de testes
+        run: |
+          npm run migration:run
+          npm run seed
+        working-directory: backend
+
+      - name: Subir a API em segundo plano
+        working-directory: backend
+        run: |
+          nohup npx tsx src/server.ts > "$GITHUB_WORKSPACE/api.log" 2>&1 &
+          for tentativa in $(seq 1 30); do
+            if curl --fail --silent --max-time 2 http://localhost:3000/ready; then
+              echo
+              echo "API pronta (tentativa $tentativa)."
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "::error::A API não respondeu em /ready."
+          cat "$GITHUB_WORKSPACE/api.log"
+          exit 1
+
+      - name: Instalar o Chromium do Playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: Rodar os testes E2E (npm run test:e2e)
+        run: npm run test:e2e
+
+      - name: Mostrar o log da API
+        if: failure()
+        run: cat api.log || true
+
+      - name: Enviar o relatório do Playwright
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: relatorio-e2e
+          path: |
+            playwright-report/
+            test-results/
+            api.log
+          retention-days: 7
+          if-no-files-found: ignore
