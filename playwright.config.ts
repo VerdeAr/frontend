@@ -1,7 +1,9 @@
 import { defineConfig, devices } from "@playwright/test";
+import { resolveApiUrl } from "./e2e/helpers/env.ts";
 
-// A API usada pelo E2E. O build do preview embute esta URL (VITE_API_BASEURL).
-const apiUrl = process.env.E2E_API_URL ?? "http://localhost:3000";
+// A API usada pelo E2E (sempre local). O build do preview embute esta URL (VITE_API_BASEURL).
+// A leitura acontece antes do build, então uma URL remota falha logo, sem gastar tempo.
+const apiUrl = resolveApiUrl();
 
 // Porta liberada no CORS do backend por padrão (CORS_ORIGIN)
 const appPort = 5173;
@@ -11,6 +13,7 @@ const isCI = Boolean(process.env.CI);
 
 export default defineConfig({
 	testDir: "./e2e",
+	globalSetup: "./e2e/global-setup.ts",
 	// O fluxo cria dados no banco de testes; um teste por vez evita interferência
 	fullyParallel: false,
 	workers: 1,
