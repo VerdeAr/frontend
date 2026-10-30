@@ -3,12 +3,15 @@ import { ProtectedRoute } from "@/components/auth";
 import RootLayout from "@/components/layout/RootLayout";
 import AccountSettingsPage from "@/pages/AccountSettingsPage";
 import CartPage from "@/pages/CartPage";
+import ChatInboxPage from "@/pages/ChatInboxPage";
+import ChatRoomPage from "@/pages/ChatRoomPage";
 import CheckoutPage from "@/pages/CheckoutPage";
 import Home from "@/pages/Home";
 import Login from "@/pages/Login";
 import OrderSuccessPage from "@/pages/OrderSuccessPage";
+import ProductDetailPage from "@/pages/ProductDetailPage";
 import Register from "@/pages/Register";
-import { homeLoader } from "./loaders";
+import { cartLoader, homeLoader, productDetailLoader } from "./loaders";
 
 export const router = createBrowserRouter([
 	{
@@ -29,6 +32,11 @@ export const router = createBrowserRouter([
 				element: <Register />,
 			},
 			{
+				path: "produtos/:id",
+				element: <ProductDetailPage />,
+				loader: productDetailLoader,
+			},
+			{
 				element: <ProtectedRoute />,
 				children: [
 					{
@@ -38,6 +46,7 @@ export const router = createBrowserRouter([
 					{
 						path: "carrinho",
 						element: <CartPage />,
+						loader: cartLoader,
 					},
 					{
 						path: "checkout",
@@ -46,6 +55,14 @@ export const router = createBrowserRouter([
 					{
 						path: "pedido-confirmado/:id",
 						element: <OrderSuccessPage />,
+					},
+					{
+						path: "chat",
+						element: <ChatInboxPage />,
+					},
+					{
+						path: "chat/:id",
+						element: <ChatRoomPage />,
 					},
 				],
 			},

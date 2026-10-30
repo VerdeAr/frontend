@@ -54,3 +54,11 @@ export interface ToggleActiveResponse {
 export interface DeleteProductResponse {
 	message: string;
 }
+
+export interface ShippingSimulationResult {
+	neighborhood_id?: string;
+	neighborhood_name?: string;
+	price: number;
+	estimated_days?: number;
+	is_fixed: boolean;
+}

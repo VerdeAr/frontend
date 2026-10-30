@@ -1,6 +1,8 @@
 import {
 	ClipboardList,
+	Loader2,
 	Lock,
+	LogOut,
 	Package,
 	ShoppingBag,
 	Sprout,
@@ -16,8 +18,9 @@ import {
 	SellerShippingForm,
 } from "@/components/account";
 import { SellerCatalogView, SellerOrdersManager } from "@/components/seller";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useAuthStore } from "@/stores";
+import { useAuthStore, useCartStore } from "@/stores";
 
 type AccountTab =
 	| "profile"
@@ -46,6 +49,7 @@ export default function AccountSettingsPage() {
 	const [activeTab, setActiveTab] = useState<AccountTab>(() =>
 		normalizeTab(searchParams.get("aba")),
 	);
+	const [isLoggingOut, setIsLoggingOut] = useState(false);
 
 	useEffect(() => {
 		setActiveTab(normalizeTab(searchParams.get("aba")));
@@ -62,6 +66,19 @@ export default function AccountSettingsPage() {
 	}
 
 	const isSeller = user.role === "VENDEDOR";
+
+	const handleLogout = async () => {
+		setIsLoggingOut(true);
+		try {
+			await useAuthStore.getState().logout();
+			useCartStore.getState().reset();
+			navigate("/login", { replace: true });
+		} catch {
+			alert("Não foi possível sair. Tente novamente.");
+		} finally {
+			setIsLoggingOut(false);
+		}
+	};
 
 	const tabs = [
 		{
@@ -152,6 +169,22 @@ export default function AccountSettingsPage() {
 								"Consumidor"
 							)}
 						</span>
+
+						<Button
+							type="button"
+							variant="outline"
+							size="sm"
+							onClick={handleLogout}
+							disabled={isLoggingOut}
+							className="h-9 px-3 gap-1.5 text-muted-foreground hover:text-destructive hover:border-destructive/40"
+						>
+							{isLoggingOut ? (
+								<Loader2 className="size-4 animate-spin" />
+							) : (
+								<LogOut className="size-4" />
+							)}
+							<span>Sair</span>
+						</Button>
 					</div>
 				</div>
 

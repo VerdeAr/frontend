@@ -25,6 +25,10 @@ export const authService = {
 		return response.data;
 	},
 
+	async logout(): Promise<void> {
+		await api.post("/auth/logout");
+	},
+
 	async updateProfile(
 		data: UpdateProfileData,
 	): Promise<{ success: boolean; message: string; user: User }> {

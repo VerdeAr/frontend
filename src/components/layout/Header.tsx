@@ -1,5 +1,7 @@
 import {
 	ClipboardList,
+	Loader2,
+	LogOut,
 	MessageCircle,
 	Search,
 	ShoppingCart,
@@ -8,8 +10,10 @@ import {
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { CartBadge } from "@/components/cart";
+import { ChatBadge } from "@/components/chat";
 import { saleService } from "@/services/sale.service";
 import { useAuthStore } from "@/stores/auth.store";
+import { useCartStore } from "@/stores/cart.store";
 
 export function Header() {
 	const navigate = useNavigate();
@@ -18,6 +22,20 @@ export function Header() {
 	const [pendingOrders, setPendingOrders] = useState(0);
 
 	const isSeller = user?.role === "VENDEDOR";
+	const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+	const handleLogout = async () => {
+		setIsLoggingOut(true);
+		try {
+			await useAuthStore.getState().logout();
+			useCartStore.getState().reset();
+			navigate("/");
+		} catch {
+			alert("Não foi possível sair. Tente novamente.");
+		} finally {
+			setIsLoggingOut(false);
+		}
+	};
 
 	useEffect(() => {
 		if (isSeller) {
@@ -90,6 +108,7 @@ export function Header() {
 						aria-label="Mensagens e Atendimento"
 					>
 						<MessageCircle className="size-5" />
+						<ChatBadge />
 					</Link>
 
 					{/* Atalho do Produtor Rural (gestão de pedidos recebidos) */}
@@ -128,6 +147,24 @@ export function Header() {
 					>
 						<UserIcon className="size-5" />
 					</Link>
+
+					{/* Botão Sair (visível quando logado) */}
+					{isAuthenticated && (
+						<button
+							type="button"
+							onClick={handleLogout}
+							disabled={isLoggingOut}
+							className="flex h-11 w-11 items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-muted transition-colors disabled:opacity-50"
+							aria-label="Sair da conta"
+							title="Sair da conta"
+						>
+							{isLoggingOut ? (
+								<Loader2 className="size-5 animate-spin" />
+							) : (
+								<LogOut className="size-5" />
+							)}
+						</button>
+					)}
 				</nav>
 			</div>
 		</header>

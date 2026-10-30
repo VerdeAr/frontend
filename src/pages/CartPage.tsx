@@ -1,7 +1,13 @@
-import { ArrowLeft, Loader2 } from "lucide-react";
-import { useEffect } from "react";
-import { Link } from "react-router";
+import { AlertCircle, ArrowLeft, Loader2, RefreshCw } from "lucide-react";
+import {
+	Link,
+	useLoaderData,
+	useNavigation,
+	useRevalidator,
+} from "react-router";
 import { CartItemList, CartSummary, DeliverySelector } from "@/components/cart";
+import { Button } from "@/components/ui/button";
+import type { CartLoaderData } from "@/router/loaders";
 import {
 	selectCartItemCount,
 	selectCartItems,
@@ -13,23 +19,23 @@ import {
 } from "@/stores";
 
 export default function CartPage() {
+	const { error } = useLoaderData<CartLoaderData>();
+	const navigation = useNavigation();
+	const revalidator = useRevalidator();
+
 	const items = useCartStore(selectCartItems);
 	const itemCount = useCartStore(selectCartItemCount);
 	const subtotal = useCartStore(selectCartSubtotal);
 	const shipping = useCartStore(selectCartShipping);
 	const total = useCartStore(selectCartTotal);
 	const deliveryType = useCartStore(selectDeliveryType);
-	const isLoading = useCartStore((state) => state.isLoading);
 	const isUpdating = useCartStore((state) => state.isUpdating);
-	const fetchCart = useCartStore((state) => state.fetchCart);
 	const updateQuantity = useCartStore((state) => state.updateQuantity);
 	const removeItem = useCartStore((state) => state.removeItem);
 	const clearCart = useCartStore((state) => state.clearCart);
 	const setDeliveryType = useCartStore((state) => state.setDeliveryType);
 
-	useEffect(() => {
-		fetchCart();
-	}, [fetchCart]);
+	const isLoading = navigation.state === "loading";
 
 	const handleClearCart = async () => {
 		if (window.confirm("Deseja realmente esvaziar todo o seu carrinho?")) {
@@ -78,8 +84,29 @@ export default function CartPage() {
 					</div>
 				</div>
 
-				{/* Loading State */}
-				{isLoading && items.length === 0 ? (
+				{/* Loading State or Error State */}
+				{error ? (
+					<div className="flex w-full flex-col items-center justify-center rounded-3xl border border-destructive/30 bg-destructive/5 p-8 sm:p-12 text-center">
+						<div className="flex size-14 items-center justify-center rounded-2xl bg-destructive/10 text-destructive mb-3">
+							<AlertCircle className="size-7" />
+						</div>
+						<h3 className="text-base sm:text-lg font-semibold text-foreground mb-1">
+							Erro ao carregar o carrinho
+						</h3>
+						<p className="max-w-md text-xs sm:text-sm text-muted-foreground mb-5">
+							{error}
+						</p>
+						<Button
+							type="button"
+							variant="outline"
+							onClick={() => revalidator.revalidate()}
+							className="h-11 rounded-2xl px-5 text-sm font-medium gap-2 border-border/80 hover:bg-muted/60"
+						>
+							<RefreshCw className="size-4" />
+							<span>Tentar Novamente</span>
+						</Button>
+					</div>
+				) : isLoading && items.length === 0 ? (
 					<div className="flex min-h-75 items-center justify-center">
 						<Loader2 className="size-8 animate-spin text-primary" />
 					</div>
