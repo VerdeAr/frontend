@@ -1,0 +1,62 @@
+name: CI
+
+# Qualidade e testes. Roda em todo Pull Request e também é chamado pelo deploy.yml
+# (workflow_call), que só publica depois de este pipeline passar.
+on:
+  pull_request:
+    branches: [main, prod]
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  # O script "prepare" instala os hooks do Husky, que não fazem sentido no CI
+  HUSKY: 0
+
+jobs:
+  qualidade:
+    name: Qualidade
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar o código
+        uses: actions/checkout@v7
+
+      - name: Configurar o Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Verificar tipos e lint (npm run check)
+        run: npm run check
+
+      - name: Compilar (npm run build)
+        run: npm run build
+
+  testes-unitarios:
+    name: Testes unitários
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar o código
+        uses: actions/checkout@v7
+
+      - name: Configurar o Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Rodar os testes unitários e de componentes (npm test)
+        run: npm test
