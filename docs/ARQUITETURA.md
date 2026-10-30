@@ -49,6 +49,7 @@ Essas rotas inexistentes caem em uma página de erro padrão do React Router at�
 | Testes | Vitest + Testing Library (unidade e componentes) e Playwright (E2E) |
 | Git hooks | Husky + Commitlint |
 | Container | Docker multi-stage com Nginx Alpine |
+| CI/CD | GitHub Actions (`.github/workflows/`), imagem no GHCR e Dependabot. Ver [CICD.md](CICD.md) |
 
 Alias de importação: `@/*` aponta para `src/*` (configurado no `vite.config.ts` e no `tsconfig.app.json`).
 
@@ -63,7 +64,7 @@ flowchart LR
     A --> D[(PostgreSQL)]
 ```
 
-O frontend é 100% estático. Em produção, o Nginx serve o `dist/` e todas as rotas desconhecidas voltam para o `index.html`, o que permite ao React Router resolver o caminho. A URL da API é fixada **no build** pela variável `VITE_API_BASEURL`.
+O frontend é 100% estático. Em produção, o Nginx serve o `dist/` e todas as rotas desconhecidas voltam para o `index.html`, o que permite ao React Router resolver o caminho. A URL da API é fixada **no build** pela variável `VITE_API_BASEURL`; por isso o pipeline de deploy constrói uma imagem por ambiente, cada uma com a `API_BASE_URL` do seu GitHub Environment.
 
 ---
 
@@ -212,7 +213,7 @@ Em Minha Conta, o vendedor cadastra e edita produtos (`/vendedor/produtos`), ati
 
 ## 10. Limitações conhecidas
 
-- **Sem pipeline de CI** neste repositório (previsto na VER-105). Os testes existem — unitários e de componentes com Vitest (`npm test`) e o E2E do caminho feliz com Playwright (`npm run test:e2e`) — mas rodam apenas localmente. O E2E exige a API local com banco de testes (ver README).
+- **O E2E depende da `main` do backend.** O job E2E do CI baixa o repositório do backend e sobe a API real; uma mudança incompatível lá pode quebrar o E2E do frontend. A versão pode ser fixada com a variável `E2E_BACKEND_REF` (ver [CICD.md](CICD.md)).
 - **O `POST /vendas/checkout` devolve a entidade crua da venda** (pagamento como objeto, itens sem `product_name`), diferente do `GET /vendas/:id`. Por isso a tela de pedido confirmado busca o pedido pelo ID em vez de usar a resposta do checkout. Corrigir na origem é tarefa do backend.
 - **Rotas órfãs:** `/chat` e `/produtos/busca` são linkadas no Header e no Footer, mas não existem. O chat está em desenvolvimento (VER-58); a busca mobile ainda não tem tarefa associada. Também não há `errorElement` nem página 404 (previstos na VER-55).
 - **Funcionalidades da API sem tela:** o envio de avaliações (ver seção 1).
@@ -250,4 +251,4 @@ O `nginx.conf` faz fallback de SPA, cache de um ano para assets estáticos, `no-
 
 ## 12. Fluxo de trabalho
 
-Branches seguem o GitLab Flow, descrito em [GITFLOW.md](GITFLOW.md), e cada branch usa o ID da própria tarefa (`<tipo>/VER-<ID>-<descricao-curta-em-portugues>`). Commits seguem Conventional Commits, em português, com o mesmo ID e até 100 caracteres (`feat(carrinho): [VER-105] cria seletor de quantidade`). O protocolo completo de trabalho com IA está em `.agents/AGENTS.md`. O Pull Request precisa de revisão por pares (os responsáveis estão no arquivo `CODEOWNERS`) e de `npm run check` passando. O andamento das tarefas está em [ANDAMENTO.md](ANDAMENTO.md).
+Branches seguem o GitLab Flow, descrito em [GITFLOW.md](GITFLOW.md), e cada branch usa o ID da própria tarefa (`<tipo>/VER-<ID>-<descricao-curta-em-portugues>`). Commits seguem Conventional Commits, em português, com o mesmo ID e até 100 caracteres (`feat(carrinho): [VER-105] cria seletor de quantidade`). O protocolo completo de trabalho com IA está em `.agents/AGENTS.md`. O Pull Request precisa de revisão por pares (os responsáveis estão no arquivo `CODEOWNERS`) e do CI verde (Qualidade, Testes unitários e E2E, descritos em [CICD.md](CICD.md)). O andamento das tarefas está em [ANDAMENTO.md](ANDAMENTO.md).

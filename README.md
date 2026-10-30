@@ -49,6 +49,7 @@ A vitrine pode ser navegada sem login. Ao tentar adicionar um produto ao carrinh
 | Testes | Vitest + Testing Library (jsdom) e Playwright (E2E) |
 | Git hooks | Husky + Commitlint |
 | Container | Docker multi-stage (Nginx Alpine) |
+| CI/CD | GitHub Actions, imagem no GHCR e Dependabot |
 
 ## Pré-requisitos
 
@@ -141,7 +142,9 @@ cd ../backend
 docker compose -f docker-compose.test.yml up -d --wait
 
 # 2. Migrations e seed no banco de testes, e a API na porta 3000
-export DB_HOST=localhost DB_PORT=5433 DB_USER=postgres DB_PASS=postgres        DB_NAME=verdear_test JWT_SECRET=test_secret        CORS_ORIGIN=http://localhost:5173 PORT=3000
+export DB_HOST=localhost DB_PORT=5433 DB_USER=postgres DB_PASS=postgres \
+       DB_NAME=verdear_test JWT_SECRET=test_secret \
+       CORS_ORIGIN=http://localhost:5173 PORT=3000
 npm run migration:run
 npm run seed
 npm run dev          # deixe rodando neste terminal
@@ -160,7 +163,7 @@ Defina **todas** as variáveis `DB_*`: o backend lê o `.env` apenas para o que 
 - `E2E_API_URL` define a API usada (padrão `http://localhost:3000`). **Só aceita `localhost` ou `127.0.0.1`**: com qualquer outro endereço, o Playwright falha antes do build, para que o E2E nunca rode contra a homologação.
 - Antes dos testes, o `e2e/global-setup.ts` confere se a API responde em `/ready` (inclui a conexão com o banco).
 - Cada execução cria vendedor, produto e cliente com dados únicos (e-mail, CPF e CNPJ), então o banco não precisa ser limpo entre execuções.
-- No CI (variável `CI` definida), o Playwright tenta cada teste até 3 vezes e gera o relatório HTML em `playwright-report/`. O trace da falha fica em `test-results/`.
+- No CI (variável `CI` definida), o Playwright tenta cada teste até 3 vezes e gera o relatório HTML em `playwright-report/`. O trace da falha fica em `test-results/`. No GitHub, o job **E2E** monta o mesmo ambiente sozinho (ver [docs/CICD.md](docs/CICD.md)).
 - Para depurar: `npx playwright test --headed` ou `npx playwright test --ui`.
 
 | Caminho | Conteúdo |
@@ -178,7 +181,19 @@ docker build --build-arg VITE_API_BASEURL=https://api.seudominio.com -t verdear-
 docker run -p 8080:80 verdear-frontend
 ```
 
-A imagem serve os arquivos estáticos com Nginx, com a configuração de SPA em [nginx.conf](nginx.conf).
+A imagem serve os arquivos estáticos com Nginx, com a configuração de SPA em [nginx.conf](nginx.conf). A URL da API fica gravada no build; por isso o pipeline constrói uma imagem por ambiente.
+
+## CI/CD
+
+Os workflows ficam em `.github/workflows/`:
+
+| Workflow | O que faz |
+|---|---|
+| `ci.yml` | Em todo Pull Request para `main` ou `prod`: **Qualidade** (`npm run check` e `npm run build`), **Testes unitários** (`npm test`) e **E2E** (Playwright com a API e o PostgreSQL no próprio runner) |
+| `deploy.yml` | Push na `main` (homologação) ou na `prod` (produção): roda o CI, publica a imagem no GHCR com a `API_BASE_URL` do ambiente, implanta (`webhook` ou `ssh`) e verifica a aplicação |
+| `monitoring.yml` | A cada 15 minutos, confere se a aplicação de cada ambiente responde |
+
+O Dependabot abre PRs de atualização de npm, GitHub Actions e Docker. A configuração dos Environments, as variáveis (`API_BASE_URL`, `APP_BASE_URL`, `DEPLOY_METHOD`...), o rollback e os problemas comuns estão em [docs/CICD.md](docs/CICD.md).
 
 ## Estrutura do projeto
 
@@ -220,7 +235,7 @@ e2e/                # Testes de ponta a ponta (Playwright) e seus helpers
   feat(carrinho): [VER-105] descricao concisa da alteracao
   ```
   Redigidos em português, no imperativo, com no máximo 100 caracteres. Prefixos: `feat`, `fix`, `refactor`, `chore`, `docs`, `test`.
-- **Pull Request:** revisado por pares (responsáveis no `CODEOWNERS`) e com `npm run check` e `npm test` passando. Mudanças no fluxo de compra também devem passar no `npm run test:e2e`.
+- **Pull Request:** revisado por pares (responsáveis no `CODEOWNERS`) e com o CI verde (`npm run check`, `npm test` e o E2E). Rode `npm run check` e `npm test` localmente antes de abrir o PR; mudanças no fluxo de compra também devem passar no `npm run test:e2e`.
 - **Segurança:** nunca comite tokens, senhas ou URLs fixas; use o `.env`.
 - **Definition of Done:** critérios de aceite do Jira atendidos, commits no padrão, sem credenciais expostas, testes validados pelo QA com evidências, subtarefas concluídas e PR aprovado.
 
@@ -230,3 +245,4 @@ e2e/                # Testes de ponta a ponta (Playwright) e seus helpers
 - [docs/REQUISITOS.md](docs/REQUISITOS.md) — requisitos funcionais e não funcionais, com o estado de cada um
 - [docs/ANDAMENTO.md](docs/ANDAMENTO.md) — o que já foi entregue, o que está em andamento e o que está planejado
 - [docs/GITFLOW.md](docs/GITFLOW.md) — fluxo de versionamento
+- [docs/CICD.md](docs/CICD.md) — pipelines de CI, deploy e monitoramento, e como configurar o GitHub
