@@ -86,7 +86,7 @@ jobs:
 
       - name: Definir nome e tags da imagem
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ghcr.io/${{ github.repository }}
           # A imagem depende da API do ambiente, então a tag por commit leva o nome dele
