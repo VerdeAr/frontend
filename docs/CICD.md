@@ -1,10 +1,19 @@
 # CI/CD do Frontend — VerdeAr
 
-Como o código do frontend é validado, publicado e monitorado. O processo não depende de uma plataforma de hospedagem específica: o resultado do pipeline é uma **imagem Docker** (Nginx servindo a SPA) no GitHub Container Registry (GHCR), que pode rodar em qualquer servidor.
+Como o código do frontend (`VerdeAr/frontend`) é validado, publicado e monitorado. O processo não depende de uma plataforma de hospedagem específica: o resultado do pipeline é uma **imagem Docker** (Nginx servindo a SPA) no GitHub Container Registry (GHCR), que pode rodar em qualquer servidor.
 
-O pipeline do backend segue o mesmo desenho (`VerdeAr/backend`, `docs/CICD.md`). Aqui estão as diferenças que importam para o frontend, em especial a [seção 2.3](#23-a-imagem-é-feita-por-ambiente).
+O frontend consome a API do VerdeAr, então dois pontos o ligam a ela: o **E2E** sobe a API de verdade para testar o fluxo de compra ([seção 2.2](#22-como-o-job-e2e-funciona)) e a **URL da API é gravada no build** da imagem ([seção 2.3](#23-a-imagem-é-feita-por-ambiente)).
 
 ## 1. Visão geral
+
+### Ambientes
+
+| Ambiente | Branch | Aplicação | API consumida | GitHub Environment |
+|---|---|---|---|---|
+| Homologação | `main` | https://verdear-dev.pedmesa.com.br | https://api-verdear-dev.pedmesa.com.br | `homologacao` |
+| Produção | `prod` | https://verdear.pedmesa.com.br | https://api-verdear.pedmesa.com.br | `producao` |
+
+### Fluxo
 
 ```
 Pull Request ──▶ ci.yml ──▶ merge na main ──▶ deploy.yml ──▶ homologação
@@ -52,7 +61,7 @@ No CI a variável `CI` está definida, então o Playwright repete cada teste at�
 
 ### 2.3 A imagem é feita por ambiente
 
-O Vite **grava a URL da API dentro do JavaScript** na hora do build (`VITE_API_BASEURL`). Por isso, ao contrário do backend, a imagem do frontend não é a mesma para todos os ambientes: o `deploy.yml` constrói uma imagem para a homologação e outra para a produção, cada uma com a `API_BASE_URL` do seu Environment.
+O Vite **grava a URL da API dentro do JavaScript** na hora do build (`VITE_API_BASEURL`). Por isso a imagem do frontend não é a mesma para todos os ambientes: o `deploy.yml` constrói uma imagem para a homologação e outra para a produção, cada uma com a `API_BASE_URL` do seu Environment.
 
 Consequências:
 
@@ -83,6 +92,13 @@ Cadastre em **cada** environment:
 | `DEPLOY_SSH_PORT` | Secret | Opcional | Porta SSH (padrão `22`) |
 | `DEPLOY_SSH_PATH` | Variable | Método `ssh` | Pasta do `docker-compose.yml` no servidor |
 | `DEPLOY_SSH_COMMAND` | Variable | Opcional | Comando executado no servidor (padrão `docker compose pull && docker compose up -d`) |
+
+Valores de `API_BASE_URL` e `APP_BASE_URL` em uso:
+
+| Environment | `API_BASE_URL` | `APP_BASE_URL` |
+|---|---|---|
+| `homologacao` | `https://api-verdear-dev.pedmesa.com.br` | `https://verdear-dev.pedmesa.com.br` |
+| `producao` | `https://api-verdear.pedmesa.com.br` | `https://verdear.pedmesa.com.br` |
 
 Se `APP_BASE_URL` ou `DEPLOY_METHOD` não estiverem definidos, os workflows emitem um aviso e pulam a etapa correspondente, sem falhar. Só a `API_BASE_URL` é obrigatória.
 
@@ -180,7 +196,7 @@ Cada publicação gera a tag `sha-<commit curto>-<ambiente>`. Para voltar a uma 
 O `monitoring.yml` roda a cada 15 minutos e faz `curl --fail` em `${APP_BASE_URL}/` de cada ambiente, com até 3 tentativas. Se um ambiente não responde ou devolve erro HTTP, a execução falha e o GitHub notifica os responsáveis pelo repositório. Para rodar na hora: *Actions → Monitoramento → Run workflow*.
 
 - Workflows agendados só rodam na branch padrão (`main`). O monitoramento começa a valer depois do merge.
-- A verificação confere que o Nginx entrega a página, **não** que a API está de pé. A API tem o próprio monitoramento no repositório do backend (`/ready`).
+- A verificação confere que o Nginx entrega a página, **não** que a API está de pé. A API é monitorada pelo pipeline do repositório dela, que consulta `/ready`.
 - Um ambiente sem `APP_BASE_URL` é ignorado com um aviso, para não gerar falha falsa.
 
 ## 8. Dependabot
