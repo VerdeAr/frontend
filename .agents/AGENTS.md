@@ -34,7 +34,7 @@ Ao receber uma demanda ou chave de tarefa (ex.: `VER-44`):
 ```mermaid
 flowchart TD
     A["1. Identificar a subtarefa no PLAN.md"] --> B["2. Executar o código da subtarefa única"]
-    B --> C["3. Verificar integridade (tsc e biome)"]
+    B --> C["3. Verificar integridade (npm run check e npm test)"]
     C --> D["4. PAUSA OBRIGATÓRIA e solicitar validação humana"]
     D --> E["5. Propor o bloco de commit"]
     E --> F{"Desenvolvedor aprovou?"}
@@ -118,7 +118,7 @@ Antes de sugerir `git checkout -b` ou `git commit`, valide a chave no Jira e mon
   export type ProductInput = z.infer<typeof productSchema>;
   ```
 - **Asserções seguras:** evite `as Tipo` quando houver `type guard` ou `z.nativeEnum`.
-- **Compilação limpa:** todo código entregue passa em `tsc -b` (incluído no `npm run check`).
+- **Compilação limpa e testes verdes:** todo código entregue passa em `tsc -b` e no Biome (`npm run check`) e em `npm test`. Mudanças no fluxo de compra também passam em `npm run test:e2e`.
 - **Testes:** código novo de lógica (stores, `lib/`, componentes com regra de negócio) vem com teste `.test.ts(x)` ao lado do arquivo; serviços HTTP são simulados com `vi.mock`.
 
 ---

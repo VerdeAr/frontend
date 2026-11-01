@@ -66,6 +66,15 @@ flowchart LR
 
 O frontend é 100% estático. Em produção, o Nginx serve o `dist/` e todas as rotas desconhecidas voltam para o `index.html`, o que permite ao React Router resolver o caminho. A URL da API é fixada **no build** pela variável `VITE_API_BASEURL`; por isso o pipeline de deploy constrói uma imagem por ambiente, cada uma com a `API_BASE_URL` do seu GitHub Environment.
 
+### Ambientes
+
+| Ambiente | Branch | Aplicação | API consumida |
+|---|---|---|---|
+| Homologação | `main` | https://verdear-dev.pedmesa.com.br | https://api-verdear-dev.pedmesa.com.br |
+| Produção | `prod` | https://verdear.pedmesa.com.br | https://api-verdear.pedmesa.com.br |
+
+O merge na `main` publica e implanta a homologação; o merge na `prod` faz o mesmo na produção. Os dois só ocorrem com o CI verde. Um workflow agendado confere a cada 15 minutos se a aplicação de cada ambiente responde. Os detalhes estão em [CICD.md](CICD.md).
+
 ---
 
 ## 4. Estrutura de pastas
