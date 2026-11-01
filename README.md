@@ -56,6 +56,15 @@ A vitrine pode ser navegada sem login. Ao tentar adicionar um produto ao carrinh
 - Node.js 20+ (a imagem Docker usa 22)
 - Backend do VerdeAr em execução (por padrão em `http://localhost:3000`)
 
+## Ambientes
+
+| Ambiente | Branch | Aplicação | API | Documentação da API (Swagger) |
+|---|---|---|---|---|
+| **Homologação** | `main` | https://verdear-dev.pedmesa.com.br | https://api-verdear-dev.pedmesa.com.br | [/docs](https://api-verdear-dev.pedmesa.com.br/docs) |
+| **Produção** | `prod` | https://verdear.pedmesa.com.br | https://api-verdear.pedmesa.com.br | [/docs](https://api-verdear.pedmesa.com.br/docs) |
+
+Cada ambiente tem a sua imagem Docker, porque a URL da API fica gravada no build. O GitHub também lista os ambientes em **Deployments**, na lateral da página do repositório, com o endereço e a data do último deploy. Como o pipeline publica e implanta cada ambiente, veja [docs/CICD.md](docs/CICD.md).
+
 ## Como executar
 
 ```bash
