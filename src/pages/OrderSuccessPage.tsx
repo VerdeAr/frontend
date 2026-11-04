@@ -5,8 +5,7 @@ import {
 	Loader2,
 	ShoppingBag,
 } from "lucide-react";
-import { useEffect, useState } from "react";
-import { Link, useLocation, useParams } from "react-router";
+import { Link, useLoaderData, useLocation, useNavigation } from "react-router";
 import {
 	OrderItemsList,
 	OrderPaymentInstructions,
@@ -14,47 +13,23 @@ import {
 import { buttonVariants } from "@/components/ui/button";
 import { formatDate } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
-import { saleService } from "@/services/sale.service";
+import type { OrderSuccessLoaderData } from "@/router/loaders";
 import type { SaleResponse } from "@/types";
 
 export default function OrderSuccessPage() {
-	const { id } = useParams<{ id: string }>();
 	const location = useLocation();
+	const navigation = useNavigation();
+	const { sale: loaderSale, error: loaderError } =
+		useLoaderData<OrderSuccessLoaderData>();
 
 	const stateSale = location.state?.sale as SaleResponse | undefined;
-	const [sale, setSale] = useState<SaleResponse | null>(stateSale || null);
-	const [isLoading, setIsLoading] = useState(!stateSale);
-	const [error, setError] = useState<string | null>(null);
+	const sale = stateSale || loaderSale;
+	const error = !sale
+		? loaderError ||
+			"Não conseguimos localizar as informações do pedido solicitado."
+		: null;
 
-	useEffect(() => {
-		if (sale || !id) return;
-
-		let isMounted = true;
-		setIsLoading(true);
-
-		saleService
-			.getPurchaseById(id)
-			.then((data) => {
-				if (isMounted) {
-					setSale(data);
-				}
-			})
-			.catch((err) => {
-				console.error("Erro ao carregar detalhes da compra:", err);
-				if (isMounted) {
-					setError("Não foi possível carregar os detalhes deste pedido.");
-				}
-			})
-			.finally(() => {
-				if (isMounted) {
-					setIsLoading(false);
-				}
-			});
-
-		return () => {
-			isMounted = false;
-		};
-	}, [id, sale]);
+	const isLoading = navigation.state === "loading" && !sale;
 
 	if (isLoading) {
 		return (
