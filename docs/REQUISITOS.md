@@ -125,9 +125,9 @@ Requisitos do produto, com o estado de cada um. O VerdeAr é um marketplace que 
 
 | ID | Requisito | Camada | Estado | Ref. |
 |---|---|:-:|---|---|
-| RF-80 | Falhas de rota, de carregamento ou de API mostram uma tela de erro amigável, e rotas inexistentes mostram uma página 404; nunca uma tela em branco. | F | Planejado | VER-55 |
+| RF-80 | Falhas de rota, de carregamento ou de API mostram uma tela de erro amigável, e rotas inexistentes mostram uma página 404; nunca uma tela em branco. | F | Parcial | VER-53, VER-55 |
 | RF-81 | Componentes comuns (paginação, confirmação, seletor de quantidade, estado vazio e abas da conta) são centralizados e reutilizados. | F | Planejado | VER-48 |
-| RF-82 | Todas as páginas carregam dados por data loaders do React Router. | F | Parcial (Home, Carrinho e Produto) | VER-51 |
+| RF-82 | Todas as páginas carregam dados por data loaders do React Router. | F | Implementado | VER-51, VER-53 |
 
 ---
 
@@ -146,7 +146,7 @@ Requisitos do produto, com o estado de cada um. O VerdeAr é um marketplace que 
 | RNF-09 | Confiabilidade | Erros inesperados retornam 500 sem expor detalhes internos. | Implementado |
 | RNF-10 | Usabilidade | A interface é mobile-first (a partir de 375 px), com áreas de toque de no mínimo 44 px. | Implementado |
 | RNF-11 | Usabilidade | Estados de carregamento (esqueletos), vazio e erro estão presentes nas telas principais. | Parcial (VER-55, VER-48) |
-| RNF-12 | Desempenho | Os dados da página são carregados em paralelo antes da exibição (data loaders), sem cascata de requisições. | Parcial (VER-51) |
+| RNF-12 | Desempenho | Os dados da página são carregados em paralelo antes da exibição (data loaders), sem cascata de requisições. | Implementado (VER-51, VER-53) |
 | RNF-13 | Desempenho | Listagens são paginadas no servidor. | Implementado |
 | RNF-14 | Manutenibilidade | TypeScript em modo `strict`, sem `any`, com Biome; `npm run check` deve passar antes do Pull Request. | Implementado |
 | RNF-15 | Manutenibilidade | Camadas separadas no backend (rota, controller, service, repository) e componentes por domínio no frontend. | Implementado |
