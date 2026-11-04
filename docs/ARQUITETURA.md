@@ -118,10 +118,12 @@ Definido em `src/router/routes.tsx`, todas sob `RootLayout`:
 | `/produtos/:id` | Detalhe do produto (loader `productDetailLoader`) | Público |
 | `/minha-conta` | Minha Conta | Logado |
 | `/carrinho` | Carrinho (loader `cartLoader`) | Logado |
-| `/checkout` | Checkout | Logado |
-| `/pedido-confirmado/:id` | Confirmação do pedido | Logado |
+| `/checkout` | Checkout (loader `checkoutLoader`) | Logado |
+| `/pedido-confirmado/:id` | Confirmação do pedido (loader `orderSuccessLoader`) | Logado |
 
+- **`RootErrorBoundary`** atua como `errorElement` na rota raiz, exibindo tela amigável em português com botão de retorno à vitrine para qualquer falha de carregamento ou rota.
 - **`ProtectedRoute`** envolve as rotas privadas e redireciona o visitante para `/login`, guardando a origem em `state.from`.
+- **Proteção de sessão nos loaders:** `cartLoader`, `checkoutLoader` e `orderSuccessLoader` checam a sessão antes de consultar a API, evitando requisições desnecessárias que retornariam 401 enquanto o `ProtectedRoute` atua.
 - **`RoleRoute`** existe para restringir por papel, mas **não é usada** no roteador hoje. A separação de vendedor acontece dentro de Minha Conta (abaixo) e, de forma definitiva, no backend.
 - **Minha Conta** usa abas controladas pelo parâmetro `?aba=`. O valor é normalizado e aceita sinônimos em português e inglês: `profile`, `purchases`/`compras`, `security`/`seguranca`, e as exclusivas de vendedor `orders`/`pedidos`, `products`/`produtos` e `shipping`/`frete`. As abas de vendedor só aparecem quando `user.role === "VENDEDOR"`.
 - **Home pública:** adicionar um produto ao carrinho sem login leva ao `/login` com a origem salva.
@@ -135,7 +137,7 @@ O estado de busca vive na query string, o que torna a vitrine compartilhável e 
 | `q` | Termo de busca |
 | `pagina` | Página atual (12 produtos por página) |
 
-O `homeLoader` lê esses parâmetros e busca categorias e produtos em paralelo. Em caso de falha, retorna listas vazias com uma mensagem de erro em vez de quebrar a página.
+O `homeLoader` lê esses parâmetros e busca categorias e produtos em paralelo. O parâmetro `categoria` é validado como UUID; se inválido, é desconsiderado e a vitrine completa é listada sem erro 400. Os parâmetros de consulta são enviados sem duplicidade (`category_id`, `search`, `page`, `limit` e `disponivel`). Em caso de falha, retorna listas vazias com uma mensagem de erro em vez de quebrar a página.
 
 ### Detalhe do produto (`/produtos/:id`)
 - O `productDetailLoader` busca o produto (`GET /produtos/:id`) e os bairros (`GET /bairros`) em paralelo. Se os bairros falharem, a página abre mesmo assim com a lista vazia.
@@ -224,7 +226,7 @@ Em Minha Conta, o vendedor cadastra e edita produtos (`/vendedor/produtos`), ati
 
 - **O E2E depende da `main` do backend.** O job E2E do CI baixa o repositório do backend e sobe a API real; uma mudança incompatível lá pode quebrar o E2E do frontend. A versão pode ser fixada com a variável `E2E_BACKEND_REF` (ver [CICD.md](CICD.md)).
 - **O `POST /vendas/checkout` devolve a entidade crua da venda** (pagamento como objeto, itens sem `product_name`), diferente do `GET /vendas/:id`. Por isso a tela de pedido confirmado busca o pedido pelo ID em vez de usar a resposta do checkout. Corrigir na origem é tarefa do backend.
-- **Rotas órfãs:** `/chat` e `/produtos/busca` são linkadas no Header e no Footer, mas não existem. O chat está em desenvolvimento (VER-58); a busca mobile ainda não tem tarefa associada. Também não há `errorElement` nem página 404 (previstos na VER-55).
+- **Rotas órfãs:** `/chat` e `/produtos/busca` são linkadas no Header e no Footer, mas não existem. O chat está em desenvolvimento (VER-58); a busca mobile ainda não tem tarefa associada. A raiz agora conta com `RootErrorBoundary` (VER-53) para falhas gerais de rota e 404 em português.
 - **Funcionalidades da API sem tela:** o envio de avaliações (ver seção 1).
 - **Simulador de frete da PDP:** o valor exibido é uma estimativa e pode diferir do frete do carrinho, que soma a taxa de cada produtor.
 - **`RoleRoute` não utilizado** e **sem refresh token** (ver seções 5 e 6).
