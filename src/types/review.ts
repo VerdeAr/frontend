@@ -1,3 +1,7 @@
+import type {
+	CreateReviewPayload,
+	ReviewFormData,
+} from "@/schemas/review.schema";
 import type { Review } from "./models";
 
 export interface FormattedReviewItem {
@@ -16,4 +20,4 @@ export interface ProductRatingSummary {
 	review_count: number;
 }
 
-export type { Review };
+export type { CreateReviewPayload, Review, ReviewFormData };
