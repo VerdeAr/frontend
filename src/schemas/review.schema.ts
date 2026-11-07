@@ -10,7 +10,7 @@ export const reviewFormSchema = z.object({
 		.string()
 		.max(500, "O comentário deve ter no máximo 500 caracteres.")
 		.optional()
-		.default(""),
+		.or(z.literal("")),
 });
 
 export type ReviewFormData = z.infer<typeof reviewFormSchema>;
