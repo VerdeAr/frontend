@@ -68,7 +68,7 @@ Resultado: os ambientes de **homologação** e **produção** estão no ar, com 
 | VER-58 — Mensagens e chat com WebSocket (Socket.io) | Fazendo | VER-60 Feito (no `main`) | VER-59 Feito | VER-61 **Fazendo** |
 | VER-62 — Endereços com CEP e autopreenchimento | Fazendo | VER-64 **Revisão** (branch `feat/VER-64-enderecos-com-cep`, ainda sem merge) | VER-63 A fazer | VER-65 A fazer |
 | VER-74 — Blindagem de autenticação com cookies HTTP-Only | Fazendo | VER-76 Feito (no `main`) | VER-75 Feito | VER-77 **Fazendo** |
-| VER-78 — Avaliação pós-venda | Fazendo | VER-80 A fazer | VER-79 Feito | VER-81 A fazer |
+| VER-78 — Avaliação pós-venda | Fazendo | VER-80 Feito | VER-79 Feito | VER-81 A fazer |
 | VER-90 — Frete dinâmico com OpenRouteService e Leaflet | A fazer (a tarefa; as subtarefas já começaram) | VER-92 **Fazendo** | VER-91 **Fazendo** | VER-93 A fazer |
 | VER-66 — PDP | A fazer (o Jira não atualizou a tarefa) | VER-68 Feito (no `main`) | VER-67 Feito | VER-69 A fazer |
 | VER-51 — Data loaders do React Router | A fazer (a tarefa; o frontend já está entregue) | VER-53 Feito (no `main`) | VER-52 A fazer | VER-54 A fazer |
