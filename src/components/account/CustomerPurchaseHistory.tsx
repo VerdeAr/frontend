@@ -6,14 +6,16 @@ import {
 	Loader2,
 	ShoppingBag,
 	Sprout,
+	Star,
 	Store,
 	Truck,
 	XCircle,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
+import { ReviewOrderModal } from "@/components/reviews";
 import { Badge } from "@/components/ui/badge";
-import { buttonVariants } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { formatBRL, formatDate } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 import { saleService } from "@/services/sale.service";
@@ -58,6 +60,11 @@ export function CustomerPurchaseHistory() {
 	const [purchases, setPurchases] = useState<SaleResponse[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
+	const [selectedSaleToReview, setSelectedSaleToReview] =
+		useState<SaleResponse | null>(null);
+	const [reviewedSaleIds, setReviewedSaleIds] = useState<Set<string>>(
+		new Set(),
+	);
 
 	useEffect(() => {
 		let isMounted = true;
@@ -86,6 +93,14 @@ export function CustomerPurchaseHistory() {
 			isMounted = false;
 		};
 	}, []);
+
+	const handleReviewSuccess = (saleId: string) => {
+		setReviewedSaleIds((prev) => {
+			const updated = new Set(prev);
+			updated.add(saleId);
+			return updated;
+		});
+	};
 
 	if (isLoading) {
 		return (
@@ -152,6 +167,8 @@ export function CustomerPurchaseHistory() {
 				{purchases.map((purchase) => {
 					const paymentMethodName =
 						purchase.payments?.[0]?.payment_method || "Não especificado";
+					const isFinalized = purchase.status === "FINALIZADA";
+					const isAlreadyReviewed = reviewedSaleIds.has(purchase.id);
 
 					return (
 						<div
@@ -243,7 +260,7 @@ export function CustomerPurchaseHistory() {
 							</div>
 
 							{/* Order Card Footer */}
-							<div className="pt-3 border-t border-border/50 flex flex-col sm:flex-row items-center justify-between gap-3">
+							<div className="pt-3 border-t border-border/50 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
 								<div className="flex items-baseline gap-2 self-start sm:self-auto">
 									<span className="text-xs text-muted-foreground">
 										Valor Total:
@@ -253,21 +270,51 @@ export function CustomerPurchaseHistory() {
 									</span>
 								</div>
 
-								<Link
-									to={`/pedido-confirmado/${purchase.id}`}
-									className={cn(
-										buttonVariants({ variant: "outline", size: "sm" }),
-										"w-full sm:w-auto h-9 gap-1.5 text-xs font-semibold rounded-xl",
-									)}
-								>
-									<span>Ver Comprovante</span>
-									<ExternalLink className="size-3" />
-								</Link>
+								<div className="flex flex-col sm:flex-row items-center gap-2">
+									{isFinalized &&
+										(isAlreadyReviewed ? (
+											<div className="flex w-full sm:w-auto h-11 sm:h-9 items-center justify-center gap-1.5 px-3 rounded-xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 text-xs font-semibold border border-emerald-500/25">
+												<CheckCircle2 className="size-3.5 shrink-0" />
+												<span>Avaliado</span>
+											</div>
+										) : (
+											<Button
+												type="button"
+												variant="outline"
+												onClick={() => setSelectedSaleToReview(purchase)}
+												className="w-full sm:w-auto h-11 sm:h-9 gap-1.5 text-xs font-semibold rounded-xl border-amber-500/40 text-amber-700 hover:bg-amber-500/10 dark:text-amber-400"
+											>
+												<Star className="size-3.5 fill-amber-400 text-amber-400 shrink-0" />
+												<span>Avaliar compra</span>
+											</Button>
+										))}
+
+									<Link
+										to={`/pedido-confirmado/${purchase.id}`}
+										className={cn(
+											buttonVariants({ variant: "outline", size: "sm" }),
+											"w-full sm:w-auto h-11 sm:h-9 gap-1.5 text-xs font-semibold rounded-xl",
+										)}
+									>
+										<span>Ver Comprovante</span>
+										<ExternalLink className="size-3" />
+									</Link>
+								</div>
 							</div>
 						</div>
 					);
 				})}
 			</div>
+
+			{/* Modal de Avaliação do Pedido */}
+			{selectedSaleToReview && (
+				<ReviewOrderModal
+					isOpen={Boolean(selectedSaleToReview)}
+					onClose={() => setSelectedSaleToReview(null)}
+					sale={selectedSaleToReview}
+					onSuccess={() => handleReviewSuccess(selectedSaleToReview.id)}
+				/>
+			)}
 		</div>
 	);
 }
