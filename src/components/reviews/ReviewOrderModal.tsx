@@ -99,10 +99,17 @@ export function ReviewOrderModal({
 				response?: { data?: { message?: string } };
 				message?: string;
 			};
-			setApiError(
+			const message =
 				error.response?.data?.message ||
-					"Não foi possível registrar sua avaliação. Tente novamente.",
-			);
+				"Não foi possível registrar sua avaliação. Tente novamente.";
+			setApiError(message);
+
+			if (message.toLowerCase().includes("já possui uma avaliação")) {
+				onSuccess?.();
+				setTimeout(() => {
+					onClose();
+				}, 2000);
+			}
 		}
 	};
 

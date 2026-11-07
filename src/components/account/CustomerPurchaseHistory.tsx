@@ -168,7 +168,10 @@ export function CustomerPurchaseHistory() {
 					const paymentMethodName =
 						purchase.payments?.[0]?.payment_method || "Não especificado";
 					const isFinalized = purchase.status === "FINALIZADA";
-					const isAlreadyReviewed = reviewedSaleIds.has(purchase.id);
+					const isAlreadyReviewed =
+						Boolean(purchase.is_reviewed) ||
+						Boolean(purchase.review) ||
+						reviewedSaleIds.has(purchase.id);
 
 					return (
 						<div

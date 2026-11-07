@@ -1,5 +1,6 @@
 import { AlertCircle, ShoppingBag, Sprout, Store } from "lucide-react";
 import { useState } from "react";
+import { StarRatingDisplay } from "@/components/reviews";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatBRL, formatStock } from "@/lib/formatters";
@@ -117,6 +118,15 @@ export function ProductCard({
 					<h3 className="line-clamp-2 text-sm sm:text-base font-semibold text-foreground group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors leading-snug">
 						{product.name}
 					</h3>
+
+					{/* Avaliação e Reputação do Produto */}
+					<div className="mt-1.5 flex items-center">
+						<StarRatingDisplay
+							rating={product.average_rating}
+							reviewCount={product.review_count}
+							size="sm"
+						/>
+					</div>
 				</div>
 
 				{/* Preço, Unidade e Botão de Ação */}
