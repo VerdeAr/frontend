@@ -1,7 +1,18 @@
-import { CheckCircle2, MapPin, Store, Truck } from "lucide-react";
-import { useId, useState } from "react";
+import {
+	CheckCircle2,
+	Clock,
+	Loader2,
+	Map as MapIcon,
+	MapPin,
+	Navigation,
+	Store,
+	Truck,
+} from "lucide-react";
+import { useEffect, useId, useState } from "react";
+import { DeliveryRouteMap } from "@/components/common";
 import { formatBRL } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
+import { type ShippingCalculationResult, shippingService } from "@/services";
 import type { Neighborhood } from "@/types";
 
 export interface ProductShippingSimulatorProps {
@@ -18,16 +29,53 @@ export function ProductShippingSimulator({
 	const selectId = useId();
 	const [selectedNeighborhoodId, setSelectedNeighborhoodId] =
 		useState<string>("");
+	const [isCalculating, setIsCalculating] = useState(false);
+	const [calculation, setCalculation] =
+		useState<ShippingCalculationResult | null>(null);
+	const [isMapExpanded, setIsMapExpanded] = useState(true);
 
 	const selectedNeighborhood = neighborhoods.find(
 		(n) => n.id === selectedNeighborhoodId,
 	);
 
-	// Determina o valor do frete
-	const shippingPrice =
-		typeof sellerFixedShippingRate === "number" && sellerFixedShippingRate >= 0
-			? sellerFixedShippingRate
-			: 10.0; // Taxa padrão estimada se não houver taxa fixa cadastrada
+	useEffect(() => {
+		let isMounted = true;
+
+		async function computeShipping() {
+			if (!selectedNeighborhood) {
+				setCalculation(null);
+				return;
+			}
+
+			setIsCalculating(true);
+			try {
+				const result = await shippingService.calculateShipping({
+					neighborhoodName: selectedNeighborhood.name,
+					baseFee:
+						typeof sellerFixedShippingRate === "number" &&
+						sellerFixedShippingRate >= 0
+							? sellerFixedShippingRate
+							: undefined,
+				});
+
+				if (isMounted) {
+					setCalculation(result);
+				}
+			} catch (err) {
+				console.error("Erro ao calcular frete dinâmico na PDP:", err);
+			} finally {
+				if (isMounted) {
+					setIsCalculating(false);
+				}
+			}
+		}
+
+		computeShipping();
+
+		return () => {
+			isMounted = false;
+		};
+	}, [selectedNeighborhood, sellerFixedShippingRate]);
 
 	return (
 		<div
@@ -46,7 +94,7 @@ export function ProductShippingSimulator({
 						Simulação de Frete e Entrega
 					</h2>
 					<p className="text-[11px] text-muted-foreground sm:text-xs">
-						Calcule o valor e o prazo direto com o produtor
+						Cálculo dinâmico pela distância real da fazenda até você
 					</p>
 				</div>
 			</div>
@@ -58,40 +106,106 @@ export function ProductShippingSimulator({
 					className="text-xs font-medium text-foreground flex items-center gap-1"
 				>
 					<MapPin className="size-3.5 text-muted-foreground" />
-					<span>Selecione seu bairro para simular:</span>
+					<span>Selecione seu bairro para traçar a rota:</span>
 				</label>
 
-				<select
-					id={selectId}
-					value={selectedNeighborhoodId}
-					onChange={(e) => setSelectedNeighborhoodId(e.target.value)}
-					className="h-11 w-full rounded-xl border border-border/70 bg-background px-3 py-2 text-xs font-medium text-foreground transition-colors focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 sm:text-sm"
-				>
-					<option value="">Selecione o bairro de entrega...</option>
-					{neighborhoods.map((neighborhood) => (
-						<option key={neighborhood.id} value={neighborhood.id}>
-							{neighborhood.name}
-							{neighborhood.city ? ` - ${neighborhood.city}` : ""}
-						</option>
-					))}
-				</select>
+				<div className="relative w-full">
+					<select
+						id={selectId}
+						value={selectedNeighborhoodId}
+						onChange={(e) => setSelectedNeighborhoodId(e.target.value)}
+						disabled={isCalculating}
+						className="h-11 w-full rounded-xl border border-border/70 bg-background px-3 py-2 text-xs font-medium text-foreground transition-colors focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 sm:text-sm disabled:opacity-60"
+					>
+						<option value="">Selecione o bairro de entrega...</option>
+						{neighborhoods.map((neighborhood) => (
+							<option key={neighborhood.id} value={neighborhood.id}>
+								{neighborhood.name}
+								{neighborhood.city ? ` - ${neighborhood.city}` : ""}
+							</option>
+						))}
+					</select>
+					{isCalculating && (
+						<div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+							<Loader2 className="size-4 animate-spin text-emerald-600" />
+						</div>
+					)}
+				</div>
 			</div>
 
-			{/* Resultado da Simulação */}
-			{selectedNeighborhoodId && selectedNeighborhood && (
-				<div className="flex flex-col gap-2.5 rounded-xl border border-emerald-600/20 bg-emerald-50/60 p-3 text-xs dark:bg-emerald-950/30">
-					<div className="flex items-center justify-between gap-2">
-						<span className="font-semibold text-foreground">
-							Entrega em {selectedNeighborhood.name}:
-						</span>
-						<span className="font-bold text-emerald-700 dark:text-emerald-300">
-							{shippingPrice === 0 ? "Grátis" : formatBRL(shippingPrice)}
-						</span>
+			{/* Resultado da Simulação com Cálculo Dinâmico */}
+			{selectedNeighborhoodId && selectedNeighborhood && calculation && (
+				<div className="flex flex-col gap-3 rounded-xl border border-emerald-600/20 bg-emerald-50/60 p-3.5 text-xs dark:bg-emerald-950/30 transition-all">
+					<div className="flex items-center justify-between gap-2 border-b border-emerald-600/15 pb-2.5">
+						<div className="flex flex-col">
+							<span className="font-semibold text-foreground text-xs sm:text-sm">
+								Entrega em {selectedNeighborhood.name}
+							</span>
+							<span className="text-[11px] text-muted-foreground">
+								Rota calculada via OpenRouteService
+							</span>
+						</div>
+						<div className="text-right">
+							<span className="text-sm sm:text-base font-bold text-emerald-700 dark:text-emerald-300">
+								{calculation.totalPrice === 0
+									? "Grátis"
+									: formatBRL(calculation.totalPrice)}
+							</span>
+						</div>
 					</div>
 
-					<div className="flex items-center gap-2 text-muted-foreground text-[11px] sm:text-xs">
+					{/* Detalhamento da Fórmula Dinâmica */}
+					<div className="grid grid-cols-2 gap-2 text-[11px] text-muted-foreground pt-0.5">
+						<div className="flex items-center gap-1.5">
+							<Navigation className="size-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+							<span>
+								Distância: <strong>{calculation.distanceKm} km</strong>
+							</span>
+						</div>
+						<div className="flex items-center gap-1.5">
+							<Clock className="size-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+							<span>
+								Tempo estimado:{" "}
+								<strong>~{calculation.durationMinutes} min</strong>
+							</span>
+						</div>
+					</div>
+
+					<div className="flex items-center justify-between text-[11px] text-muted-foreground/80 bg-background/50 rounded-lg p-2 border border-border/40">
+						<span>
+							Fórmula: {formatBRL(calculation.baseFee)} base + (
+							{calculation.distanceKm} km × {formatBRL(calculation.pricePerKm)}
+							/km)
+						</span>
+						<button
+							type="button"
+							onClick={() => setIsMapExpanded((prev) => !prev)}
+							className="inline-flex items-center gap-1 font-medium text-emerald-700 hover:text-emerald-800 dark:text-emerald-400 transition-colors"
+						>
+							<MapIcon className="size-3" />
+							<span>{isMapExpanded ? "Ocultar Mapa" : "Ver Rota"}</span>
+						</button>
+					</div>
+
+					{/* Mapa Interativo Renderizado */}
+					{isMapExpanded && (
+						<div className="pt-1 animate-in fade-in duration-300">
+							<DeliveryRouteMap
+								origin={calculation.origin}
+								destination={calculation.destination}
+								routeCoordinates={calculation.routeCoordinates}
+								distanceKm={calculation.distanceKm}
+								durationMinutes={calculation.durationMinutes}
+								className="h-56 sm:h-64 rounded-xl"
+							/>
+						</div>
+					)}
+
+					<div className="flex items-center gap-2 text-muted-foreground text-[11px]">
 						<CheckCircle2 className="size-3.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
-						<span>Taxa fixa do produtor rural para toda a região</span>
+						<span>
+							Cálculo preciso direto da propriedade rural até o bairro
+						</span>
 					</div>
 				</div>
 			)}

@@ -45,6 +45,7 @@ Essas rotas inexistentes caem em uma página de erro padrão do React Router at�
 | HTTP | Axios com `withCredentials: true` (sessão por cookie HTTP-Only) |
 | Documentos | `cpf-cnpj-validator` |
 | Datas | `date-fns` |
+| Mapas e Rotas | Leaflet.js, `react-leaflet`, OpenStreetMap e OpenRouteService API |
 | Qualidade | Biome |
 | Testes | Vitest + Testing Library (unidade e componentes) e Playwright (E2E) |
 | Git hooks | Husky + Commitlint |
@@ -89,6 +90,7 @@ src/
 │   ├── cart/           # CartItemList, CartItemRow, CartSummary, DeliverySelector, CartBadge
 │   ├── catalog/        # ProductGrid, ProductCard, CategorySelector, SearchBar, HeroBannerCarousel
 │   ├── checkout/       # CheckoutSummaryCard, DeliveryAddressCard, PaymentMethodSelector, OrderItemsList
+│   ├── common/         # Componentes compartilhados (DeliveryRouteMap)
 │   ├── layout/         # RootLayout, Header e Footer
 │   ├── pdp/            # ProductGallery, ProductHeaderInfo, ProductSellerCard, ProductShippingSimulator, ProductActionsBar
 │   ├── seller/         # Catálogo, formulário de produto e gestão de pedidos do produtor

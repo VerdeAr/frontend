@@ -1,4 +1,11 @@
-import { AlertCircle, ArrowLeft, Loader2, RefreshCw } from "lucide-react";
+import {
+	AlertCircle,
+	ArrowLeft,
+	Loader2,
+	Navigation,
+	RefreshCw,
+} from "lucide-react";
+import { useEffect, useState } from "react";
 import {
 	Link,
 	useLoaderData,
@@ -6,8 +13,11 @@ import {
 	useRevalidator,
 } from "react-router";
 import { CartItemList, CartSummary, DeliverySelector } from "@/components/cart";
+import { DeliveryRouteMap } from "@/components/common";
 import { Button } from "@/components/ui/button";
+import { formatBRL } from "@/lib/formatters";
 import type { CartLoaderData } from "@/router/loaders";
+import { type ShippingCalculationResult, shippingService } from "@/services";
 import {
 	selectCartItemCount,
 	selectCartItems,
@@ -15,6 +25,7 @@ import {
 	selectCartSubtotal,
 	selectCartTotal,
 	selectDeliveryType,
+	useAuthStore,
 	useCartStore,
 } from "@/stores";
 
@@ -22,6 +33,7 @@ export default function CartPage() {
 	const { error } = useLoaderData<CartLoaderData>();
 	const navigation = useNavigation();
 	const revalidator = useRevalidator();
+	const user = useAuthStore((state) => state.user);
 
 	const items = useCartStore(selectCartItems);
 	const itemCount = useCartStore(selectCartItemCount);
@@ -35,7 +47,55 @@ export default function CartPage() {
 	const clearCart = useCartStore((state) => state.clearCart);
 	const setDeliveryType = useCartStore((state) => state.setDeliveryType);
 
+	const [calculation, setCalculation] =
+		useState<ShippingCalculationResult | null>(null);
+
 	const isLoading = navigation.state === "loading";
+
+	useEffect(() => {
+		let isMounted = true;
+
+		async function computeDynamicShipping() {
+			if (deliveryType !== "ENTREGA") {
+				setCalculation(null);
+				return;
+			}
+
+			try {
+				const neighborhoodName =
+					typeof user?.neighborhood === "object"
+						? user?.neighborhood?.name
+						: user?.neighborhood || undefined;
+
+				const result = await shippingService.calculateShipping({
+					neighborhoodName,
+					destinationAddress: user?.address || undefined,
+				});
+
+				if (isMounted) {
+					setCalculation(result);
+				}
+			} catch (err) {
+				console.error("Erro ao calcular frete no carrinho:", err);
+			}
+		}
+
+		computeDynamicShipping();
+
+		return () => {
+			isMounted = false;
+		};
+	}, [deliveryType, user]);
+
+	const effectiveShipping =
+		deliveryType === "ENTREGA" && calculation
+			? calculation.totalPrice
+			: shipping;
+
+	const effectiveTotal =
+		deliveryType === "ENTREGA" && calculation
+			? subtotal + calculation.totalPrice
+			: total;
 
 	const handleClearCart = async () => {
 		if (window.confirm("Deseja realmente esvaziar todo o seu carrinho?")) {
@@ -130,14 +190,54 @@ export default function CartPage() {
 								<DeliverySelector
 									deliveryType={deliveryType}
 									onSelect={setDeliveryType}
-									shipping={shipping}
+									shipping={effectiveShipping}
 									isUpdating={isUpdating}
 								/>
 
+								{/* Card da Rota e Mapa Interativo (quando Entrega selecionada) */}
+								{deliveryType === "ENTREGA" && calculation && (
+									<div className="rounded-3xl border border-emerald-600/25 bg-card p-4 sm:p-5 shadow-xs flex flex-col gap-3 animate-in fade-in duration-300">
+										<div className="flex items-center justify-between">
+											<div className="flex items-center gap-2">
+												<div className="flex size-8 items-center justify-center rounded-xl bg-primary/10 text-primary">
+													<Navigation className="size-4" />
+												</div>
+												<div>
+													<h3 className="text-xs sm:text-sm font-bold text-foreground">
+														Rota da Entrega
+													</h3>
+													<p className="text-[11px] text-muted-foreground">
+														{calculation.distanceKm} km da fazenda • ~
+														{calculation.durationMinutes} min
+													</p>
+												</div>
+											</div>
+											<span className="text-xs font-bold text-emerald-700 dark:text-emerald-300">
+												{formatBRL(calculation.totalPrice)}
+											</span>
+										</div>
+
+										<DeliveryRouteMap
+											origin={calculation.origin}
+											destination={calculation.destination}
+											routeCoordinates={calculation.routeCoordinates}
+											distanceKm={calculation.distanceKm}
+											durationMinutes={calculation.durationMinutes}
+											className="h-48 sm:h-56 rounded-xl"
+										/>
+
+										<p className="text-[11px] text-muted-foreground/85 text-center">
+											Taxa Base: {formatBRL(calculation.baseFee)} + (
+											{calculation.distanceKm} km ×{" "}
+											{formatBRL(calculation.pricePerKm)}/km)
+										</p>
+									</div>
+								)}
+
 								<CartSummary
 									subtotal={subtotal}
-									shipping={shipping}
-									total={total}
+									shipping={effectiveShipping}
+									total={effectiveTotal}
 									deliveryType={deliveryType}
 									itemCount={itemCount}
 									isUpdating={isUpdating}

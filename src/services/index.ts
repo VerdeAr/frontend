@@ -6,4 +6,5 @@ export * from "./neighborhood.service";
 export * from "./review.service";
 export * from "./sale.service";
 export * from "./seller-products.service";
+export * from "./shipping.service";
 export * from "./socket.service";

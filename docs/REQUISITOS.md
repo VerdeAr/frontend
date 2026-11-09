@@ -76,7 +76,7 @@ Requisitos do produto, com o estado de cada um. O VerdeAr é um marketplace que 
 | RF-33 | O carrinho aceita produtos de vendedores diferentes. | B | Implementado | VER-40 |
 | RF-34 | O cliente escolhe **Entrega** ou **Retirada** e a forma de pagamento (Cartão, PIX, Dinheiro ou Boleto). | B, F | Implementado | VER-40 |
 | RF-35 | O frete soma a taxa fixa de cada vendedor presente no carrinho, só na modalidade Entrega; em Retirada é R$ 0,00. | B, F | Implementado | VER-40 |
-| RF-36 | O frete passa a ser calculado pela distância de condução (taxa base + km × preço por km), exibido no carrinho, no checkout e no simulador da página do produto, com mapa da rota. | B, F | Planejado | VER-90 |
+| RF-36 | O frete passa a ser calculado pela distância de condução (taxa base + km × preço por km), exibido no carrinho, no checkout e no simulador da página do produto, com mapa da rota. | B, F | Parcial (F pronto, B planejado) | VER-90 |
 
 ### 2.5 Checkout e pedidos do cliente
 

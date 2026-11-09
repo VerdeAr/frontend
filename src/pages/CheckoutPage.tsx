@@ -2,8 +2,10 @@ import {
 	AlertCircle,
 	ArrowLeft,
 	Loader2,
+	Navigation,
 	RefreshCw,
 	ShoppingBag,
+	Truck,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
@@ -18,10 +20,16 @@ import {
 	DeliveryAddressCard,
 	PaymentMethodSelector,
 } from "@/components/checkout";
+import { DeliveryRouteMap } from "@/components/common";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { formatBRL } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 import type { CheckoutLoaderData } from "@/router/loaders";
 import { saleService } from "@/services/sale.service";
+import {
+	type ShippingCalculationResult,
+	shippingService,
+} from "@/services/shipping.service";
 import {
 	selectCartItems,
 	selectCartShipping,
@@ -50,6 +58,8 @@ export default function CheckoutPage() {
 
 	const isLoading = navigation.state === "loading";
 
+	const [calculation, setCalculation] =
+		useState<ShippingCalculationResult | null>(null);
 	const [paymentMethod, setPaymentMethod] = useState<string>(
 		cart?.payment_method || "PIX",
 	);
@@ -61,6 +71,51 @@ export default function CheckoutPage() {
 			setPaymentMethod(cart.payment_method);
 		}
 	}, [cart?.payment_method]);
+
+	useEffect(() => {
+		let isMounted = true;
+
+		async function computeDynamicShipping() {
+			if (deliveryType !== "ENTREGA") {
+				setCalculation(null);
+				return;
+			}
+
+			try {
+				const neighborhoodName =
+					typeof user?.neighborhood === "object"
+						? user?.neighborhood?.name
+						: user?.neighborhood || undefined;
+
+				const result = await shippingService.calculateShipping({
+					neighborhoodName,
+					destinationAddress: user?.address || undefined,
+				});
+
+				if (isMounted) {
+					setCalculation(result);
+				}
+			} catch (err) {
+				console.error("Erro ao calcular frete no checkout:", err);
+			}
+		}
+
+		computeDynamicShipping();
+
+		return () => {
+			isMounted = false;
+		};
+	}, [deliveryType, user]);
+
+	const effectiveShipping =
+		deliveryType === "ENTREGA" && calculation
+			? calculation.totalPrice
+			: shipping;
+
+	const effectiveTotal =
+		deliveryType === "ENTREGA" && calculation
+			? subtotal + calculation.totalPrice
+			: total;
 
 	const handleSubmitOrder = async () => {
 		setErrorMessage(null);
@@ -200,6 +255,57 @@ export default function CheckoutPage() {
 							<DeliveryAddressCard user={user} deliveryType={deliveryType} />
 						)}
 
+						{/* Card da Rota e Mapa Interativo (quando Entrega selecionada) */}
+						{deliveryType === "ENTREGA" && calculation && (
+							<div className="rounded-3xl border border-emerald-600/25 bg-card p-5 sm:p-6 shadow-xs flex flex-col gap-3.5 animate-in fade-in duration-300">
+								<div className="flex items-center justify-between">
+									<div className="flex items-center gap-2.5">
+										<div className="flex size-8 items-center justify-center rounded-xl bg-primary/10 text-primary">
+											<Truck className="size-4" />
+										</div>
+										<div>
+											<h3 className="text-sm font-bold text-foreground">
+												Trajeto de Entrega
+											</h3>
+											<p className="text-xs text-muted-foreground">
+												Da propriedade do produtor até seu endereço de entrega
+											</p>
+										</div>
+									</div>
+									<div className="text-right">
+										<span className="text-sm font-bold text-emerald-700 dark:text-emerald-300">
+											{formatBRL(calculation.totalPrice)}
+										</span>
+									</div>
+								</div>
+
+								<DeliveryRouteMap
+									origin={calculation.origin}
+									destination={calculation.destination}
+									routeCoordinates={calculation.routeCoordinates}
+									distanceKm={calculation.distanceKm}
+									durationMinutes={calculation.durationMinutes}
+									className="h-56 sm:h-64 rounded-2xl"
+								/>
+
+								<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[11px] text-muted-foreground bg-muted/30 p-2.5 rounded-xl border border-border/40">
+									<div className="flex items-center gap-1.5">
+										<Navigation className="size-3.5 text-emerald-600 dark:text-emerald-400" />
+										<span>
+											Distância: <strong>{calculation.distanceKm} km</strong> •
+											Estimativa:{" "}
+											<strong>~{calculation.durationMinutes} min</strong>
+										</span>
+									</div>
+									<span>
+										Cálculo: {formatBRL(calculation.baseFee)} base + (
+										{calculation.distanceKm} km ×{" "}
+										{formatBRL(calculation.pricePerKm)}/km)
+									</span>
+								</div>
+							</div>
+						)}
+
 						<PaymentMethodSelector
 							selectedMethod={paymentMethod}
 							onSelectMethod={setPaymentMethod}
@@ -212,8 +318,8 @@ export default function CheckoutPage() {
 						<CheckoutSummaryCard
 							items={items}
 							subtotal={subtotal}
-							shipping={shipping}
-							total={total}
+							shipping={effectiveShipping}
+							total={effectiveTotal}
 							deliveryType={deliveryType}
 							isSubmitting={isSubmitting}
 							onSubmitOrder={handleSubmitOrder}
