@@ -1,8 +1,17 @@
 import type { LoaderFunctionArgs } from "react-router";
+import { z } from "zod";
 import { catalogService } from "@/services/catalog.service";
 import { neighborhoodService } from "@/services/neighborhood.service";
+import { saleService } from "@/services/sale.service";
+import { useAuthStore } from "@/stores/auth.store";
 import { useCartStore } from "@/stores/cart.store";
-import type { CartResponse, Category, Neighborhood, Product } from "@/types";
+import type {
+	CartResponse,
+	Category,
+	Neighborhood,
+	Product,
+	SaleResponse,
+} from "@/types";
 
 export interface HomeLoaderData {
 	categories: Category[];
@@ -16,8 +25,11 @@ export async function homeLoader({
 	request,
 }: LoaderFunctionArgs): Promise<HomeLoaderData> {
 	const url = new URL(request.url);
-	const currentCategory = url.searchParams.get("categoria") || undefined;
-	const currentSearch = url.searchParams.get("q") || undefined;
+	const rawCategory = url.searchParams.get("categoria");
+	const isCategoryUuid =
+		rawCategory && z.string().uuid().safeParse(rawCategory).success;
+	const currentCategory = isCategoryUuid ? rawCategory : undefined;
+	const currentSearch = url.searchParams.get("q")?.trim() || undefined;
 	const currentPage =
 		Number.parseInt(url.searchParams.get("pagina") || "1", 10) || 1;
 
@@ -26,9 +38,7 @@ export async function homeLoader({
 			catalogService.getCategories(),
 			catalogService.getProducts({
 				category_id: currentCategory,
-				categoriaId: currentCategory,
 				search: currentSearch,
-				termo: currentSearch,
 				page: currentPage,
 				limit: 12,
 				disponivel: true,
@@ -61,6 +71,11 @@ export interface CartLoaderData {
 }
 
 export async function cartLoader(): Promise<CartLoaderData> {
+	const { isAuthenticated } = useAuthStore.getState();
+	if (!isAuthenticated) {
+		return { cart: null, error: null };
+	}
+
 	try {
 		const cart = await useCartStore.getState().fetchCart();
 		const error = useCartStore.getState().error;
@@ -70,6 +85,30 @@ export async function cartLoader(): Promise<CartLoaderData> {
 		return {
 			cart: null,
 			error: "Não foi possível carregar os dados do carrinho.",
+		};
+	}
+}
+
+export interface CheckoutLoaderData {
+	cart: CartResponse | null;
+	error: string | null;
+}
+
+export async function checkoutLoader(): Promise<CheckoutLoaderData> {
+	const { isAuthenticated } = useAuthStore.getState();
+	if (!isAuthenticated) {
+		return { cart: null, error: null };
+	}
+
+	try {
+		const cart = await useCartStore.getState().fetchCart();
+		const error = useCartStore.getState().error;
+		return { cart, error };
+	} catch (err) {
+		console.error("Erro ao carregar dados do checkout:", err);
+		return {
+			cart: null,
+			error: "Não foi possível carregar as informações do seu carrinho.",
 		};
 	}
 }
@@ -111,6 +150,43 @@ export async function productDetailLoader({
 			neighborhoods: [],
 			error:
 				"Não foi possível encontrar as informações deste produto. Ele pode estar indisponível ou ter sido removido.",
+		};
+	}
+}
+
+export interface OrderSuccessLoaderData {
+	sale: SaleResponse | null;
+	error: string | null;
+}
+
+export async function orderSuccessLoader({
+	params,
+}: LoaderFunctionArgs): Promise<OrderSuccessLoaderData> {
+	const { isAuthenticated } = useAuthStore.getState();
+	if (!isAuthenticated) {
+		return { sale: null, error: null };
+	}
+
+	const { id } = params;
+
+	if (!id) {
+		return {
+			sale: null,
+			error: "Identificador do pedido não informado.",
+		};
+	}
+
+	try {
+		const sale = await saleService.getPurchaseById(id);
+		return {
+			sale,
+			error: null,
+		};
+	} catch (err) {
+		console.error("Erro ao carregar detalhes do pedido:", err);
+		return {
+			sale: null,
+			error: "Não foi possível encontrar as informações do pedido solicitado.",
 		};
 	}
 }

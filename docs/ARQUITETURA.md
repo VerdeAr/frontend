@@ -118,10 +118,12 @@ Definido em `src/router/routes.tsx`, todas sob `RootLayout`:
 | `/produtos/:id` | Detalhe do produto (loader `productDetailLoader`) | Público |
 | `/minha-conta` | Minha Conta | Logado |
 | `/carrinho` | Carrinho (loader `cartLoader`) | Logado |
-| `/checkout` | Checkout | Logado |
-| `/pedido-confirmado/:id` | Confirmação do pedido | Logado |
+| `/checkout` | Checkout (loader `checkoutLoader`) | Logado |
+| `/pedido-confirmado/:id` | Confirmação do pedido (loader `orderSuccessLoader`) | Logado |
 
+- **`RootErrorBoundary`** atua como `errorElement` na rota raiz, exibindo tela amigável em português com botão de retorno à vitrine para qualquer falha de carregamento ou rota.
 - **`ProtectedRoute`** envolve as rotas privadas e redireciona o visitante para `/login`, guardando a origem em `state.from`.
+- **Proteção de sessão nos loaders:** `cartLoader`, `checkoutLoader` e `orderSuccessLoader` checam a sessão antes de consultar a API, evitando requisições desnecessárias que retornariam 401 enquanto o `ProtectedRoute` atua.
 - **`RoleRoute`** existe para restringir por papel, mas **não é usada** no roteador hoje. A separação de vendedor acontece dentro de Minha Conta (abaixo) e, de forma definitiva, no backend.
 - **Minha Conta** usa abas controladas pelo parâmetro `?aba=`. O valor é normalizado e aceita sinônimos em português e inglês: `profile`, `purchases`/`compras`, `security`/`seguranca`, e as exclusivas de vendedor `orders`/`pedidos`, `products`/`produtos` e `shipping`/`frete`. As abas de vendedor só aparecem quando `user.role === "VENDEDOR"`.
 - **Home pública:** adicionar um produto ao carrinho sem login leva ao `/login` com a origem salva.
@@ -135,7 +137,7 @@ O estado de busca vive na query string, o que torna a vitrine compartilhável e 
 | `q` | Termo de busca |
 | `pagina` | Página atual (12 produtos por página) |
 
-O `homeLoader` lê esses parâmetros e busca categorias e produtos em paralelo. Em caso de falha, retorna listas vazias com uma mensagem de erro em vez de quebrar a página.
+O `homeLoader` lê esses parâmetros e busca categorias e produtos em paralelo. O parâmetro `categoria` é validado como UUID; se inválido, é desconsiderado e a vitrine completa é listada sem erro 400. Os parâmetros de consulta são enviados sem duplicidade (`category_id`, `search`, `page`, `limit` e `disponivel`). Em caso de falha, retorna listas vazias com uma mensagem de erro em vez de quebrar a página.
 
 ### Detalhe do produto (`/produtos/:id`)
 - O `productDetailLoader` busca o produto (`GET /produtos/:id`) e os bairros (`GET /bairros`) em paralelo. Se os bairros falharem, a página abre mesmo assim com a lista vazia.

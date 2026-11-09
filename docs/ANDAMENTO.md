@@ -37,7 +37,7 @@ Legenda dos status do Jira: **Feito**, **Revisão** (code review), **Fazendo**, 
 
 | Subtarefa | Entrega | Tarefa |
 |---|---|---|
-| VER-53 | Data loaders do React Router e refatoração das páginas (Home e Carrinho) | VER-51 — Migração para data loaders |
+| VER-53 | Data loaders do React Router (Home, Carrinho, Checkout e Confirmação de Pedido), validação de UUID e RootErrorBoundary | VER-51 — Migração para data loaders |
 | VER-68 | `ProductDetailPage` e subcomponentes da PDP (`/produtos/:id`): galeria, informações com avaliação, produtor, simulador de frete e barra de ações | VER-66 — Páginas de detalhe do produto |
 | VER-76 | Autenticação por cookies HTTP-Only: remoção dos tokens do client-side, `withCredentials` e botão de logout | VER-74 — Blindagem de autenticação |
 | VER-60 | Cliente Socket.io, `ChatInboxPage` e `ChatRoomPage`, stores do chat, badge de mensagens não lidas no Header e botão para conversar com o produtor na PDP | VER-58 — Mensagens e chat |
@@ -71,7 +71,7 @@ Resultado: os ambientes de **homologação** e **produção** estão no ar, com 
 | VER-78 — Avaliação pós-venda | Fazendo | VER-80 Feito | VER-79 Feito | VER-81 A fazer |
 | VER-90 — Frete dinâmico com OpenRouteService e Leaflet | A fazer (a tarefa; as subtarefas já começaram) | VER-92 **Fazendo** | VER-91 **Fazendo** | VER-93 A fazer |
 | VER-66 — PDP | A fazer (o Jira não atualizou a tarefa) | VER-68 Feito (no `main`) | VER-67 Feito | VER-69 A fazer |
-| VER-51 — Data loaders do React Router | A fazer (a tarefa; o frontend já está entregue) | VER-53 Feito (no `main`) | VER-52 A fazer | VER-54 A fazer |
+| VER-51 — Data loaders do React Router | A fazer (a tarefa; frontend 100% entregue no VER-53) | VER-53 Feito | VER-52 A fazer | VER-54 A fazer |
 
 ---
 
@@ -92,7 +92,7 @@ Resultado: os ambientes de **homologação** e **produção** estão no ar, com 
 
 - **VER-108 (bug, backend, A fazer):** os endpoints de chat expõem o hash da senha, o CPF, o e-mail e o telefone do outro participante da conversa. Precisa ser corrigido antes de o chat ser considerado concluído (VER-58).
 - A busca mobile do Header aponta para `/produtos/busca`, que não existe. Nenhuma tarefa cobre isso hoje.
-- A página 404 e o `errorElement` ficam com a VER-55.
+- A página 404 dedicada fica com a VER-55; o `errorElement` amigável (`RootErrorBoundary`) na raiz foi entregue na VER-53.
 - O `POST /vendas/checkout` devolve a entidade crua da venda, diferente do `GET /vendas/:id`. A tela de pedido confirmado contorna isso buscando o pedido pelo ID. A correção é do backend e ainda não tem tarefa.
 
 ---
