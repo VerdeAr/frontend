@@ -17,12 +17,12 @@ Telas e fluxos já disponíveis:
 | Detalhe do produto (PDP) | Página pública `/produtos/:id`, aberta ao clicar no card do produto. Mostra galeria, nome, preço, estoque, descrição, média e quantidade de avaliações, card do produtor, simulador de frete e barra de ações (quantidade e adicionar ao carrinho). |
 | Carrinho | Itens, resumo de valores e seletor de entrega (**Entrega** com frete ou **Retirada**), sincronizados com a API. |
 | Checkout | Resumo, endereço de entrega, forma de pagamento e tela de pedido confirmado com instruções. |
-| Minhas Compras | Histórico de compras do usuário logado. |
+| Minhas Compras | Histórico de compras do usuário logado e avaliação de pedidos finalizados via modal interativo. |
+| Avaliações | Avaliação de compras concluídas com estrelas (`StarRatingInput`), feedback semântico e exibição de reputação nos cards da vitrine e do produtor. |
 | Painel do vendedor | Dentro de Minha Conta: Pedidos Recebidos, Meus Produtos (cadastro, edição e ativar/desativar) e Frete e Entrega. |
 
 Ainda **não implementado** no frontend, embora a API já exista ou esteja modelada:
 
-- **Avaliação pós-venda** (VER-78, em desenvolvimento): a API de avaliações já existe e a PDP já exibe a média e a quantidade de avaliações do produto. Faltam `StarRatingInput`, `ReviewOrderModal` (o cliente avaliar um pedido finalizado) e a exibição da reputação nos cards de produto e no perfil do produtor.
 - **Chat** entre cliente e vendedor (VER-58, em desenvolvimento): o ícone do Header e o link do Footer apontam para `/chat`, que ainda não tem rota.
 - **Busca mobile:** o botão de busca no Header (telas pequenas) aponta para `/produtos/busca`, que também não tem rota.
 
@@ -226,12 +226,10 @@ Em Minha Conta, o vendedor cadastra e edita produtos (`/vendedor/produtos`), ati
 
 - **O E2E depende da `main` do backend.** O job E2E do CI baixa o repositório do backend e sobe a API real; uma mudança incompatível lá pode quebrar o E2E do frontend. A versão pode ser fixada com a variável `E2E_BACKEND_REF` (ver [CICD.md](CICD.md)).
 - **O `POST /vendas/checkout` devolve a entidade crua da venda** (pagamento como objeto, itens sem `product_name`), diferente do `GET /vendas/:id`. Por isso a tela de pedido confirmado busca o pedido pelo ID em vez de usar a resposta do checkout. Corrigir na origem é tarefa do backend.
-- **Rotas órfãs:** `/chat` e `/produtos/busca` são linkadas no Header e no Footer, mas não existem. O chat está em desenvolvimento (VER-58); a busca mobile ainda não tem tarefa associada. A raiz agora conta com `RootErrorBoundary` (VER-53) para falhas gerais de rota e 404 em português.
-- **Funcionalidades da API sem tela:** o envio de avaliações (ver seção 1).
+- **Rotas órfãs:** `/chat` e `/produtos/busca` são linkadas no Header e no Footer, mas não existem. O chat está em desenvolvimento (VER-58); a busca mobile ainda não tem tarefa associada. Também não há `errorElement` nem página 404 (previstos na VER-55).
 - **Simulador de frete da PDP:** o valor exibido é uma estimativa e pode diferir do frete do carrinho, que soma a taxa de cada produtor.
 - **`RoleRoute` não utilizado** e **sem refresh token** (ver seções 5 e 6).
 - **Sem pasta `hooks/`:** a lógica reutilizável hoje vive nos stores e nos componentes.
-- **Avaliações em desenvolvimento** (VER-78): componentes de estrelas, modal de avaliação do pedido e exibição de reputação ainda não existem.
 
 ---
 
