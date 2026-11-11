@@ -1,5 +1,6 @@
 import type { LoaderFunctionArgs } from "react-router";
 import { z } from "zod";
+import { getApiErrorStatus } from "@/lib/api-error";
 import { catalogService } from "@/services/catalog.service";
 import { neighborhoodService } from "@/services/neighborhood.service";
 import { saleService } from "@/services/sale.service";
@@ -11,6 +12,7 @@ import type {
 	Neighborhood,
 	Product,
 	SaleResponse,
+	SellerOrderDetail,
 } from "@/types";
 
 export interface HomeLoaderData {
@@ -187,6 +189,59 @@ export async function orderSuccessLoader({
 		return {
 			sale: null,
 			error: "Não foi possível encontrar as informações do pedido solicitado.",
+		};
+	}
+}
+
+export interface SellerOrderDetailLoaderData {
+	order: SellerOrderDetail | null;
+	error: string | null;
+	/** Código HTTP do erro (403, 404...) para a página escolher a mensagem e as ações. */
+	errorStatus: number | null;
+}
+
+const SELLER_ORDER_NOT_FOUND =
+	"Pedido não encontrado. Ele pode ter sido removido ou o link está incorreto.";
+
+export async function sellerOrderDetailLoader({
+	params,
+}: LoaderFunctionArgs): Promise<SellerOrderDetailLoaderData> {
+	const { isAuthenticated, user } = useAuthStore.getState();
+
+	// Sem sessão ou sem papel de vendedor, o ProtectedRoute e o RoleRoute redirecionam
+	if (!isAuthenticated || user?.role !== "VENDEDOR") {
+		return { order: null, error: null, errorStatus: null };
+	}
+
+	const { id } = params;
+	if (!id || !z.string().uuid().safeParse(id).success) {
+		return { order: null, error: SELLER_ORDER_NOT_FOUND, errorStatus: 404 };
+	}
+
+	try {
+		const order = await saleService.getSellerOrderDetail(id);
+		return { order, error: null, errorStatus: null };
+	} catch (err) {
+		console.error("Erro ao carregar detalhe do pedido do vendedor:", err);
+		const status = getApiErrorStatus(err);
+
+		if (status === 404) {
+			return { order: null, error: SELLER_ORDER_NOT_FOUND, errorStatus: 404 };
+		}
+
+		if (status === 403) {
+			return {
+				order: null,
+				error:
+					"Este pedido não contém produtos seus, por isso você não tem acesso a ele.",
+				errorStatus: 403,
+			};
+		}
+
+		return {
+			order: null,
+			error: "Não foi possível carregar o pedido. Tente novamente.",
+			errorStatus: status,
 		};
 	}
 }

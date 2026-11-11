@@ -1,3 +1,4 @@
+import { AxiosError, type AxiosResponse } from "axios";
 import type { LoaderFunctionArgs } from "react-router";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { catalogService } from "@/services/catalog.service";
@@ -5,12 +6,13 @@ import { saleService } from "@/services/sale.service";
 import { useAuthStore } from "@/stores/auth.store";
 import { useCartStore } from "@/stores/cart.store";
 import { criarCarrinho, criarProduto, criarUsuario } from "@/test/fixtures";
-import type { SaleResponse } from "@/types";
+import type { SaleResponse, SellerOrderDetail } from "@/types";
 import {
 	cartLoader,
 	checkoutLoader,
 	homeLoader,
 	orderSuccessLoader,
+	sellerOrderDetailLoader,
 } from "./loaders";
 
 vi.mock("@/services/catalog.service", () => ({
@@ -24,6 +26,7 @@ vi.mock("@/services/catalog.service", () => ({
 vi.mock("@/services/sale.service", () => ({
 	saleService: {
 		getPurchaseById: vi.fn(),
+		getSellerOrderDetail: vi.fn(),
 	},
 }));
 
@@ -268,6 +271,113 @@ describe("orderSuccessLoader: proteção de sessão e carga de pedido confirmado
 		expect(data.sale).toBeNull();
 		expect(data.error).toBe(
 			"Não foi possível encontrar as informações do pedido solicitado.",
+		);
+	});
+});
+
+describe("sellerOrderDetailLoader: acesso do vendedor e tratamento de erros", () => {
+	const ID_VALIDO = "3f2b8c1e-4d5a-4b6c-8d7e-9f0a1b2c3d4e";
+
+	function argumentos(id?: string) {
+		return {
+			params: id ? { id } : {},
+		} as unknown as LoaderFunctionArgs;
+	}
+
+	function logarComo(role: "CLIENTE" | "VENDEDOR") {
+		useAuthStore.setState({
+			isAuthenticated: true,
+			user: criarUsuario({ role }),
+		});
+	}
+
+	function erroHttp(status: number) {
+		const erro = new AxiosError("Falha");
+		erro.response = { status, data: {} } as AxiosResponse;
+		return erro;
+	}
+
+	it("não chama a API sem sessão ou quando o usuário não é vendedor", async () => {
+		expect(await sellerOrderDetailLoader(argumentos(ID_VALIDO))).toEqual({
+			order: null,
+			error: null,
+			errorStatus: null,
+		});
+
+		logarComo("CLIENTE");
+		await sellerOrderDetailLoader(argumentos(ID_VALIDO));
+
+		expect(venda.getSellerOrderDetail).not.toHaveBeenCalled();
+	});
+
+	it("trata ID ausente ou inválido como pedido não encontrado, sem chamar a API", async () => {
+		logarComo("VENDEDOR");
+
+		const semId = await sellerOrderDetailLoader(argumentos());
+		const idInvalido = await sellerOrderDetailLoader(argumentos("abc"));
+
+		expect(semId.errorStatus).toBe(404);
+		expect(idInvalido.errorStatus).toBe(404);
+		expect(venda.getSellerOrderDetail).not.toHaveBeenCalled();
+	});
+
+	it("busca o detalhe do pedido quando o vendedor está logado", async () => {
+		logarComo("VENDEDOR");
+		const pedido: SellerOrderDetail = {
+			id: ID_VALIDO,
+			status: "ABERTA",
+			delivery_type: "ENTREGA",
+			created_at: new Date().toISOString(),
+			updated_at: new Date().toISOString(),
+			payment_method: "PIX",
+			customer: {
+				id: "cliente-1",
+				name: "João",
+				email: "joao@verdear.dev",
+				phone: null,
+				address: null,
+				neighborhood: null,
+			},
+			items: [],
+			seller_subtotal: 0,
+			order_total: 0,
+			status_history: [],
+			pending_adjustment: null,
+		};
+		venda.getSellerOrderDetail.mockResolvedValue(pedido);
+
+		const data = await sellerOrderDetailLoader(argumentos(ID_VALIDO));
+
+		expect(venda.getSellerOrderDetail).toHaveBeenCalledWith(ID_VALIDO);
+		expect(data).toEqual({ order: pedido, error: null, errorStatus: null });
+	});
+
+	it("diferencia pedido de outro vendedor (403) de pedido inexistente (404)", async () => {
+		logarComo("VENDEDOR");
+
+		venda.getSellerOrderDetail.mockRejectedValueOnce(erroHttp(403));
+		const semPermissao = await sellerOrderDetailLoader(argumentos(ID_VALIDO));
+
+		venda.getSellerOrderDetail.mockRejectedValueOnce(erroHttp(404));
+		const inexistente = await sellerOrderDetailLoader(argumentos(ID_VALIDO));
+
+		expect(semPermissao.errorStatus).toBe(403);
+		expect(semPermissao.error).toContain("não contém produtos seus");
+		expect(inexistente.errorStatus).toBe(404);
+		expect(inexistente.order).toBeNull();
+	});
+
+	it("devolve mensagem genérica em falha de rede", async () => {
+		logarComo("VENDEDOR");
+		venda.getSellerOrderDetail.mockRejectedValue(
+			new AxiosError("Network Error"),
+		);
+
+		const data = await sellerOrderDetailLoader(argumentos(ID_VALIDO));
+
+		expect(data.errorStatus).toBeNull();
+		expect(data.error).toBe(
+			"Não foi possível carregar o pedido. Tente novamente.",
 		);
 	});
 });
