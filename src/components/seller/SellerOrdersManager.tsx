@@ -3,17 +3,20 @@ import {
 	CheckCircle2,
 	ClipboardList,
 	Clock,
+	Hourglass,
 	Loader2,
+	PackageOpen,
+	Truck,
 	XCircle,
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { saleService } from "@/services/sale.service";
-import type { SellerOrderResponse } from "@/types";
+import type { SaleStatus, SellerOrderResponse } from "@/types";
 import { SellerOrderCard } from "./SellerOrderCard";
 
-type StatusFilter = "" | "ABERTA" | "FINALIZADA" | "CANCELADA";
+type StatusFilter = "" | SaleStatus;
 
 const FILTERS: {
 	label: string;
@@ -21,7 +24,14 @@ const FILTERS: {
 	icon: React.ComponentType<{ className?: string }>;
 }[] = [
 	{ label: "Todos", value: "", icon: ClipboardList },
-	{ label: "Pendentes", value: "ABERTA", icon: Clock },
+	{ label: "Recebidos", value: "ABERTA", icon: Clock },
+	{ label: "Em preparação", value: "EM_PREPARACAO", icon: PackageOpen },
+	{ label: "A caminho", value: "A_CAMINHO", icon: Truck },
+	{
+		label: "Aguardando cliente",
+		value: "AGUARDANDO_APROVACAO_CLIENTE",
+		icon: Hourglass,
+	},
 	{ label: "Concluídos", value: "FINALIZADA", icon: CheckCircle2 },
 	{ label: "Cancelados", value: "CANCELADA", icon: XCircle },
 ];
@@ -113,11 +123,6 @@ export function SellerOrdersManager() {
 						>
 							<Icon className={cn("size-3.5", isActive && "text-primary")} />
 							<span>{filter.label}</span>
-							{filter.value === "ABERTA" && pendingCount > 0 && (
-								<span className="ml-1 flex size-4 items-center justify-center rounded-full bg-amber-500 text-[10px] font-bold text-white">
-									{pendingCount}
-								</span>
-							)}
 						</button>
 					);
 				})}

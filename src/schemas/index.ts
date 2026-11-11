@@ -1,3 +1,4 @@
+export * from "./adjustment.schema";
 export * from "./auth.schema";
 export * from "./chat.schema";
 export * from "./person.schema";

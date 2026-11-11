@@ -1,8 +1,11 @@
 import { api } from "@/lib/api";
 import type {
 	CheckoutPayload,
+	ProposeAdjustmentPayload,
 	SaleResponse,
+	SellerOrderDetail,
 	SellerOrderResponse,
+	SellerTargetStatus,
 } from "@/types";
 
 export const saleService = {
@@ -51,15 +54,52 @@ export const saleService = {
 	},
 
 	/**
-	 * Atualiza o status do pedido pelo vendedor (FINALIZADA ou CANCELADA).
+	 * Atualiza o status do pedido pelo vendedor, conforme a máquina de estados do backend.
 	 */
 	async updateOrderStatus(
 		id: string,
-		status: "FINALIZADA" | "CANCELADA",
+		status: SellerTargetStatus,
 	): Promise<SellerOrderResponse> {
 		const response = await api.patch<SellerOrderResponse>(
 			`/vendas/${id}/status`,
 			{ status },
+		);
+		return response.data;
+	},
+
+	/**
+	 * Obtém o detalhe de um pedido do vendedor, com histórico de status e ajuste pendente.
+	 */
+	async getSellerOrderDetail(id: string): Promise<SellerOrderDetail> {
+		const response = await api.get<SellerOrderDetail>(
+			`/vendedor/pedidos/${id}`,
+		);
+		return response.data;
+	},
+
+	/**
+	 * Envia ao cliente uma proposta de ajuste de quantidade ou pesagem (RF-56).
+	 * O pedido passa a AGUARDANDO_APROVACAO_CLIENTE até a resposta do cliente.
+	 */
+	async proposeAdjustment(
+		id: string,
+		data: ProposeAdjustmentPayload,
+	): Promise<SellerOrderDetail> {
+		const response = await api.post<SellerOrderDetail>(
+			`/vendedor/pedidos/${id}/propor-ajuste`,
+			data,
+		);
+		return response.data;
+	},
+
+	/**
+	 * Registra a resposta do cliente à proposta de ajuste.
+	 * Aceitar aplica os novos valores; recusar cancela o pedido inteiro.
+	 */
+	async respondAdjustment(id: string, accept: boolean): Promise<SaleResponse> {
+		const response = await api.post<SaleResponse>(
+			`/vendas/${id}/responder-ajuste`,
+			{ aceitar: accept },
 		);
 		return response.data;
 	},

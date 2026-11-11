@@ -94,11 +94,11 @@ Requisitos do produto, com o estado de cada um. O VerdeAr é um marketplace que 
 |---|---|:-:|---|---|
 | RF-50 | O Vendedor lista os pedidos que contêm produtos seus, com filtro por status, e vê o subtotal da sua parte. | B, F | Implementado | VER-41 |
 | RF-51 | O Vendedor vê o contador de pedidos pendentes no cabeçalho. | B, F | Implementado | VER-41 |
-| RF-52 | Só o Vendedor altera o status: `ABERTA → FINALIZADA` ou `ABERTA → CANCELADA`. Estados finais não mudam. | B, F | Implementado | VER-41 |
-| RF-53 | Ao cancelar um pedido, o estoque dos itens é devolvido. | B | Implementado | VER-41 |
-| RF-54 | O Vendedor tem página de detalhe do pedido (`/vendedor/pedidos/:id`) com linha do tempo, dados do cliente e rota de entrega. | B, F | Planejado | VER-94 |
-| RF-55 | O workflow do pedido ganha as etapas Recebido, Em Preparação, A Caminho e Concluído. | B, F | Planejado | VER-94 |
-| RF-56 | O Vendedor propõe ajuste de itens ou pesagem, e o cliente aprova ou recusa por um banner no histórico; não há alteração unilateral. | B, F | Planejado | VER-94 |
+| RF-52 | Só o Vendedor altera o status, seguindo a máquina de estados do pedido (RF-55). `FINALIZADA` e `CANCELADA` são finais. | B, F | Implementado | VER-41, VER-95, VER-96 |
+| RF-53 | Ao cancelar um pedido, o estoque dos itens é devolvido uma única vez, mesmo com cancelamentos simultâneos. | B | Implementado | VER-41, VER-95 |
+| RF-54 | O Vendedor tem página de detalhe do pedido (`/vendedor/pedidos/:id`) com linha do tempo, dados do cliente e rota de entrega. | B, F | Parcial (página pronta; o mapa da rota entra com a VER-92, hoje é exibido o endereço) | VER-95, VER-96 |
+| RF-55 | O workflow do pedido ganha as etapas Recebido (`ABERTA`), Em Preparação, A Caminho (só Entrega) e Concluído (`FINALIZADA`). | B, F | Implementado | VER-95, VER-96 |
+| RF-56 | O Vendedor propõe ajuste de quantidade ou pesagem, e o cliente aprova ou recusa por um banner no histórico; não há alteração unilateral. Aceitar atualiza quantidades, total, pagamento e estoque; recusar cancela o pedido. | B, F | Implementado | VER-95, VER-96 |
 | RF-57 | O Vendedor recebe e-mail de novo pedido e o cliente recebe e-mail a cada atualização de status. | B | Planejado | VER-82 |
 
 ### 2.7 Avaliações

@@ -1,5 +1,5 @@
 import { createBrowserRouter } from "react-router";
-import { ProtectedRoute } from "@/components/auth";
+import { ProtectedRoute, RoleRoute } from "@/components/auth";
 import RootErrorBoundary from "@/components/layout/RootErrorBoundary";
 import RootLayout from "@/components/layout/RootLayout";
 import AccountSettingsPage from "@/pages/AccountSettingsPage";
@@ -12,12 +12,14 @@ import Login from "@/pages/Login";
 import OrderSuccessPage from "@/pages/OrderSuccessPage";
 import ProductDetailPage from "@/pages/ProductDetailPage";
 import Register from "@/pages/Register";
+import SellerOrderDetailPage from "@/pages/SellerOrderDetailPage";
 import {
 	cartLoader,
 	checkoutLoader,
 	homeLoader,
 	orderSuccessLoader,
 	productDetailLoader,
+	sellerOrderDetailLoader,
 } from "./loaders";
 
 export const router = createBrowserRouter([
@@ -73,6 +75,17 @@ export const router = createBrowserRouter([
 					{
 						path: "chat/:id",
 						element: <ChatRoomPage />,
+					},
+					{
+						// Telas exclusivas do vendedor; o cliente é redirecionado para a vitrine
+						element: <RoleRoute allowedRoles={["VENDEDOR"]} />,
+						children: [
+							{
+								path: "vendedor/pedidos/:id",
+								element: <SellerOrderDetailPage />,
+								loader: sellerOrderDetailLoader,
+							},
+						],
 					},
 				],
 			},

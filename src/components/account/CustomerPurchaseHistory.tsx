@@ -1,7 +1,6 @@
 import {
 	AlertCircle,
 	CheckCircle2,
-	Clock,
 	ExternalLink,
 	Loader2,
 	ShoppingBag,
@@ -9,52 +8,17 @@ import {
 	Star,
 	Store,
 	Truck,
-	XCircle,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
+import { SaleStatusBadge } from "@/components/orders";
 import { ReviewOrderModal } from "@/components/reviews";
-import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { formatBRL, formatDate } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 import { saleService } from "@/services/sale.service";
-import type { SaleResponse, SaleStatus } from "@/types";
-
-function renderStatusBadge(status: SaleStatus) {
-	switch (status) {
-		case "FINALIZADA":
-			return (
-				<Badge
-					variant="secondary"
-					className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 gap-1.5 py-1 text-xs font-semibold"
-				>
-					<CheckCircle2 className="size-3.5" />
-					<span>Concluída</span>
-				</Badge>
-			);
-		case "CANCELADA":
-			return (
-				<Badge
-					variant="destructive"
-					className="bg-destructive/15 text-destructive border border-destructive/30 gap-1.5 py-1 text-xs font-semibold"
-				>
-					<XCircle className="size-3.5" />
-					<span>Cancelada</span>
-				</Badge>
-			);
-		default:
-			return (
-				<Badge
-					variant="secondary"
-					className="bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 gap-1.5 py-1 text-xs font-semibold"
-				>
-					<Clock className="size-3.5" />
-					<span>Aguardando preparo</span>
-				</Badge>
-			);
-	}
-}
+import type { SaleResponse } from "@/types";
+import { AdjustmentApprovalBanner } from "./AdjustmentApprovalBanner";
 
 export function CustomerPurchaseHistory() {
 	const [purchases, setPurchases] = useState<SaleResponse[]>([]);
@@ -65,6 +29,10 @@ export function CustomerPurchaseHistory() {
 	const [reviewedSaleIds, setReviewedSaleIds] = useState<Set<string>>(
 		new Set(),
 	);
+	// Confirmação exibida no card depois que o cliente responde a um ajuste
+	const [adjustmentMessages, setAdjustmentMessages] = useState<
+		Record<string, string>
+	>({});
 
 	useEffect(() => {
 		let isMounted = true;
@@ -93,6 +61,26 @@ export function CustomerPurchaseHistory() {
 			isMounted = false;
 		};
 	}, []);
+
+	const handleAdjustmentResponded = (
+		updatedSale: SaleResponse,
+		accepted: boolean,
+	) => {
+		// Mescla para manter campos que a resposta não traz (ex.: avaliação)
+		setPurchases((prev) =>
+			prev.map((purchase) =>
+				purchase.id === updatedSale.id
+					? { ...purchase, ...updatedSale, pending_adjustment: null }
+					: purchase,
+			),
+		);
+		setAdjustmentMessages((prev) => ({
+			...prev,
+			[updatedSale.id]: accepted
+				? "Ajuste aceito. Os novos valores já valem para o seu pedido."
+				: "Pedido cancelado. Os produtos voltaram para o estoque do produtor.",
+		}));
+	};
 
 	const handleReviewSuccess = (saleId: string) => {
 		setReviewedSaleIds((prev) => {
@@ -193,9 +181,34 @@ export function CustomerPurchaseHistory() {
 								</div>
 
 								<div className="flex items-center gap-2 self-start sm:self-auto">
-									{renderStatusBadge(purchase.status)}
+									<SaleStatusBadge
+										status={purchase.status}
+										audience="customer"
+									/>
 								</div>
 							</div>
+
+							{purchase.status === "AGUARDANDO_APROVACAO_CLIENTE" &&
+								purchase.pending_adjustment && (
+									<AdjustmentApprovalBanner
+										saleId={purchase.id}
+										adjustment={purchase.pending_adjustment}
+										onResponded={handleAdjustmentResponded}
+									/>
+								)}
+
+							{adjustmentMessages[purchase.id] && (
+								<p
+									role="status"
+									className="flex items-start gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-800 dark:text-emerald-200"
+								>
+									<CheckCircle2
+										className="mt-0.5 size-3.5 shrink-0"
+										aria-hidden="true"
+									/>
+									<span>{adjustmentMessages[purchase.id]}</span>
+								</p>
+							)}
 
 							{/* Delivery & Payment Badges */}
 							<div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
