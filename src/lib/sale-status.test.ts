@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
+import type { SaleStatus, StatusHistoryEntry } from "@/types";
 import {
+	buildOrderTimeline,
 	canProposeAdjustment,
 	canSellerTransition,
 	getSaleStatusLabel,
@@ -143,5 +145,94 @@ describe("getTimelineSteps", () => {
 			"EM_PREPARACAO",
 			"FINALIZADA",
 		]);
+	});
+});
+
+describe("buildOrderTimeline", () => {
+	function historico(...status: SaleStatus[]): StatusHistoryEntry[] {
+		return status.map((item, index) => ({
+			status: item,
+			changed_at: `2026-11-0${index + 1}T10:00:00.000Z`,
+		}));
+	}
+
+	const estados = (status: SaleStatus, ...hist: SaleStatus[]) =>
+		buildOrderTimeline(status, "ENTREGA", historico(...hist)).steps.map(
+			(step) => step.state,
+		);
+
+	it("marca a etapa atual e deixa as seguintes como próximas", () => {
+		expect(estados("EM_PREPARACAO", "ABERTA", "EM_PREPARACAO")).toEqual([
+			"done",
+			"current",
+			"upcoming",
+			"upcoming",
+		]);
+	});
+
+	it("traz a data da última entrada de cada etapa", () => {
+		const { steps } = buildOrderTimeline(
+			"A_CAMINHO",
+			"ENTREGA",
+			historico("ABERTA", "EM_PREPARACAO", "A_CAMINHO"),
+		);
+		expect(steps[2].changedAt).toBe("2026-11-03T10:00:00.000Z");
+		expect(steps[3].changedAt).toBeNull();
+	});
+
+	it("conclui todas as etapas percorridas e marca as puladas", () => {
+		expect(estados("FINALIZADA", "ABERTA", "FINALIZADA")).toEqual([
+			"done",
+			"skipped",
+			"skipped",
+			"done",
+		]);
+	});
+
+	it("considera feitas as etapas anteriores em pedidos sem histórico", () => {
+		expect(estados("A_CAMINHO")).toEqual([
+			"done",
+			"done",
+			"current",
+			"upcoming",
+		]);
+	});
+
+	it("pausa na última etapa alcançada enquanto o cliente decide o ajuste", () => {
+		const timeline = buildOrderTimeline(
+			"AGUARDANDO_APROVACAO_CLIENTE",
+			"ENTREGA",
+			historico("ABERTA", "EM_PREPARACAO", "AGUARDANDO_APROVACAO_CLIENTE"),
+		);
+		expect(timeline.steps.map((step) => step.state)).toEqual([
+			"done",
+			"current",
+			"upcoming",
+			"upcoming",
+		]);
+		expect(timeline.interruption).toEqual({
+			status: "AGUARDANDO_APROVACAO_CLIENTE",
+			changedAt: "2026-11-03T10:00:00.000Z",
+		});
+	});
+
+	it("interrompe o fluxo no cancelamento", () => {
+		const timeline = buildOrderTimeline(
+			"CANCELADA",
+			"RETIRADA",
+			historico("ABERTA", "CANCELADA"),
+		);
+		expect(timeline.steps.map((step) => step.state)).toEqual([
+			"done",
+			"skipped",
+			"skipped",
+		]);
+		expect(timeline.interruption?.status).toBe("CANCELADA");
+	});
+
+	it("não traz interrupção em pedidos dentro do fluxo", () => {
+		expect(
+			buildOrderTimeline("ABERTA", "ENTREGA", historico("ABERTA")).interruption,
+		).toBeNull();
 	});
 });

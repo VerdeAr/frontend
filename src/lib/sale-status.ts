@@ -1,4 +1,9 @@
-import type { DeliveryType, SaleStatus, SellerTargetStatus } from "@/types";
+import type {
+	DeliveryType,
+	SaleStatus,
+	SellerTargetStatus,
+	StatusHistoryEntry,
+} from "@/types";
 
 /**
  * Regras de exibição do status do pedido (RF-52, RF-55 e RF-56).
@@ -132,4 +137,78 @@ export function getTimelineSteps(deliveryType: DeliveryType): SaleStatus[] {
 	return deliveryType === "ENTREGA"
 		? ["ABERTA", "EM_PREPARACAO", "A_CAMINHO", "FINALIZADA"]
 		: ["ABERTA", "EM_PREPARACAO", "FINALIZADA"];
+}
+
+/** Situação de cada etapa na linha do tempo. */
+export type TimelineStepState = "done" | "current" | "upcoming" | "skipped";
+
+export interface TimelineStep {
+	status: SaleStatus;
+	state: TimelineStepState;
+	/** Data da última vez em que o pedido entrou nesta etapa, se houver registro. */
+	changedAt: string | null;
+}
+
+export interface OrderTimeline {
+	steps: TimelineStep[];
+	/** Status fora do fluxo normal (cancelado ou aguardando o cliente), quando for o atual. */
+	interruption: { status: SaleStatus; changedAt: string | null } | null;
+}
+
+function lastChangeOf(
+	history: readonly StatusHistoryEntry[],
+	status: SaleStatus,
+): string | null {
+	const entries = history.filter((entry) => entry.status === status);
+	return entries.length > 0 ? entries[entries.length - 1].changed_at : null;
+}
+
+/**
+ * Monta a linha do tempo do pedido a partir do histórico de status.
+ * - A etapa alcançada é o status atual ou, se o pedido saiu do fluxo (cancelado ou
+ *   aguardando o cliente), a última etapa registrada no histórico.
+ * - Pedidos antigos podem não ter histórico; nesse caso as etapas anteriores contam como feitas.
+ * - Etapas puladas (ex.: Recebido → Concluído) aparecem como "skipped".
+ */
+export function buildOrderTimeline(
+	status: SaleStatus,
+	deliveryType: DeliveryType,
+	history: readonly StatusHistoryEntry[],
+): OrderTimeline {
+	const stepStatuses = getTimelineSteps(deliveryType);
+	const isInterrupted = !stepStatuses.includes(status);
+
+	let reachedIndex = stepStatuses.indexOf(status);
+	if (isInterrupted) {
+		const reachedSteps = stepStatuses
+			.map((step, index) => (lastChangeOf(history, step) ? index : -1))
+			.filter((index) => index >= 0);
+		// Todo pedido começa em Recebido, mesmo sem registro
+		reachedIndex = reachedSteps.length > 0 ? Math.max(...reachedSteps) : 0;
+	}
+
+	const hasHistory = history.length > 0;
+
+	const steps = stepStatuses.map((step, index): TimelineStep => {
+		const changedAt = lastChangeOf(history, step);
+
+		let state: TimelineStepState;
+		if (index > reachedIndex) {
+			state = status === "CANCELADA" ? "skipped" : "upcoming";
+		} else if (index === reachedIndex) {
+			state =
+				status === "FINALIZADA" || status === "CANCELADA" ? "done" : "current";
+		} else {
+			state = changedAt || !hasHistory ? "done" : "skipped";
+		}
+
+		return { status: step, state, changedAt };
+	});
+
+	return {
+		steps,
+		interruption: isInterrupted
+			? { status, changedAt: lastChangeOf(history, status) }
+			: null,
+	};
 }

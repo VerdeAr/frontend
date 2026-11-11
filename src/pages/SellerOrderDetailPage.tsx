@@ -5,7 +5,7 @@ import {
 	useNavigation,
 	useRevalidator,
 } from "react-router";
-import { OrderDetailHeader } from "@/components/orders";
+import { OrderDetailHeader, OrderStatusTimeline } from "@/components/orders";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { SellerOrderDetailLoaderData } from "@/router/loaders";
@@ -81,6 +81,12 @@ export default function SellerOrderDetailPage() {
 			</Link>
 
 			<OrderDetailHeader order={order} />
+
+			<OrderStatusTimeline
+				status={order.status}
+				deliveryType={order.delivery_type}
+				history={order.status_history}
+			/>
 		</div>
 	);
 }
