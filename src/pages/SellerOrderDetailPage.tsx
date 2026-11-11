@@ -1,14 +1,33 @@
-import { AlertCircle, ArrowLeft, Loader2, RotateCw } from "lucide-react";
+import {
+	AlertCircle,
+	ArrowLeft,
+	CheckCircle2,
+	Loader2,
+	RotateCw,
+} from "lucide-react";
+import { useState } from "react";
 import {
 	Link,
 	useLoaderData,
 	useNavigation,
 	useRevalidator,
 } from "react-router";
-import { OrderDetailHeader, OrderStatusTimeline } from "@/components/orders";
+import {
+	OrderCustomerCard,
+	OrderDetailHeader,
+	OrderQuickActions,
+	OrderStatusTimeline,
+	SellerOrderItemsList,
+} from "@/components/orders";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { getApiErrorMessage } from "@/lib/api-error";
+import { getSaleStatusLabel } from "@/lib/sale-status";
 import { cn } from "@/lib/utils";
 import type { SellerOrderDetailLoaderData } from "@/router/loaders";
+import { saleService } from "@/services/sale.service";
+import type { SellerTargetStatus } from "@/types";
+
+type ActionFeedback = { type: "success" | "error"; message: string } | null;
 
 const ORDERS_LIST_PATH = "/minha-conta?aba=pedidos";
 
@@ -19,7 +38,45 @@ export default function SellerOrderDetailPage() {
 	const navigation = useNavigation();
 	const revalidator = useRevalidator();
 
+	const [pendingTarget, setPendingTarget] = useState<SellerTargetStatus | null>(
+		null,
+	);
+	const [feedback, setFeedback] = useState<ActionFeedback>(null);
+
 	const isRevalidating = revalidator.state === "loading";
+
+	/** Muda o status no backend e recarrega o pedido; devolve true em caso de sucesso. */
+	const handleChangeStatus = async (
+		target: SellerTargetStatus,
+	): Promise<boolean> => {
+		if (!order || pendingTarget) return false;
+
+		setPendingTarget(target);
+		setFeedback(null);
+		try {
+			await saleService.updateOrderStatus(order.id, target);
+			await revalidator.revalidate();
+			setFeedback({
+				type: "success",
+				message: `Pedido atualizado para "${getSaleStatusLabel(target)}".`,
+			});
+			return true;
+		} catch (err) {
+			console.error("Erro ao atualizar status do pedido:", err);
+			setFeedback({
+				type: "error",
+				message: getApiErrorMessage(
+					err,
+					"Não foi possível atualizar o pedido. Tente novamente.",
+				),
+			});
+			// O pedido pode ter mudado em outra tela; recarrega para mostrar o estado real
+			revalidator.revalidate();
+			return false;
+		} finally {
+			setPendingTarget(null);
+		}
+	};
 
 	if (navigation.state === "loading" && !order) {
 		return (
@@ -82,10 +139,55 @@ export default function SellerOrderDetailPage() {
 
 			<OrderDetailHeader order={order} />
 
-			<OrderStatusTimeline
+			{feedback && (
+				<p
+					role={feedback.type === "error" ? "alert" : "status"}
+					className={cn(
+						"flex items-start gap-2 rounded-xl border p-3 text-sm",
+						feedback.type === "error"
+							? "border-destructive/30 bg-destructive/10 text-destructive"
+							: "border-emerald-500/30 bg-emerald-500/10 text-emerald-800 dark:text-emerald-200",
+					)}
+				>
+					{feedback.type === "error" ? (
+						<AlertCircle
+							className="mt-0.5 size-4 shrink-0"
+							aria-hidden="true"
+						/>
+					) : (
+						<CheckCircle2
+							className="mt-0.5 size-4 shrink-0"
+							aria-hidden="true"
+						/>
+					)}
+					<span>{feedback.message}</span>
+				</p>
+			)}
+
+			<OrderQuickActions
 				status={order.status}
 				deliveryType={order.delivery_type}
-				history={order.status_history}
+				hasPendingAdjustment={order.pending_adjustment !== null}
+				pendingTarget={pendingTarget}
+				onChangeStatus={handleChangeStatus}
+			/>
+
+			<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+				<OrderStatusTimeline
+					status={order.status}
+					deliveryType={order.delivery_type}
+					history={order.status_history}
+				/>
+				<OrderCustomerCard
+					customer={order.customer}
+					deliveryType={order.delivery_type}
+				/>
+			</div>
+
+			<SellerOrderItemsList
+				items={order.items}
+				sellerSubtotal={order.seller_subtotal}
+				orderTotal={order.order_total}
 			/>
 		</div>
 	);
