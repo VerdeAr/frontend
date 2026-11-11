@@ -17,12 +17,12 @@ Telas e fluxos já disponíveis:
 | Detalhe do produto (PDP) | Página pública `/produtos/:id`, aberta ao clicar no card do produto. Mostra galeria, nome, preço, estoque, descrição, média e quantidade de avaliações, card do produtor, simulador de frete e barra de ações (quantidade e adicionar ao carrinho). |
 | Carrinho | Itens, resumo de valores e seletor de entrega (**Entrega** com frete ou **Retirada**), sincronizados com a API. |
 | Checkout | Resumo, endereço de entrega, forma de pagamento e tela de pedido confirmado com instruções. |
-| Minhas Compras | Histórico de compras do usuário logado. |
+| Minhas Compras | Histórico de compras do usuário logado e avaliação de pedidos finalizados via modal interativo. |
+| Avaliações | Avaliação de compras concluídas com estrelas (`StarRatingInput`), feedback semântico e exibição de reputação nos cards da vitrine e do produtor. |
 | Painel do vendedor | Dentro de Minha Conta: Pedidos Recebidos, Meus Produtos (cadastro, edição e ativar/desativar) e Frete e Entrega. |
 
 Ainda **não implementado** no frontend, embora a API já exista ou esteja modelada:
 
-- **Avaliação pós-venda** (VER-78, em desenvolvimento): a API de avaliações já existe e a PDP já exibe a média e a quantidade de avaliações do produto. Faltam `StarRatingInput`, `ReviewOrderModal` (o cliente avaliar um pedido finalizado) e a exibição da reputação nos cards de produto e no perfil do produtor.
 - **Chat** entre cliente e vendedor (VER-58, em desenvolvimento): o ícone do Header e o link do Footer apontam para `/chat`, que ainda não tem rota.
 - **Busca mobile:** o botão de busca no Header (telas pequenas) aponta para `/produtos/busca`, que também não tem rota.
 
@@ -46,8 +46,10 @@ Essas rotas inexistentes caem em uma página de erro padrão do React Router at�
 | Documentos | `cpf-cnpj-validator` |
 | Datas | `date-fns` |
 | Qualidade | Biome |
+| Testes | Vitest + Testing Library (unidade e componentes) e Playwright (E2E) |
 | Git hooks | Husky + Commitlint |
 | Container | Docker multi-stage com Nginx Alpine |
+| CI/CD | GitHub Actions (`.github/workflows/`), imagem no GHCR e Dependabot. Ver [CICD.md](CICD.md) |
 
 Alias de importação: `@/*` aponta para `src/*` (configurado no `vite.config.ts` e no `tsconfig.app.json`).
 
@@ -62,7 +64,16 @@ flowchart LR
     A --> D[(PostgreSQL)]
 ```
 
-O frontend é 100% estático. Em produção, o Nginx serve o `dist/` e todas as rotas desconhecidas voltam para o `index.html`, o que permite ao React Router resolver o caminho. A URL da API é fixada **no build** pela variável `VITE_API_BASEURL`.
+O frontend é 100% estático. Em produção, o Nginx serve o `dist/` e todas as rotas desconhecidas voltam para o `index.html`, o que permite ao React Router resolver o caminho. A URL da API é fixada **no build** pela variável `VITE_API_BASEURL`; por isso o pipeline de deploy constrói uma imagem por ambiente, cada uma com a `API_BASE_URL` do seu GitHub Environment.
+
+### Ambientes
+
+| Ambiente | Branch | Aplicação | API consumida |
+|---|---|---|---|
+| Homologação | `main` | https://verdear-dev.pedmesa.com.br | https://api-verdear-dev.pedmesa.com.br |
+| Produção | `prod` | https://verdear.pedmesa.com.br | https://api-verdear.pedmesa.com.br |
+
+O merge na `main` publica e implanta a homologação; o merge na `prod` faz o mesmo na produção. Os dois só ocorrem com o CI verde. Um workflow agendado confere a cada 15 minutos se a aplicação de cada ambiente responde. Os detalhes estão em [CICD.md](CICD.md).
 
 ---
 
@@ -91,7 +102,7 @@ src/
 └── types/              # auth, cart, catalog, sale e models
 ```
 
-Outros arquivos relevantes: `public/images/` (logos e banners), `nginx.conf`, `Dockerfile`, `components.json`, `biome.json`, `.husky/`.
+Outros arquivos relevantes: `public/images/` (logos e banners), `nginx.conf`, `Dockerfile`, `components.json`, `biome.json`, `.husky/`, `playwright.config.ts` e `e2e/` (testes de ponta a ponta com Playwright e seus helpers).
 
 ---
 
@@ -107,10 +118,12 @@ Definido em `src/router/routes.tsx`, todas sob `RootLayout`:
 | `/produtos/:id` | Detalhe do produto (loader `productDetailLoader`) | Público |
 | `/minha-conta` | Minha Conta | Logado |
 | `/carrinho` | Carrinho (loader `cartLoader`) | Logado |
-| `/checkout` | Checkout | Logado |
-| `/pedido-confirmado/:id` | Confirmação do pedido | Logado |
+| `/checkout` | Checkout (loader `checkoutLoader`) | Logado |
+| `/pedido-confirmado/:id` | Confirmação do pedido (loader `orderSuccessLoader`) | Logado |
 
+- **`RootErrorBoundary`** atua como `errorElement` na rota raiz, exibindo tela amigável em português com botão de retorno à vitrine para qualquer falha de carregamento ou rota.
 - **`ProtectedRoute`** envolve as rotas privadas e redireciona o visitante para `/login`, guardando a origem em `state.from`.
+- **Proteção de sessão nos loaders:** `cartLoader`, `checkoutLoader` e `orderSuccessLoader` checam a sessão antes de consultar a API, evitando requisições desnecessárias que retornariam 401 enquanto o `ProtectedRoute` atua.
 - **`RoleRoute`** existe para restringir por papel, mas **não é usada** no roteador hoje. A separação de vendedor acontece dentro de Minha Conta (abaixo) e, de forma definitiva, no backend.
 - **Minha Conta** usa abas controladas pelo parâmetro `?aba=`. O valor é normalizado e aceita sinônimos em português e inglês: `profile`, `purchases`/`compras`, `security`/`seguranca`, e as exclusivas de vendedor `orders`/`pedidos`, `products`/`produtos` e `shipping`/`frete`. As abas de vendedor só aparecem quando `user.role === "VENDEDOR"`.
 - **Home pública:** adicionar um produto ao carrinho sem login leva ao `/login` com a origem salva.
@@ -124,7 +137,7 @@ O estado de busca vive na query string, o que torna a vitrine compartilhável e 
 | `q` | Termo de busca |
 | `pagina` | Página atual (12 produtos por página) |
 
-O `homeLoader` lê esses parâmetros e busca categorias e produtos em paralelo. Em caso de falha, retorna listas vazias com uma mensagem de erro em vez de quebrar a página.
+O `homeLoader` lê esses parâmetros e busca categorias e produtos em paralelo. O parâmetro `categoria` é validado como UUID; se inválido, é desconsiderado e a vitrine completa é listada sem erro 400. Os parâmetros de consulta são enviados sem duplicidade (`category_id`, `search`, `page`, `limit` e `disponivel`). Em caso de falha, retorna listas vazias com uma mensagem de erro em vez de quebrar a página.
 
 ### Detalhe do produto (`/produtos/:id`)
 - O `productDetailLoader` busca o produto (`GET /produtos/:id`) e os bairros (`GET /bairros`) em paralelo. Se os bairros falharem, a página abre mesmo assim com a lista vazia.
@@ -205,20 +218,19 @@ Em Minha Conta, o vendedor cadastra e edita produtos (`/vendedor/produtos`), ati
 3. **Componentes por domínio:** cada pasta de `components/` tem um `index.ts` que reexporta o que é público.
 4. **Dados via loaders e stores:** dados de rota entram por loaders; estado compartilhado por Zustand; chamadas HTTP só em `services/`.
 5. **Type safety:** `any` é proibido. O `tsconfig.app.json` ativa `noUnusedLocals`, `noUnusedParameters`, `verbatimModuleSyntax` e `erasableSyntaxOnly` (sem `enum` ou `namespace`; use uniões de strings).
-6. **Qualidade:** `npm run check` (`tsc --noEmit` + Biome com `--error-on-warnings`) deve passar antes de abrir PR. `npm run format` corrige o estilo.
+6. **Qualidade:** `npm run check` (`tsc -b` + Biome com `--error-on-warnings`) e `npm test` (Vitest + Testing Library) devem passar antes de abrir PR. Mudanças no fluxo de compra também passam pelo `npm run test:e2e` (Playwright). `npm run format` corrige o estilo.
 7. **Idioma:** textos de interface, comentários e rotas em português do Brasil.
 
 ---
 
 ## 10. Limitações conhecidas
 
-- **Sem testes automatizados** e sem pipeline de CI neste repositório.
+- **O E2E depende da `main` do backend.** O job E2E do CI baixa o repositório do backend e sobe a API real; uma mudança incompatível lá pode quebrar o E2E do frontend. A versão pode ser fixada com a variável `E2E_BACKEND_REF` (ver [CICD.md](CICD.md)).
+- **O `POST /vendas/checkout` devolve a entidade crua da venda** (pagamento como objeto, itens sem `product_name`), diferente do `GET /vendas/:id`. Por isso a tela de pedido confirmado busca o pedido pelo ID em vez de usar a resposta do checkout. Corrigir na origem é tarefa do backend.
 - **Rotas órfãs:** `/chat` e `/produtos/busca` são linkadas no Header e no Footer, mas não existem. O chat está em desenvolvimento (VER-58); a busca mobile ainda não tem tarefa associada. Também não há `errorElement` nem página 404 (previstos na VER-55).
-- **Funcionalidades da API sem tela:** o envio de avaliações (ver seção 1).
 - **Simulador de frete da PDP:** o valor exibido é uma estimativa e pode diferir do frete do carrinho, que soma a taxa de cada produtor.
 - **`RoleRoute` não utilizado** e **sem refresh token** (ver seções 5 e 6).
 - **Sem pasta `hooks/`:** a lógica reutilizável hoje vive nos stores e nos componentes.
-- **Avaliações em desenvolvimento** (VER-78): componentes de estrelas, modal de avaliação do pedido e exibição de reputação ainda não existem.
 
 ---
 
@@ -249,4 +261,4 @@ O `nginx.conf` faz fallback de SPA, cache de um ano para assets estáticos, `no-
 
 ## 12. Fluxo de trabalho
 
-Branches seguem o GitLab Flow, descrito em [GITFLOW.md](GITFLOW.md), e cada branch usa o ID da própria tarefa (`<tipo>/VER-<ID>-<descricao-curta-em-portugues>`). Commits seguem Conventional Commits, em português, com o mesmo ID e até 100 caracteres (`feat(carrinho): [VER-105] cria seletor de quantidade`). O protocolo completo de trabalho com IA está em `.agents/AGENTS.md`. O Pull Request precisa de revisão por pares (os responsáveis estão no arquivo `CODEOWNERS`) e de `npm run check` passando. O andamento das tarefas está em [ANDAMENTO.md](ANDAMENTO.md).
+Branches seguem o GitLab Flow, descrito em [GITFLOW.md](GITFLOW.md), e cada branch usa o ID da própria tarefa (`<tipo>/VER-<ID>-<descricao-curta-em-portugues>`). Commits seguem Conventional Commits, em português, com o mesmo ID e até 100 caracteres (`feat(carrinho): [VER-105] cria seletor de quantidade`). O protocolo completo de trabalho com IA está em `.agents/AGENTS.md`. O Pull Request precisa de revisão por pares (os responsáveis estão no arquivo `CODEOWNERS`) e do CI verde (Qualidade, Testes unitários e E2E, descritos em [CICD.md](CICD.md)). O andamento das tarefas está em [ANDAMENTO.md](ANDAMENTO.md).

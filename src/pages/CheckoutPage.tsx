@@ -1,13 +1,26 @@
-import { ArrowLeft, Loader2, ShoppingBag } from "lucide-react";
+import {
+	AlertCircle,
+	ArrowLeft,
+	Loader2,
+	RefreshCw,
+	ShoppingBag,
+} from "lucide-react";
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router";
+import {
+	Link,
+	useLoaderData,
+	useNavigate,
+	useNavigation,
+	useRevalidator,
+} from "react-router";
 import {
 	CheckoutSummaryCard,
 	DeliveryAddressCard,
 	PaymentMethodSelector,
 } from "@/components/checkout";
-import { buttonVariants } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import type { CheckoutLoaderData } from "@/router/loaders";
 import { saleService } from "@/services/sale.service";
 import {
 	selectCartItems,
@@ -21,6 +34,10 @@ import {
 
 export default function CheckoutPage() {
 	const navigate = useNavigate();
+	const navigation = useNavigation();
+	const revalidator = useRevalidator();
+	const { error } = useLoaderData<CheckoutLoaderData>();
+
 	const user = useAuthStore((state) => state.user);
 
 	const items = useCartStore(selectCartItems);
@@ -28,19 +45,16 @@ export default function CheckoutPage() {
 	const shipping = useCartStore(selectCartShipping);
 	const total = useCartStore(selectCartTotal);
 	const deliveryType = useCartStore(selectDeliveryType);
-	const isLoading = useCartStore((state) => state.isLoading);
 	const fetchCart = useCartStore((state) => state.fetchCart);
 	const cart = useCartStore((state) => state.cart);
+
+	const isLoading = navigation.state === "loading";
 
 	const [paymentMethod, setPaymentMethod] = useState<string>(
 		cart?.payment_method || "PIX",
 	);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-	useEffect(() => {
-		fetchCart();
-	}, [fetchCart]);
 
 	useEffect(() => {
 		if (cart?.payment_method) {
@@ -68,11 +82,9 @@ export default function CheckoutPage() {
 			// Revalida o estado do carrinho no store global
 			await fetchCart();
 
-			// Redireciona para a tela de confirmação do pedido
-			navigate(`/pedido-confirmado/${sale.id}`, {
-				replace: true,
-				state: { sale },
-			});
+			// Redireciona para a tela de confirmação, que busca o pedido formatado pelo ID. A resposta
+			// do checkout é a entidade crua da venda (pagamento como objeto) e não serve de estado.
+			navigate(`/pedido-confirmado/${sale.id}`, { replace: true });
 		} catch (error: unknown) {
 			console.error("Erro ao realizar checkout:", error);
 			const msg =
@@ -93,6 +105,31 @@ export default function CheckoutPage() {
 			setIsSubmitting(false);
 		}
 	};
+
+	if (error) {
+		return (
+			<div className="flex w-full flex-col items-center justify-center rounded-3xl border border-destructive/30 bg-destructive/5 p-8 sm:p-12 text-center my-12 max-w-lg mx-auto">
+				<div className="flex size-14 items-center justify-center rounded-2xl bg-destructive/10 text-destructive mb-3">
+					<AlertCircle className="size-7" />
+				</div>
+				<h3 className="text-base sm:text-lg font-semibold text-foreground mb-1">
+					Erro ao carregar o checkout
+				</h3>
+				<p className="max-w-md text-xs sm:text-sm text-muted-foreground mb-5">
+					{error}
+				</p>
+				<Button
+					type="button"
+					variant="outline"
+					onClick={() => revalidator.revalidate()}
+					className="h-11 rounded-2xl px-5 text-sm font-medium gap-2 border-border/80 hover:bg-muted/60"
+				>
+					<RefreshCw className="size-4" />
+					<span>Tentar Novamente</span>
+				</Button>
+			</div>
+		);
+	}
 
 	if (isLoading && items.length === 0) {
 		return (

@@ -6,8 +6,11 @@ export const setOnUnauthorizedCallback = (callback: () => void) => {
 	onUnauthorizedCallback = callback;
 };
 
+export const API_BASE_URL =
+	import.meta.env.VITE_API_BASEURL || "http://localhost:3000";
+
 export const api = axios.create({
-	baseURL: import.meta.env.VITE_API_BASEURL || "http://localhost:3000",
+	baseURL: API_BASE_URL,
 	timeout: 15000,
 	withCredentials: true,
 	headers: {

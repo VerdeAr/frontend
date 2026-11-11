@@ -1,20 +1,30 @@
 import { createBrowserRouter } from "react-router";
 import { ProtectedRoute } from "@/components/auth";
+import RootErrorBoundary from "@/components/layout/RootErrorBoundary";
 import RootLayout from "@/components/layout/RootLayout";
 import AccountSettingsPage from "@/pages/AccountSettingsPage";
 import CartPage from "@/pages/CartPage";
+import ChatInboxPage from "@/pages/ChatInboxPage";
+import ChatRoomPage from "@/pages/ChatRoomPage";
 import CheckoutPage from "@/pages/CheckoutPage";
 import Home from "@/pages/Home";
 import Login from "@/pages/Login";
 import OrderSuccessPage from "@/pages/OrderSuccessPage";
 import ProductDetailPage from "@/pages/ProductDetailPage";
 import Register from "@/pages/Register";
-import { cartLoader, homeLoader, productDetailLoader } from "./loaders";
+import {
+	cartLoader,
+	checkoutLoader,
+	homeLoader,
+	orderSuccessLoader,
+	productDetailLoader,
+} from "./loaders";
 
 export const router = createBrowserRouter([
 	{
 		path: "/",
 		element: <RootLayout />,
+		errorElement: <RootErrorBoundary />,
 		children: [
 			{
 				index: true,
@@ -49,10 +59,20 @@ export const router = createBrowserRouter([
 					{
 						path: "checkout",
 						element: <CheckoutPage />,
+						loader: checkoutLoader,
 					},
 					{
 						path: "pedido-confirmado/:id",
 						element: <OrderSuccessPage />,
+						loader: orderSuccessLoader,
+					},
+					{
+						path: "chat",
+						element: <ChatInboxPage />,
+					},
+					{
+						path: "chat/:id",
+						element: <ChatRoomPage />,
 					},
 				],
 			},

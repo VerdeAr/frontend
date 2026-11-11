@@ -38,6 +38,13 @@ export interface SaleResponse {
 	updated_at: string;
 	items: FormattedSaleItem[];
 	payments: SalePayment[];
+	is_reviewed?: boolean;
+	review?: {
+		id: string;
+		rating: number;
+		comment: string | null;
+		created_at: string;
+	} | null;
 }
 
 export interface SellerOrderResponse {

@@ -10,6 +10,7 @@ import {
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { CartBadge } from "@/components/cart";
+import { ChatBadge } from "@/components/chat";
 import { saleService } from "@/services/sale.service";
 import { useAuthStore } from "@/stores/auth.store";
 import { useCartStore } from "@/stores/cart.store";
@@ -107,6 +108,7 @@ export function Header() {
 						aria-label="Mensagens e Atendimento"
 					>
 						<MessageCircle className="size-5" />
+						<ChatBadge />
 					</Link>
 
 					{/* Atalho do Produtor Rural (gestão de pedidos recebidos) */}
