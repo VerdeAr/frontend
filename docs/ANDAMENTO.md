@@ -72,6 +72,7 @@ Resultado: os ambientes de **homologação** e **produção** estão no ar, com 
 | VER-90 — Frete dinâmico com OpenRouteService e Leaflet | A fazer (a tarefa; as subtarefas já começaram) | VER-92 **Fazendo** | VER-91 **Fazendo** | VER-93 A fazer |
 | VER-66 — PDP | A fazer (o Jira não atualizou a tarefa) | VER-68 Feito (no `main`) | VER-67 Feito | VER-69 A fazer |
 | VER-51 — Data loaders do React Router | A fazer (a tarefa; frontend 100% entregue no VER-53) | VER-53 Feito | VER-52 A fazer | VER-54 A fazer |
+| VER-94 — Painel do vendedor e workflow de pedidos | Fazendo | VER-96 **Revisão** (branch `feat/VER-96-detalhe-pedido-ajuste-consentimento`, ainda sem merge) | VER-95 Feito | VER-97 A fazer |
 
 ---
 
@@ -84,7 +85,6 @@ Resultado: os ambientes de **homologação** e **produção** estão no ar, com 
 | VER-70 — Perfil público do produtor | VER-72: `ProducerProfilePage`, vitrine do produtor e rota pública `/vendedores/:id`. |
 | VER-82 — E-mails transacionais com Resend | VER-84: avisos e feedbacks visuais dos e-mails disparados. |
 | VER-86 — Imagens na Cloudflare R2 | VER-88: `ImageUploadDropzone` e integração nos formulários. |
-| VER-94 — Painel do vendedor e workflow de pedidos | VER-96: `SellerOrderDetailPage`, modal de ajuste e banner de aprovação. |
 
 ---
 
@@ -111,7 +111,7 @@ Quando as tarefas abaixo forem entregues, revise estas partes de `ARQUITETURA.md
 | VER-70 | Nova rota pública de perfil do produtor. |
 | VER-86 | Upload de imagens (`ImageUploadDropzone`) nos formulários de produto. |
 | VER-90 | Mapa com Leaflet, nova dependência e nova regra de exibição do frete. |
-| VER-94 | Nova página de detalhe de pedido do vendedor. |
+| VER-94 | A VER-96 já documentou a página de detalhe, o workflow e o ajuste em `ARQUITETURA.md` e o RF-52 a RF-56 em `REQUISITOS.md`. Depois da QA (VER-97), confirmar os estados; quando a VER-92 entrar, trocar o endereço pelo mapa no detalhe e fechar o RF-54. |
 | VER-48 | Nova organização de componentes. Atualizar a estrutura de pastas. |
 
 ---

@@ -90,13 +90,14 @@ src/
 │   ├── catalog/        # ProductGrid, ProductCard, CategorySelector, SearchBar, HeroBannerCarousel
 │   ├── checkout/       # CheckoutSummaryCard, DeliveryAddressCard, PaymentMethodSelector, OrderItemsList
 │   ├── layout/         # RootLayout, Header e Footer
+│   ├── orders/         # SaleStatusBadge, OrderDetailHeader, OrderStatusTimeline, OrderQuickActions, OrderCustomerCard, SellerOrderItemsList, OrderAdjustmentDialog
 │   ├── pdp/            # ProductGallery, ProductHeaderInfo, ProductSellerCard, ProductShippingSimulator, ProductActionsBar
 │   ├── seller/         # Catálogo, formulário de produto e gestão de pedidos do produtor
-│   └── ui/             # Primitivos (Button, Card, Dialog, Input, Select, Switch, Badge, Skeleton...)
-├── lib/                # api.ts (Axios), formatters.ts, masks.ts e utils.ts
-├── pages/              # Home, ProductDetailPage, Login, Register, CartPage, CheckoutPage, OrderSuccessPage, AccountSettingsPage
-├── router/             # routes.tsx (árvore de rotas) e loaders.ts (dados da Home, do produto e do carrinho)
-├── schemas/            # Schemas Zod: auth, person, product
+│   └── ui/             # Primitivos (Button, Card, Dialog, ConfirmDialog, Input, Select, Switch, Badge, Skeleton...)
+├── lib/                # api.ts (Axios), api-error.ts, formatters.ts, masks.ts, sale-status.ts, sale-adjustment.ts e utils.ts
+├── pages/              # Home, ProductDetailPage, Login, Register, CartPage, CheckoutPage, OrderSuccessPage, AccountSettingsPage, SellerOrderDetailPage
+├── router/             # routes.tsx (árvore de rotas) e loaders.ts (dados da Home, do produto, do carrinho e do pedido do vendedor)
+├── schemas/            # Schemas Zod: adjustment, auth, chat, person, product, review
 ├── services/           # Uma função por chamada à API, tipada
 ├── stores/             # auth.store.ts e cart.store.ts
 └── types/              # auth, cart, catalog, sale e models
@@ -120,11 +121,13 @@ Definido em `src/router/routes.tsx`, todas sob `RootLayout`:
 | `/carrinho` | Carrinho (loader `cartLoader`) | Logado |
 | `/checkout` | Checkout (loader `checkoutLoader`) | Logado |
 | `/pedido-confirmado/:id` | Confirmação do pedido (loader `orderSuccessLoader`) | Logado |
+| `/vendedor/pedidos/:id` | Detalhe do pedido do vendedor (loader `sellerOrderDetailLoader`) | Somente Vendedor (`RoleRoute`) |
 
 - **`RootErrorBoundary`** atua como `errorElement` na rota raiz, exibindo tela amigável em português com botão de retorno à vitrine para qualquer falha de carregamento ou rota.
 - **`ProtectedRoute`** envolve as rotas privadas e redireciona o visitante para `/login`, guardando a origem em `state.from`.
-- **Proteção de sessão nos loaders:** `cartLoader`, `checkoutLoader` e `orderSuccessLoader` checam a sessão antes de consultar a API, evitando requisições desnecessárias que retornariam 401 enquanto o `ProtectedRoute` atua.
-- **`RoleRoute`** existe para restringir por papel, mas **não é usada** no roteador hoje. A separação de vendedor acontece dentro de Minha Conta (abaixo) e, de forma definitiva, no backend.
+- **Proteção de sessão nos loaders:** `cartLoader`, `checkoutLoader`, `orderSuccessLoader` e `sellerOrderDetailLoader` checam a sessão antes de consultar a API, evitando requisições desnecessárias que retornariam 401 enquanto o `ProtectedRoute` atua. O `sellerOrderDetailLoader` também confere o papel de vendedor, porque o loader roda antes do `RoleRoute`.
+- **`RoleRoute`** restringe por papel. Hoje envolve só `/vendedor/pedidos/:id` (`allowedRoles={["VENDEDOR"]}`): visitante vai para `/login` e cliente logado volta para `/`. As demais funções de vendedor continuam em abas de Minha Conta (abaixo), e a validação definitiva é do backend.
+- **Erros do detalhe do pedido:** o `sellerOrderDetailLoader` devolve `errorStatus` (403 para pedido sem produtos do vendedor, 404 para pedido inexistente ou ID que não é UUID), e a página mostra uma mensagem amigável com "Voltar aos pedidos"; "Tentar novamente" (`useRevalidator`) só aparece em falha de rede ou servidor.
 - **Minha Conta** usa abas controladas pelo parâmetro `?aba=`. O valor é normalizado e aceita sinônimos em português e inglês: `profile`, `purchases`/`compras`, `security`/`seguranca`, e as exclusivas de vendedor `orders`/`pedidos`, `products`/`produtos` e `shipping`/`frete`. As abas de vendedor só aparecem quando `user.role === "VENDEDOR"`.
 - **Home pública:** adicionar um produto ao carrinho sem login leva ao `/login` com a origem salva.
 
@@ -206,7 +209,24 @@ sequenceDiagram
 Antes de finalizar uma **Entrega**, o checkout exige endereço cadastrado no perfil do cliente. A forma de pagamento padrão sugerida é PIX.
 
 ### Gestão do vendedor
-Em Minha Conta, o vendedor cadastra e edita produtos (`/vendedor/produtos`), ativa ou desativa anúncios, acompanha pedidos (`/vendedor/pedidos`) e define o frete fixo (`/pessoa/frete`). O Header mostra um atalho para os pedidos com o contador de pendentes (`/vendedor/pedidos/pendentes/count`), carregado uma vez ao montar o Header.
+Em Minha Conta, o vendedor cadastra e edita produtos (`/vendedor/produtos`), ativa ou desativa anúncios, acompanha pedidos (`/vendedor/pedidos`) e define o frete fixo (`/pessoa/frete`). O Header mostra um atalho para os pedidos com o contador de pendentes (`/vendedor/pedidos/pendentes/count`), carregado uma vez ao montar o Header. O contador soma os pedidos Recebidos e Em preparação.
+
+### Workflow do pedido e ajuste com consentimento (VER-94)
+
+Cada card de pedido leva à página `/vendedor/pedidos/:id` (`GET /vendedor/pedidos/:id`), que mostra cabeçalho, linha do tempo (`status_history`), dados do cliente, itens do vendedor e ações rápidas.
+
+| Status | Rótulo | Próximas ações do vendedor |
+|---|---|---|
+| `ABERTA` | Recebido | Iniciar preparação, Concluir pedido, Propor ajuste, Cancelar |
+| `EM_PREPARACAO` | Em preparação | Saiu para entrega (Entrega) ou Confirmar retirada (Retirada), Propor ajuste, Cancelar |
+| `A_CAMINHO` | A caminho (só Entrega) | Confirmar entrega |
+| `AGUARDANDO_APROVACAO_CLIENTE` | Aguardando cliente | Só cancelar; o pedido para até o cliente responder |
+| `FINALIZADA` / `CANCELADA` | Concluído / Cancelado | Nenhuma (status finais) |
+
+- As regras de exibição ficam em `lib/sale-status.ts`, espelhando a máquina de estados do backend (`services/sale-status.ts`), que continua sendo a autoridade. O avanço usa `PATCH /vendas/:id/status`.
+- **Proposta de ajuste (`OrderAdjustmentDialog`):** o vendedor informa a nova quantidade ou peso de cada item (até 3 casas) e o motivo (até 500 caracteres). O modal mostra a prévia do novo total (`lib/sale-adjustment.ts`), envia só os itens alterados para `POST /vendedor/pedidos/:id/propor-ajuste` e não muda o preço unitário. Nada muda no pedido até o cliente aceitar.
+- **Resposta do cliente (`AdjustmentApprovalBanner`):** em Minhas Compras, a compra em `AGUARDANDO_APROVACAO_CLIENTE` mostra o motivo, os valores antigos e novos e os botões "Aceitar Ajuste" e "Cancelar Pedido" (`POST /vendas/:id/responder-ajuste`). Recusar cancela o pedido inteiro e pede confirmação. Uma trava síncrona impede que o duplo clique envie duas respostas, e um 409 da API (proposta já respondida) aparece como mensagem.
+- Os erros da API são lidos por `lib/api-error.ts` (`getApiErrorStatus` e `getApiErrorMessage`), que usam a mensagem do `ErrorResponse` do backend. Como não há biblioteca de toast, a confirmação das ações aparece na própria tela (`role="status"` ou `role="alert"`).
 
 ---
 
@@ -228,7 +248,8 @@ Em Minha Conta, o vendedor cadastra e edita produtos (`/vendedor/produtos`), ati
 - **O `POST /vendas/checkout` devolve a entidade crua da venda** (pagamento como objeto, itens sem `product_name`), diferente do `GET /vendas/:id`. Por isso a tela de pedido confirmado busca o pedido pelo ID em vez de usar a resposta do checkout. Corrigir na origem é tarefa do backend.
 - **Rotas órfãs:** `/chat` e `/produtos/busca` são linkadas no Header e no Footer, mas não existem. O chat está em desenvolvimento (VER-58); a busca mobile ainda não tem tarefa associada. Também não há `errorElement` nem página 404 (previstos na VER-55).
 - **Simulador de frete da PDP:** o valor exibido é uma estimativa e pode diferir do frete do carrinho, que soma a taxa de cada produtor.
-- **`RoleRoute` não utilizado** e **sem refresh token** (ver seções 5 e 6).
+- **Sem refresh token** (ver seção 6).
+- **Mapa da rota de entrega:** o detalhe do pedido do vendedor mostra só o endereço em texto; o mapa entra com a VER-92 (Leaflet), ainda fora do `main`.
 - **Sem pasta `hooks/`:** a lógica reutilizável hoje vive nos stores e nos componentes.
 
 ---

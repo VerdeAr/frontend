@@ -15,7 +15,8 @@ Aplicação web (SPA) do **VerdeAr**, marketplace que conecta produtores familia
 **Vendedor (produtor rural)** — tudo o que o cliente faz, mais:
 - Catálogo próprio com cadastro e edição de produtos (foto, categoria, unidade de medida, estoque).
 - Ativar ou desativar produtos sem excluí-los.
-- Controle de pedidos recebidos, com filtro por status (Aberta, Finalizada, Cancelada).
+- Controle de pedidos recebidos, com filtro por status (Recebido, Em preparação, A caminho, Aguardando cliente, Concluído e Cancelado).
+- Página de detalhe do pedido com linha do tempo, dados do cliente, avanço de etapas e proposta de ajuste de quantidade ou pesagem, que o cliente aceita ou recusa em Minhas Compras.
 - Configuração do frete fixo.
 
 ### Telas
@@ -28,6 +29,7 @@ Aplicação web (SPA) do **VerdeAr**, marketplace que conecta produtores familia
 | Carrinho, Finalizar Pedido e Pedido confirmado | Logado |
 | Minha Conta (dados, senha, histórico de compras) | Logado |
 | Abas de Catálogo de produtos, Controle de pedidos e Frete (dentro de Minha Conta) | Somente Vendedor |
+| Detalhe do pedido do vendedor (`/vendedor/pedidos/:id`) | Somente Vendedor |
 
 A vitrine pode ser navegada sem login. Ao tentar adicionar um produto ao carrinho, o visitante é enviado para o Login e volta à página de origem depois de autenticar.
 
@@ -215,12 +217,13 @@ src/
 │   ├── catalog/    # Vitrine, carrossel, filtros e busca
 │   ├── checkout/   # Resumo, endereço, pagamento
 │   ├── layout/     # Header, Footer, RootLayout
+│   ├── orders/     # Status, timeline, ações e ajuste do pedido
 │   ├── seller/     # Catálogo e pedidos do produtor
 │   └── ui/         # Primitivos (Button, Dialog, Input, Badge...)
 ├── lib/            # Instância Axios, formatadores, máscaras, utils
 ├── pages/          # Páginas que apenas orquestram componentes
 ├── router/         # Rotas e loaders de dados
-├── schemas/        # Schemas Zod (auth, person, product)
+├── schemas/        # Schemas Zod (adjustment, auth, chat, person, product, review)
 ├── services/       # Chamadas tipadas à API REST
 ├── stores/         # Zustand (auth.store, cart.store)
 ├── test/           # Setup do Vitest e dados de exemplo dos testes
@@ -234,7 +237,7 @@ e2e/                # Testes de ponta a ponta (Playwright) e seus helpers
 - **Mobile-first:** layouts pensados para 375–430px e ampliados com `md:` e `lg:`; áreas de toque com no mínimo 44px.
 - **Páginas orquestradoras:** `src/pages/` compõe componentes isolados; formulários complexos ficam em componentes próprios.
 - **Type safety:** `any` é proibido; rode `npm run check` e `npm test` antes de abrir o PR.
-- **Controle de acesso:** Home, Login e Cadastro são públicos; Minha Conta, Carrinho, Checkout e Pedido confirmado ficam sob `ProtectedRoute`. As abas de vendedor em Minha Conta só aparecem para `role === "VENDEDOR"`, e o backend valida o papel em cada rota de vendedor.
+- **Controle de acesso:** Home, Login e Cadastro são públicos; Minha Conta, Carrinho, Checkout e Pedido confirmado ficam sob `ProtectedRoute`. As abas de vendedor em Minha Conta só aparecem para `role === "VENDEDOR"`, a página `/vendedor/pedidos/:id` fica sob `RoleRoute`, e o backend valida o papel em cada rota de vendedor.
 
 ## Fluxo de contribuição
 
