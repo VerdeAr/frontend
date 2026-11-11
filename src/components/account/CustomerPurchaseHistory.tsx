@@ -1,7 +1,6 @@
 import {
 	AlertCircle,
 	CheckCircle2,
-	Clock,
 	ExternalLink,
 	Loader2,
 	ShoppingBag,
@@ -9,52 +8,16 @@ import {
 	Star,
 	Store,
 	Truck,
-	XCircle,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
+import { SaleStatusBadge } from "@/components/orders";
 import { ReviewOrderModal } from "@/components/reviews";
-import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { formatBRL, formatDate } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 import { saleService } from "@/services/sale.service";
-import type { SaleResponse, SaleStatus } from "@/types";
-
-function renderStatusBadge(status: SaleStatus) {
-	switch (status) {
-		case "FINALIZADA":
-			return (
-				<Badge
-					variant="secondary"
-					className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 gap-1.5 py-1 text-xs font-semibold"
-				>
-					<CheckCircle2 className="size-3.5" />
-					<span>Concluída</span>
-				</Badge>
-			);
-		case "CANCELADA":
-			return (
-				<Badge
-					variant="destructive"
-					className="bg-destructive/15 text-destructive border border-destructive/30 gap-1.5 py-1 text-xs font-semibold"
-				>
-					<XCircle className="size-3.5" />
-					<span>Cancelada</span>
-				</Badge>
-			);
-		default:
-			return (
-				<Badge
-					variant="secondary"
-					className="bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 gap-1.5 py-1 text-xs font-semibold"
-				>
-					<Clock className="size-3.5" />
-					<span>Aguardando preparo</span>
-				</Badge>
-			);
-	}
-}
+import type { SaleResponse } from "@/types";
 
 export function CustomerPurchaseHistory() {
 	const [purchases, setPurchases] = useState<SaleResponse[]>([]);
@@ -193,7 +156,10 @@ export function CustomerPurchaseHistory() {
 								</div>
 
 								<div className="flex items-center gap-2 self-start sm:self-auto">
-									{renderStatusBadge(purchase.status)}
+									<SaleStatusBadge
+										status={purchase.status}
+										audience="customer"
+									/>
 								</div>
 							</div>
 

@@ -1,6 +1,5 @@
 import {
 	CheckCircle2,
-	Clock,
 	Loader2,
 	MapPin,
 	Phone,
@@ -11,11 +10,11 @@ import {
 	XCircle,
 } from "lucide-react";
 import { useState } from "react";
-import { Badge } from "@/components/ui/badge";
+import { SaleStatusBadge } from "@/components/orders";
 import { buttonVariants } from "@/components/ui/button";
 import { formatBRL, formatDate } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
-import type { SaleStatus, SellerOrderResponse } from "@/types";
+import type { SellerOrderResponse } from "@/types";
 
 export interface SellerOrderCardProps {
 	order: SellerOrderResponse;
@@ -23,41 +22,6 @@ export interface SellerOrderCardProps {
 		orderId: string,
 		status: "FINALIZADA" | "CANCELADA",
 	) => Promise<void>;
-}
-
-function renderStatusBadge(status: SaleStatus) {
-	switch (status) {
-		case "FINALIZADA":
-			return (
-				<Badge
-					variant="secondary"
-					className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 gap-1.5 py-1 text-xs font-semibold"
-				>
-					<CheckCircle2 className="size-3.5" />
-					<span>Finalizada</span>
-				</Badge>
-			);
-		case "CANCELADA":
-			return (
-				<Badge
-					variant="destructive"
-					className="bg-destructive/15 text-destructive border border-destructive/30 gap-1.5 py-1 text-xs font-semibold"
-				>
-					<XCircle className="size-3.5" />
-					<span>Cancelada</span>
-				</Badge>
-			);
-		default:
-			return (
-				<Badge
-					variant="secondary"
-					className="bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 gap-1.5 py-1 text-xs font-semibold"
-				>
-					<Clock className="size-3.5" />
-					<span>Pendente</span>
-				</Badge>
-			);
-	}
 }
 
 export function SellerOrderCard({
@@ -111,7 +75,7 @@ export function SellerOrderCard({
 				</div>
 
 				<div className="flex items-center gap-2 self-start sm:self-auto">
-					{renderStatusBadge(order.status)}
+					<SaleStatusBadge status={order.status} />
 				</div>
 			</div>
 
