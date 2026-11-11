@@ -13,6 +13,7 @@ import {
 	useRevalidator,
 } from "react-router";
 import {
+	OrderAdjustmentDialog,
 	OrderCustomerCard,
 	OrderDetailHeader,
 	OrderQuickActions,
@@ -42,6 +43,7 @@ export default function SellerOrderDetailPage() {
 		null,
 	);
 	const [feedback, setFeedback] = useState<ActionFeedback>(null);
+	const [isAdjustmentOpen, setIsAdjustmentOpen] = useState(false);
 
 	const isRevalidating = revalidator.state === "loading";
 
@@ -76,6 +78,15 @@ export default function SellerOrderDetailPage() {
 		} finally {
 			setPendingTarget(null);
 		}
+	};
+
+	const handleAdjustmentSubmitted = () => {
+		setFeedback({
+			type: "success",
+			message:
+				"Proposta enviada. O pedido fica aguardando a resposta do cliente.",
+		});
+		revalidator.revalidate();
 	};
 
 	if (navigation.state === "loading" && !order) {
@@ -170,6 +181,19 @@ export default function SellerOrderDetailPage() {
 				hasPendingAdjustment={order.pending_adjustment !== null}
 				pendingTarget={pendingTarget}
 				onChangeStatus={handleChangeStatus}
+				onProposeAdjustment={() => {
+					setFeedback(null);
+					setIsAdjustmentOpen(true);
+				}}
+			/>
+
+			<OrderAdjustmentDialog
+				open={isAdjustmentOpen}
+				onOpenChange={setIsAdjustmentOpen}
+				orderId={order.id}
+				items={order.items}
+				orderTotal={order.order_total}
+				onSubmitted={handleAdjustmentSubmitted}
 			/>
 
 			<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
