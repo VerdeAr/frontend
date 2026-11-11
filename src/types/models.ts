@@ -2,7 +2,23 @@ export type UserRole = "CLIENTE" | "VENDEDOR";
 
 export type DeliveryType = "ENTREGA" | "RETIRADA";
 
-export type SaleStatus = "ABERTA" | "FINALIZADA" | "CANCELADA";
+/**
+ * Status do pedido (RF-52 e RF-55). AGUARDANDO_APROVACAO_CLIENTE só é alcançado
+ * pela proposta de ajuste do vendedor e só sai pela resposta do cliente (RF-56).
+ */
+export type SaleStatus =
+	| "ABERTA"
+	| "EM_PREPARACAO"
+	| "A_CAMINHO"
+	| "AGUARDANDO_APROVACAO_CLIENTE"
+	| "FINALIZADA"
+	| "CANCELADA";
+
+/** Status que o vendedor pode definir diretamente pelo PATCH de status. */
+export type SellerTargetStatus = Exclude<
+	SaleStatus,
+	"ABERTA" | "AGUARDANDO_APROVACAO_CLIENTE"
+>;
 
 export type ChatStatus = "ATIVO" | "FINALIZADO";
 
