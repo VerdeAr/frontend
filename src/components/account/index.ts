@@ -1,3 +1,4 @@
+export * from "./AdjustmentApprovalBanner";
 export * from "./CustomerPurchaseHistory";
 export * from "./PasswordChangeForm";
 export * from "./ProfileDataForm";
