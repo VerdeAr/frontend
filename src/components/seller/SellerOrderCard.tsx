@@ -1,5 +1,7 @@
 import {
 	CheckCircle2,
+	ChevronRight,
+	Hourglass,
 	Loader2,
 	MapPin,
 	Phone,
@@ -10,6 +12,7 @@ import {
 	XCircle,
 } from "lucide-react";
 import { useState } from "react";
+import { Link } from "react-router";
 import { SaleStatusBadge } from "@/components/orders";
 import { buttonVariants } from "@/components/ui/button";
 import { formatBRL, formatDate } from "@/lib/formatters";
@@ -78,6 +81,15 @@ export function SellerOrderCard({
 					<SaleStatusBadge status={order.status} />
 				</div>
 			</div>
+
+			{order.has_pending_adjustment && (
+				<p className="flex items-start gap-2 rounded-xl border border-orange-500/40 bg-orange-500/10 p-3 text-xs text-orange-800 dark:text-orange-200">
+					<Hourglass className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
+					<span>
+						Ajuste enviado ao cliente. O pedido fica parado até ele responder.
+					</span>
+				</p>
+			)}
 
 			{/* Customer & Delivery Information */}
 			<div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs bg-muted/30 p-3.5 rounded-xl border border-border/40">
@@ -174,47 +186,60 @@ export function SellerOrderCard({
 					</span>
 				</div>
 
-				{isPending && (
-					<div className="flex items-center gap-2 w-full sm:w-auto">
-						<button
-							type="button"
-							onClick={handleCancel}
-							disabled={isUpdating}
-							className={cn(
-								buttonVariants({ variant: "destructive", size: "sm" }),
-								"flex-1 sm:flex-initial h-10 px-3 text-xs font-semibold rounded-xl disabled:opacity-50",
-							)}
-						>
-							{isUpdating ? (
-								<Loader2 className="size-3.5 animate-spin" />
-							) : (
-								<>
-									<XCircle className="size-3.5 mr-1" />
-									<span>Cancelar Pedido</span>
-								</>
-							)}
-						</button>
+				<div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+					<Link
+						to={`/vendedor/pedidos/${order.id}`}
+						className={cn(
+							buttonVariants({ variant: "outline", size: "sm" }),
+							"flex-1 sm:flex-initial h-11 px-3.5 text-xs font-semibold rounded-xl",
+						)}
+					>
+						<span>Ver detalhes</span>
+						<ChevronRight className="size-3.5" aria-hidden="true" />
+					</Link>
 
-						<button
-							type="button"
-							onClick={handleFinalize}
-							disabled={isUpdating}
-							className={cn(
-								buttonVariants({ variant: "default", size: "sm" }),
-								"flex-1 sm:flex-initial h-10 px-3.5 text-xs font-semibold rounded-xl shadow-xs disabled:opacity-50",
-							)}
-						>
-							{isUpdating ? (
-								<Loader2 className="size-3.5 animate-spin" />
-							) : (
-								<>
-									<CheckCircle2 className="size-3.5 mr-1" />
-									<span>Concluir Entrega</span>
-								</>
-							)}
-						</button>
-					</div>
-				)}
+					{isPending && (
+						<>
+							<button
+								type="button"
+								onClick={handleCancel}
+								disabled={isUpdating}
+								className={cn(
+									buttonVariants({ variant: "destructive", size: "sm" }),
+									"flex-1 sm:flex-initial h-11 px-3 text-xs font-semibold rounded-xl disabled:opacity-50",
+								)}
+							>
+								{isUpdating ? (
+									<Loader2 className="size-3.5 animate-spin" />
+								) : (
+									<>
+										<XCircle className="size-3.5 mr-1" />
+										<span>Cancelar Pedido</span>
+									</>
+								)}
+							</button>
+
+							<button
+								type="button"
+								onClick={handleFinalize}
+								disabled={isUpdating}
+								className={cn(
+									buttonVariants({ variant: "default", size: "sm" }),
+									"flex-1 sm:flex-initial h-11 px-3.5 text-xs font-semibold rounded-xl shadow-xs disabled:opacity-50",
+								)}
+							>
+								{isUpdating ? (
+									<Loader2 className="size-3.5 animate-spin" />
+								) : (
+									<>
+										<CheckCircle2 className="size-3.5 mr-1" />
+										<span>Concluir Entrega</span>
+									</>
+								)}
+							</button>
+						</>
+					)}
+				</div>
 			</div>
 		</div>
 	);
