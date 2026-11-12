@@ -1,7 +1,6 @@
 export * from "./auth.service";
 export * from "./cart.service";
 export * from "./catalog.service";
-export * from "./cep.service";
 export * from "./chat.service";
 export * from "./neighborhood.service";
 export * from "./review.service";
