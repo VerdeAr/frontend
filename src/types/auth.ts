@@ -17,6 +17,13 @@ export interface RegisterData {
 	description?: string | null;
 	cnpj?: string | null;
 	farm_name?: string | null;
+	cep?: string | null;
+	street?: string | null;
+	number?: string | null;
+	complement?: string | null;
+	neighborhood?: string | null;
+	city?: string | null;
+	state?: string | null;
 }
 
 export interface AuthResponse {
@@ -30,6 +37,13 @@ export interface UpdateProfileData {
 	neighborhood_id?: string | null;
 	description?: string | null;
 	farm_name?: string | null;
+	cep?: string | null;
+	street?: string | null;
+	number?: string | null;
+	complement?: string | null;
+	neighborhood?: string | null;
+	city?: string | null;
+	state?: string | null;
 }
 
 export interface UpdatePasswordData {
