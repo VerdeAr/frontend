@@ -1,5 +1,6 @@
 import { AlertCircle, Edit, MapPin, Store, Truck, User } from "lucide-react";
 import { Link } from "react-router";
+import { maskCep, maskPhone } from "@/lib/masks";
 import type { DeliveryType, User as UserType } from "@/types";
 
 export interface DeliveryAddressCardProps {
@@ -11,8 +12,43 @@ export function DeliveryAddressCard({
 	user,
 	deliveryType,
 }: DeliveryAddressCardProps) {
-	const hasAddress = Boolean(user.address?.trim());
-	const neighborhoodName = user.neighborhood?.name;
+	const hasAddress = Boolean(user.address?.trim() || user.street?.trim());
+	const neighborhoodName =
+		typeof user.neighborhood === "object"
+			? user.neighborhood?.name
+			: user.neighborhood;
+
+	// Linha principal: Logradouro, Número e Complemento
+	const mainAddressLine = user.street
+		? [
+				user.street,
+				user.number ? `nº ${user.number}` : null,
+				user.complement || null,
+			]
+				.filter(Boolean)
+				.join(", ")
+		: user.address || "";
+
+	// Localidade: Bairro e Cidade - UF
+	const cityState =
+		user.city && user.state
+			? `${user.city} - ${user.state}`
+			: user.city || user.state || null;
+
+	const localityParts = [
+		neighborhoodName ? `Bairro: ${neighborhoodName}` : null,
+		cityState,
+	].filter(Boolean);
+
+	const localityLine =
+		localityParts.length > 0
+			? localityParts.join(" • ")
+			: neighborhoodName
+				? `Bairro: ${neighborhoodName}`
+				: null;
+
+	const cepLine = user.cep ? `CEP: ${maskCep(user.cep)}` : null;
+	const formattedPhone = user.phone ? maskPhone(user.phone) : null;
 
 	if (deliveryType === "RETIRADA") {
 		return (
@@ -61,27 +97,33 @@ export function DeliveryAddressCard({
 			</div>
 
 			{hasAddress ? (
-				<div className="flex flex-col gap-1.5 text-sm">
-					<div className="flex items-start gap-2 text-foreground">
+				<div className="flex flex-col gap-2 text-sm">
+					<div className="flex items-start gap-2.5 text-foreground">
 						<MapPin className="size-4 text-primary shrink-0 mt-0.5" />
-						<div>
-							<p className="font-semibold">{user.address}</p>
-							{neighborhoodName && (
-								<p className="text-xs text-muted-foreground">
-									Bairro: {neighborhoodName}
+						<div className="flex flex-col gap-0.5">
+							<p className="font-semibold leading-snug">{mainAddressLine}</p>
+							{localityLine && (
+								<p className="text-xs text-muted-foreground leading-snug">
+									{localityLine}
+								</p>
+							)}
+							{cepLine && (
+								<p className="text-xs text-muted-foreground font-mono">
+									{cepLine}
 								</p>
 							)}
 						</div>
 					</div>
 
-					<div className="flex items-center gap-2 pt-2 text-xs text-muted-foreground border-t border-border/40">
+					<div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 pt-2 text-xs text-muted-foreground border-t border-border/40">
 						<span>
 							Destinatário:{" "}
 							<strong className="text-foreground">{user.name}</strong>
 						</span>
-						{user.phone && (
+						{formattedPhone && (
 							<span>
-								• Tel: <strong className="text-foreground">{user.phone}</strong>
+								• Tel:{" "}
+								<strong className="text-foreground">{formattedPhone}</strong>
 							</span>
 						)}
 					</div>
