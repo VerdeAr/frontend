@@ -125,7 +125,7 @@ Requisitos do produto, com o estado de cada um. O VerdeAr é um marketplace que 
 
 | ID | Requisito | Camada | Estado | Ref. |
 |---|---|:-:|---|---|
-| RF-80 | Falhas de rota, de carregamento ou de API mostram uma tela de erro amigável, e rotas inexistentes mostram uma página 404; nunca uma tela em branco. | F | Parcial | VER-53, VER-55 |
+| RF-80 | Falhas de rota, de carregamento ou de API mostram uma tela de erro amigável, e rotas inexistentes mostram uma página 404; nunca uma tela em branco. | F | Implementado (QA pendente, VER-57) | VER-53, VER-55 |
 | RF-81 | Componentes comuns (paginação, confirmação, seletor de quantidade, estado vazio e abas da conta) são centralizados e reutilizados. | F | Planejado | VER-48 |
 | RF-82 | Todas as páginas carregam dados por data loaders do React Router. | F | Implementado | VER-51, VER-53 |
 

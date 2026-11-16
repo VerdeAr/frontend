@@ -73,6 +73,7 @@ Resultado: os ambientes de **homologação** e **produção** estão no ar, com 
 | VER-66 — PDP | A fazer (o Jira não atualizou a tarefa) | VER-68 Feito (no `main`) | VER-67 Feito | VER-69 A fazer |
 | VER-51 — Data loaders do React Router | A fazer (a tarefa; frontend 100% entregue no VER-53) | VER-53 Feito | VER-52 A fazer | VER-54 A fazer |
 | VER-94 — Painel do vendedor e workflow de pedidos | Fazendo | VER-96 **Revisão** (branch `feat/VER-96-detalhe-pedido-ajuste-consentimento`, ainda sem merge) | VER-95 Feito | VER-97 A fazer |
+| VER-55 — `errorElement` geral e 404 | A fazer (a tarefa; o frontend já foi entregue) | VER-56 **Revisão** (branch `feat/VER-56-error-boundary-pagina-404`, ainda sem merge) | — | VER-57 A fazer |
 
 ---
 
@@ -81,7 +82,6 @@ Resultado: os ambientes de **homologação** e **produção** estão no ar, com 
 | Tarefa | Frontend previsto |
 |---|---|
 | VER-48 — Subcomponentização e reutilizações | VER-49: subcomponentização e reutilizações profundas. |
-| VER-55 — `errorElement` geral e 404 | VER-56: `RootErrorBoundary` e página 404. |
 | VER-70 — Perfil público do produtor | VER-72: `ProducerProfilePage`, vitrine do produtor e rota pública `/vendedores/:id`. |
 | VER-82 — E-mails transacionais com Resend | VER-84: avisos e feedbacks visuais dos e-mails disparados. |
 | VER-86 — Imagens na Cloudflare R2 | VER-88: `ImageUploadDropzone` e integração nos formulários. |
@@ -91,8 +91,7 @@ Resultado: os ambientes de **homologação** e **produção** estão no ar, com 
 ## 5. Pendências conhecidas
 
 - **VER-108 (bug, backend, A fazer):** os endpoints de chat expõem o hash da senha, o CPF, o e-mail e o telefone do outro participante da conversa. Precisa ser corrigido antes de o chat ser considerado concluído (VER-58).
-- A busca mobile do Header aponta para `/produtos/busca`, que não existe. Nenhuma tarefa cobre isso hoje.
-- A página 404 dedicada fica com a VER-55; o `errorElement` amigável (`RootErrorBoundary`) na raiz foi entregue na VER-53.
+- A busca mobile do Header aponta para `/produtos/busca`, que não existe e hoje mostra a página 404 (VER-56). Nenhuma tarefa cobre a busca.
 - O `POST /vendas/checkout` devolve a entidade crua da venda, diferente do `GET /vendas/:id`. A tela de pedido confirmado contorna isso buscando o pedido pelo ID. A correção é do backend e ainda não tem tarefa.
 
 ---
@@ -106,7 +105,7 @@ Quando as tarefas abaixo forem entregues, revise estas partes de `ARQUITETURA.md
 | VER-58 | A VER-60 já está no `main`, mas `ARQUITETURA.md` e `REQUISITOS.md` ainda tratam o chat como em desenvolvimento. Documentar as rotas `/chat`, os stores e o cliente Socket.io, remover o item das rotas órfãs e atualizar o RF-70 a RF-73 depois da QA (VER-61). |
 | VER-74 | A VER-76 já está no `main`. Depois da QA (VER-77), confirmar a descrição do `auth.store`, do `api.ts` e da restauração de sessão, e atualizar o RNF-03. |
 | VER-78 | Novos componentes de avaliação e exibição de reputação. Remover o item "sem tela". |
-| VER-55 | `errorElement` e página 404 na árvore de rotas. |
+| VER-55 | A VER-56 já documentou a rota `*`, a `NotFoundPage` e o `RootErrorBoundary` revisado em `ARQUITETURA.md` e marcou o RF-80 como implementado. Depois da QA (VER-57), retirar o "QA pendente" do RF-80. |
 | VER-62 | Formulários de endereço com CEP e consulta ao ViaCEP (VER-64 em revisão). |
 | VER-70 | Nova rota pública de perfil do produtor. |
 | VER-86 | Upload de imagens (`ImageUploadDropzone`) nos formulários de produto. |

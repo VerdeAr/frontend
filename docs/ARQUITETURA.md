@@ -89,13 +89,13 @@ src/
 │   ├── cart/           # CartItemList, CartItemRow, CartSummary, DeliverySelector, CartBadge
 │   ├── catalog/        # ProductGrid, ProductCard, CategorySelector, SearchBar, HeroBannerCarousel
 │   ├── checkout/       # CheckoutSummaryCard, DeliveryAddressCard, PaymentMethodSelector, OrderItemsList
-│   ├── layout/         # RootLayout, Header e Footer
+│   ├── layout/         # RootLayout, Header, Footer e RootErrorBoundary
 │   ├── orders/         # SaleStatusBadge, OrderDetailHeader, OrderStatusTimeline, OrderQuickActions, OrderCustomerCard, SellerOrderItemsList, OrderAdjustmentDialog
 │   ├── pdp/            # ProductGallery, ProductHeaderInfo, ProductSellerCard, ProductShippingSimulator, ProductActionsBar
 │   ├── seller/         # Catálogo, formulário de produto e gestão de pedidos do produtor
 │   └── ui/             # Primitivos (Button, Card, Dialog, ConfirmDialog, Input, Select, Switch, Badge, Skeleton...)
-├── lib/                # api.ts (Axios), api-error.ts, formatters.ts, masks.ts, sale-status.ts, sale-adjustment.ts e utils.ts
-├── pages/              # Home, ProductDetailPage, Login, Register, CartPage, CheckoutPage, OrderSuccessPage, AccountSettingsPage, SellerOrderDetailPage
+├── lib/                # api.ts (Axios), api-error.ts, route-error.ts, formatters.ts, masks.ts, sale-status.ts, sale-adjustment.ts e utils.ts
+├── pages/              # Home, ProductDetailPage, Login, Register, CartPage, CheckoutPage, OrderSuccessPage, AccountSettingsPage, SellerOrderDetailPage, NotFoundPage
 ├── router/             # routes.tsx (árvore de rotas) e loaders.ts (dados da Home, do produto, do carrinho e do pedido do vendedor)
 ├── schemas/            # Schemas Zod: adjustment, auth, chat, person, product, review
 ├── services/           # Uma função por chamada à API, tipada
@@ -122,8 +122,10 @@ Definido em `src/router/routes.tsx`, todas sob `RootLayout`:
 | `/checkout` | Checkout (loader `checkoutLoader`) | Logado |
 | `/pedido-confirmado/:id` | Confirmação do pedido (loader `orderSuccessLoader`) | Logado |
 | `/vendedor/pedidos/:id` | Detalhe do pedido do vendedor (loader `sellerOrderDetailLoader`) | Somente Vendedor (`RoleRoute`) |
+| `*` | Página 404 (`NotFoundPage`), último filho de `/` | Público |
 
-- **`RootErrorBoundary`** atua como `errorElement` na rota raiz, exibindo tela amigável em português com botão de retorno à vitrine para qualquer falha de carregamento ou rota.
+- **`RootErrorBoundary`** atua como `errorElement` na rota raiz e captura falhas de loader e de componente, em tela cheia (o próprio layout pode ter falhado). O texto vem de `lib/route-error.ts` (`getRouteErrorContent`), que classifica respostas do roteador e erros do Axios em 404, 401 (botão "Entrar"), 403, 5xx e erro genérico. O texto técnico do erro nunca aparece na tela, só no `console.error`, e "Recarregar Página" só aparece em falha de servidor ou erro desconhecido.
+- **Página 404:** a rota `*` mostra a `NotFoundPage` dentro do `RootLayout`, com Header e Footer, o endereço acessado, "Voltar para a vitrine" e, quando há histórico, "Voltar à página anterior".
 - **`ProtectedRoute`** envolve as rotas privadas e redireciona o visitante para `/login`, guardando a origem em `state.from`.
 - **Proteção de sessão nos loaders:** `cartLoader`, `checkoutLoader`, `orderSuccessLoader` e `sellerOrderDetailLoader` checam a sessão antes de consultar a API, evitando requisições desnecessárias que retornariam 401 enquanto o `ProtectedRoute` atua. O `sellerOrderDetailLoader` também confere o papel de vendedor, porque o loader roda antes do `RoleRoute`.
 - **`RoleRoute`** restringe por papel. Hoje envolve só `/vendedor/pedidos/:id` (`allowedRoles={["VENDEDOR"]}`): visitante vai para `/login` e cliente logado volta para `/`. As demais funções de vendedor continuam em abas de Minha Conta (abaixo), e a validação definitiva é do backend.
@@ -246,7 +248,7 @@ Cada card de pedido leva à página `/vendedor/pedidos/:id` (`GET /vendedor/pedi
 
 - **O E2E depende da `main` do backend.** O job E2E do CI baixa o repositório do backend e sobe a API real; uma mudança incompatível lá pode quebrar o E2E do frontend. A versão pode ser fixada com a variável `E2E_BACKEND_REF` (ver [CICD.md](CICD.md)).
 - **O `POST /vendas/checkout` devolve a entidade crua da venda** (pagamento como objeto, itens sem `product_name`), diferente do `GET /vendas/:id`. Por isso a tela de pedido confirmado busca o pedido pelo ID em vez de usar a resposta do checkout. Corrigir na origem é tarefa do backend.
-- **Rotas órfãs:** `/chat` e `/produtos/busca` são linkadas no Header e no Footer, mas não existem. O chat está em desenvolvimento (VER-58); a busca mobile ainda não tem tarefa associada. Também não há `errorElement` nem página 404 (previstos na VER-55).
+- **Rotas órfãs:** `/produtos/busca` é linkada na busca mobile do Header, mas não existe e hoje cai na página 404; ainda não há tarefa associada.
 - **Simulador de frete da PDP:** o valor exibido é uma estimativa e pode diferir do frete do carrinho, que soma a taxa de cada produtor.
 - **Sem refresh token** (ver seção 6).
 - **Mapa da rota de entrega:** o detalhe do pedido do vendedor mostra só o endereço em texto; o mapa entra com a VER-92 (Leaflet), ainda fora do `main`.
