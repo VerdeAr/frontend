@@ -14,9 +14,22 @@ export function DeliveryAddressCard({
 }: DeliveryAddressCardProps) {
 	const hasAddress = Boolean(user.address?.trim() || user.street?.trim());
 	const neighborhoodName =
-		typeof user.neighborhood === "object"
+		user.neighborhood_name ||
+		(typeof user.neighborhood === "object"
 			? user.neighborhood?.name
-			: user.neighborhood;
+			: user.neighborhood);
+
+	const cep = user.zip_code || user.cep;
+	const isStructuredAddress = Boolean(user.street || cep);
+	const isIncompleteStructured =
+		isStructuredAddress &&
+		!(
+			cep?.trim() &&
+			user.street?.trim() &&
+			user.number?.trim() &&
+			user.city?.trim() &&
+			user.state?.trim()
+		);
 
 	// Linha principal: Logradouro, Número e Complemento
 	const mainAddressLine = user.street
@@ -47,7 +60,7 @@ export function DeliveryAddressCard({
 				? `Bairro: ${neighborhoodName}`
 				: null;
 
-	const cepLine = user.cep ? `CEP: ${maskCep(user.cep)}` : null;
+	const cepLine = cep ? `CEP: ${maskCep(cep)}` : null;
 	const formattedPhone = user.phone ? maskPhone(user.phone) : null;
 
 	if (deliveryType === "RETIRADA") {
@@ -97,7 +110,7 @@ export function DeliveryAddressCard({
 			</div>
 
 			{hasAddress ? (
-				<div className="flex flex-col gap-2 text-sm">
+				<div className="flex flex-col gap-3 text-sm">
 					<div className="flex items-start gap-2.5 text-foreground">
 						<MapPin className="size-4 text-primary shrink-0 mt-0.5" />
 						<div className="flex flex-col gap-0.5">
@@ -114,6 +127,27 @@ export function DeliveryAddressCard({
 							)}
 						</div>
 					</div>
+
+					{deliveryType === "ENTREGA" && isIncompleteStructured && (
+						<div className="flex items-start gap-2.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 p-3 text-amber-800 dark:text-amber-300 text-xs">
+							<AlertCircle className="size-4 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
+							<div className="space-y-0.5">
+								<p className="font-semibold">
+									Endereço incompleto para entrega
+								</p>
+								<p>
+									Para receber a entrega, informe CEP, logradouro, número,
+									cidade e UF no perfil.
+								</p>
+								<Link
+									to="/minha-conta?aba=profile"
+									className="inline-block font-bold underline mt-1 text-primary hover:opacity-80"
+								>
+									Completar endereço agora →
+								</Link>
+							</div>
+						</div>
+					)}
 
 					<div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 pt-2 text-xs text-muted-foreground border-t border-border/40">
 						<span>

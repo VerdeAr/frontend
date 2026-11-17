@@ -1,4 +1,5 @@
 import { ArrowRight, Loader2, ShieldCheck, Sprout } from "lucide-react";
+import { Link } from "react-router";
 import { buttonVariants } from "@/components/ui/button";
 import { formatBRL } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
@@ -87,8 +88,18 @@ export function CheckoutSummaryCard({
 
 			{/* Error banner */}
 			{errorMessage && (
-				<div className="rounded-2xl bg-destructive/10 border border-destructive/20 p-3 text-xs text-destructive">
-					{errorMessage}
+				<div className="rounded-2xl bg-destructive/10 border border-destructive/20 p-3 text-xs text-destructive flex flex-col gap-1.5">
+					<p>{errorMessage}</p>
+					{(errorMessage.toLowerCase().includes("endereço") ||
+						errorMessage.toLowerCase().includes("endereco") ||
+						errorMessage.toLowerCase().includes("perfil")) && (
+						<Link
+							to="/minha-conta?aba=profile"
+							className="font-bold underline text-foreground hover:opacity-80 inline-flex items-center gap-1"
+						>
+							<span>Completar endereço no perfil →</span>
+						</Link>
+					)}
 				</div>
 			)}
 
