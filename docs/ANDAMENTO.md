@@ -66,7 +66,7 @@ Resultado: os ambientes de **homologação** e **produção** estão no ar, com 
 | Tarefa | Status | Frontend | Backend | QA |
 |---|---|---|---|---|
 | VER-58 — Mensagens e chat com WebSocket (Socket.io) | Fazendo | VER-60 Feito (no `main`) | VER-59 Feito | VER-61 **Fazendo** |
-| VER-62 — Endereços com CEP e autopreenchimento | Fazendo | VER-64 **Revisão** (branch `feat/VER-64-enderecos-com-cep`, ainda sem merge) | VER-63 A fazer | VER-65 A fazer |
+| VER-62 — Endereços com CEP e autopreenchimento | Fazendo | VER-64 **Revisão** (branch `feat/VER-64-enderecos-com-cep`, ajustada para os schemas da VER-63) | VER-63 A fazer | VER-65 A fazer |
 | VER-74 — Blindagem de autenticação com cookies HTTP-Only | Fazendo | VER-76 Feito (no `main`) | VER-75 Feito | VER-77 **Fazendo** |
 | VER-78 — Avaliação pós-venda | Fazendo | VER-80 Feito | VER-79 Feito | VER-81 A fazer |
 | VER-90 — Frete dinâmico com OpenRouteService e Leaflet | A fazer (a tarefa; as subtarefas já começaram) | VER-92 **Fazendo** | VER-91 **Fazendo** | VER-93 A fazer |
