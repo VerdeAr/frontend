@@ -9,6 +9,7 @@ import ChatRoomPage from "@/pages/ChatRoomPage";
 import CheckoutPage from "@/pages/CheckoutPage";
 import Home from "@/pages/Home";
 import Login from "@/pages/Login";
+import NotFoundPage from "@/pages/NotFoundPage";
 import OrderSuccessPage from "@/pages/OrderSuccessPage";
 import ProductDetailPage from "@/pages/ProductDetailPage";
 import Register from "@/pages/Register";
@@ -88,6 +89,11 @@ export const router = createBrowserRouter([
 						],
 					},
 				],
+			},
+			{
+				// Qualquer endereço sem rota mostra a 404 dentro do layout, com Header e Footer
+				path: "*",
+				element: <NotFoundPage />,
 			},
 		],
 	},
