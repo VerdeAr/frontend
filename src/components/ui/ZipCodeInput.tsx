@@ -89,7 +89,8 @@ export const ZipCodeInput = React.forwardRef<
 						onErrorChange?.(msg);
 					}
 				} catch {
-					const msg = "Erro ao consultar CEP";
+					const msg =
+						"Não foi possível consultar o CEP agora. Preencha o endereço manualmente.";
 					setSearchError(msg);
 					onErrorChange?.(msg);
 				} finally {
