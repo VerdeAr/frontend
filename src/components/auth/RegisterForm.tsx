@@ -118,23 +118,7 @@ export function RegisterForm({ onSuccess, className }: RegisterFormProps) {
 	const onSubmit = async (data: RegisterFormData) => {
 		setServerError(null);
 		try {
-			const addressParts = [
-				data.street || data.address,
-				data.number ? `nº ${data.number}` : null,
-				data.complement || null,
-				data.neighborhood || null,
-				data.city && data.state
-					? `${data.city} - ${data.state}`
-					: data.city || null,
-				data.cep ? `CEP ${data.cep}` : null,
-			].filter(Boolean);
-
-			const formattedAddress =
-				addressParts.length > 0
-					? addressParts.join(", ")
-					: data.address
-						? data.address.trim()
-						: null;
+			const cleanCep = data.cep ? unmask(data.cep) : null;
 
 			const payload: RegisterData = {
 				name: data.name.trim(),
@@ -143,8 +127,8 @@ export function RegisterForm({ onSuccess, className }: RegisterFormProps) {
 				cpf: unmask(data.cpf),
 				role: data.role,
 				phone: data.phone ? unmask(data.phone) : null,
-				address: formattedAddress,
-				cep: data.cep ? unmask(data.cep) : null,
+				zip_code: cleanCep,
+				cep: cleanCep,
 				street: data.street
 					? data.street.trim()
 					: data.address
@@ -153,6 +137,7 @@ export function RegisterForm({ onSuccess, className }: RegisterFormProps) {
 				number: data.number ? data.number.trim() : null,
 				complement: data.complement ? data.complement.trim() : null,
 				neighborhood: data.neighborhood ? data.neighborhood.trim() : null,
+				neighborhood_name: data.neighborhood ? data.neighborhood.trim() : null,
 				city: data.city ? data.city.trim() : null,
 				state: data.state ? data.state.trim().toUpperCase() : null,
 				neighborhood_id:
