@@ -29,9 +29,12 @@ export function ProfileDataForm({ className }: ProfileDataFormProps) {
 	const isSeller = user?.role === "VENDEDOR";
 
 	const initialNeighborhood =
-		typeof user?.neighborhood === "object"
+		user?.neighborhood_name ||
+		(typeof user?.neighborhood === "object"
 			? user?.neighborhood?.name
-			: user?.neighborhood;
+			: user?.neighborhood);
+
+	const initialCep = user?.zip_code || user?.cep;
 
 	const {
 		register,
@@ -46,7 +49,7 @@ export function ProfileDataForm({ className }: ProfileDataFormProps) {
 			phone: user?.phone ? maskPhone(user.phone) : "",
 			address: user?.address || "",
 			neighborhood_id: user?.neighborhood_id || "",
-			cep: user?.cep ? maskCep(user.cep) : "",
+			cep: initialCep ? maskCep(initialCep) : "",
 			street: user?.street || "",
 			number: user?.number || "",
 			complement: user?.complement || "",
@@ -112,29 +115,13 @@ export function ProfileDataForm({ className }: ProfileDataFormProps) {
 		setServerError(null);
 		setSuccessMessage(null);
 		try {
-			const addressParts = [
-				data.street || data.address,
-				data.number ? `nº ${data.number}` : null,
-				data.complement || null,
-				data.neighborhood || null,
-				data.city && data.state
-					? `${data.city} - ${data.state}`
-					: data.city || null,
-				data.cep ? `CEP ${data.cep}` : null,
-			].filter(Boolean);
-
-			const formattedAddress =
-				addressParts.length > 0
-					? addressParts.join(", ")
-					: data.address
-						? data.address.trim()
-						: null;
+			const cleanCep = data.cep ? unmask(data.cep) : null;
 
 			const payload: UpdateProfileData = {
 				name: data.name.trim(),
 				phone: data.phone ? unmask(data.phone) : null,
-				address: formattedAddress,
-				cep: data.cep ? unmask(data.cep) : null,
+				zip_code: cleanCep,
+				cep: cleanCep,
 				street: data.street
 					? data.street.trim()
 					: data.address
@@ -143,6 +130,7 @@ export function ProfileDataForm({ className }: ProfileDataFormProps) {
 				number: data.number ? data.number.trim() : null,
 				complement: data.complement ? data.complement.trim() : null,
 				neighborhood: data.neighborhood ? data.neighborhood.trim() : null,
+				neighborhood_name: data.neighborhood ? data.neighborhood.trim() : null,
 				city: data.city ? data.city.trim() : null,
 				state: data.state ? data.state.trim().toUpperCase() : null,
 				neighborhood_id:
