@@ -18,10 +18,12 @@ export interface RegisterData {
 	cnpj?: string | null;
 	farm_name?: string | null;
 	cep?: string | null;
+	zip_code?: string | null;
 	street?: string | null;
 	number?: string | null;
 	complement?: string | null;
 	neighborhood?: string | null;
+	neighborhood_name?: string | null;
 	city?: string | null;
 	state?: string | null;
 }
@@ -38,10 +40,12 @@ export interface UpdateProfileData {
 	description?: string | null;
 	farm_name?: string | null;
 	cep?: string | null;
+	zip_code?: string | null;
 	street?: string | null;
 	number?: string | null;
 	complement?: string | null;
 	neighborhood?: string | null;
+	neighborhood_name?: string | null;
 	city?: string | null;
 	state?: string | null;
 }
