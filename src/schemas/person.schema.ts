@@ -8,6 +8,13 @@ export const updateProfileSchema = z.object({
 	phone: z.string().max(20).optional().or(z.literal("")),
 	address: z.string().max(255).optional().or(z.literal("")),
 	neighborhood_id: z.string().optional().or(z.literal("")),
+	cep: z.string().max(9).optional().or(z.literal("")),
+	street: z.string().max(255).optional().or(z.literal("")),
+	number: z.string().max(20).optional().or(z.literal("")),
+	complement: z.string().max(100).optional().or(z.literal("")),
+	neighborhood: z.string().max(100).optional().or(z.literal("")),
+	city: z.string().max(100).optional().or(z.literal("")),
+	state: z.string().max(2).optional().or(z.literal("")),
 
 	// Campos opcionais do Vendedor Rural
 	farm_name: z.string().max(150).optional().or(z.literal("")),

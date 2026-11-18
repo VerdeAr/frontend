@@ -65,7 +65,10 @@ export default function CheckoutPage() {
 	const handleSubmitOrder = async () => {
 		setErrorMessage(null);
 
-		if (deliveryType === "ENTREGA" && !user?.address?.trim()) {
+		const hasAnyAddress = Boolean(
+			user?.address?.trim() || user?.street?.trim(),
+		);
+		if (deliveryType === "ENTREGA" && !hasAnyAddress) {
 			setErrorMessage(
 				"Para entrega em domicílio, você precisa cadastrar seu endereço no perfil antes de finalizar.",
 			);

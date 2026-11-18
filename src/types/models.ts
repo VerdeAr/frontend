@@ -80,8 +80,16 @@ export interface User {
 	cpf?: string | null;
 	phone?: string | null;
 	address?: string | null;
+	cep?: string | null;
+	zip_code?: string | null;
+	street?: string | null;
+	number?: string | null;
+	complement?: string | null;
+	city?: string | null;
+	state?: string | null;
 	neighborhood_id?: string | null;
-	neighborhood?: Neighborhood | null;
+	neighborhood?: Neighborhood | string | null;
+	neighborhood_name?: string | null;
 	role: UserRole;
 	is_active: boolean;
 	fixed_shipping_rate?: number | null;

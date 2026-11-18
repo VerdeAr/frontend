@@ -29,7 +29,23 @@ test("caminho feliz: cadastro, login, compra com entrega e pedido confirmado", a
 		await page.getByLabel("E-mail").fill(customer.email);
 		await page.getByLabel("CPF").fill(customer.cpf);
 		await page.getByLabel("Telefone / WhatsApp").fill(customer.phone);
-		await page.getByLabel("Endereço / Logradouro").fill(customer.address);
+		await page.route("**/viacep.com.br/ws/*/json/**", (route) =>
+			route.fulfill({
+				json: {
+					cep: "01001-000",
+					logradouro: "Praça da Sé",
+					complemento: "",
+					bairro: "Sé",
+					localidade: "São Paulo",
+					uf: "SP",
+				},
+			}),
+		);
+		await page.getByLabel("CEP", { exact: true }).fill("01001000");
+		await expect(page.getByLabel("Rua / Logradouro")).toHaveValue(
+			"Praça da Sé",
+		);
+		await page.getByLabel("Número").fill("100");
 		await page.getByLabel(/^Senha/).fill(customer.password);
 		await page.getByLabel(/^Confirmar Senha/).fill(customer.password);
 		await page.getByRole("button", { name: "Cadastrar no Verdear" }).click();
@@ -125,7 +141,7 @@ test("caminho feliz: cadastro, login, compra com entrega e pedido confirmado", a
 		await expect(
 			page.getByRole("heading", { name: "Finalizar Pedido" }),
 		).toBeVisible();
-		await expect(page.getByText(customer.address)).toBeVisible();
+		await expect(page.getByText(/Praça da Sé/)).toBeVisible();
 		await expect(page.getByRole("radio", { name: /PIX/ })).toBeChecked();
 
 		await page
