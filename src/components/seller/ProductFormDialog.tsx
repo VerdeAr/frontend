@@ -2,6 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
 	AlertCircle,
 	ImageIcon,
+	Link as LinkIcon,
 	Loader2,
 	Plus,
 	Save,
@@ -23,6 +24,7 @@ import {
 	FormSelect,
 	FormTextarea,
 } from "@/components/ui/form-input";
+import { ImageUploadDropzone } from "@/components/ui/ImageUploadDropzone";
 import { Switch } from "@/components/ui/switch";
 import { type ProductFormData, productFormSchema } from "@/schemas";
 import { catalogService } from "@/services/catalog.service";
@@ -47,6 +49,8 @@ export function ProductFormDialog({
 		[],
 	);
 	const [serverError, setServerError] = useState<string | null>(null);
+	const [isUploadingImage, setIsUploadingImage] = useState(false);
+	const [showManualUrlInput, setShowManualUrlInput] = useState(false);
 
 	const isEditing = Boolean(productToEdit);
 
@@ -55,7 +59,6 @@ export function ProductFormDialog({
 		handleSubmit,
 		reset,
 		control,
-		watch,
 		formState: { errors, isSubmitting },
 	} = useForm<ProductFormData>({
 		resolver: zodResolver(productFormSchema),
@@ -70,9 +73,6 @@ export function ProductFormDialog({
 			is_active: true,
 		},
 	});
-
-	// Observa URL de imagem para exibir preview dinâmico
-	const imageUrlWatch = watch("image_url");
 
 	// Carrega categorias e unidades de medida para alimentar os selects
 	useEffect(() => {
@@ -103,6 +103,8 @@ export function ProductFormDialog({
 	useEffect(() => {
 		if (open) {
 			setServerError(null);
+			setIsUploadingImage(false);
+			setShowManualUrlInput(false);
 			if (productToEdit) {
 				reset({
 					name: productToEdit.name,
@@ -256,30 +258,51 @@ export function ProductFormDialog({
 						</FormSelect>
 					</div>
 
-					{/* URL da Imagem com Preview */}
+					{/* Upload de Imagem com Dropzone e Suporte a Cloudflare R2 */}
 					<div className="flex flex-col gap-2">
-						<FormInput
-							type="url"
-							label="URL da Imagem (Opcional)"
-							placeholder="https://exemplo.com/imagem.webp"
-							leftIcon={ImageIcon}
-							error={errors.image_url?.message}
-							{...register("image_url")}
-						/>
-						{imageUrlWatch && !errors.image_url && (
-							<div className="flex items-center gap-3 p-2.5 rounded-2xl bg-muted/30 border border-border/40">
-								<img
-									src={imageUrlWatch}
-									alt="Prévia do produto"
-									className="size-12 rounded-xl object-cover bg-background shrink-0"
-									onError={(e) => {
-										e.currentTarget.style.display = "none";
-									}}
+						<Controller
+							name="image_url"
+							control={control}
+							render={({ field }) => (
+								<ImageUploadDropzone
+									id="product-image-dropzone"
+									label="Foto do Produto (Opcional)"
+									value={field.value}
+									onChange={(url) => field.onChange(url)}
+									onUploadStart={() => setIsUploadingImage(true)}
+									onUploadEnd={() => setIsUploadingImage(false)}
+									onError={() => setIsUploadingImage(false)}
+									error={errors.image_url?.message}
+									disabled={isSubmitting}
 								/>
-								<span className="text-xs text-muted-foreground truncate">
-									Prévia da foto vinculada
+							)}
+						/>
+
+						{/* Opção para informar URL externa manualmente */}
+						<div className="flex items-center justify-end">
+							<button
+								type="button"
+								onClick={() => setShowManualUrlInput((prev) => !prev)}
+								className="text-xs font-medium text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 py-1"
+							>
+								<LinkIcon className="size-3" />
+								<span>
+									{showManualUrlInput
+										? "Ocultar campo de URL manual"
+										: "Ou colar URL de imagem externa"}
 								</span>
-							</div>
+							</button>
+						</div>
+
+						{showManualUrlInput && (
+							<FormInput
+								type="url"
+								placeholder="https://exemplo.com/imagem.webp"
+								leftIcon={ImageIcon}
+								error={errors.image_url?.message}
+								helperText="Caso a imagem já esteja hospedada na web, insira a URL direta."
+								{...register("image_url")}
+							/>
 						)}
 					</div>
 
@@ -329,13 +352,18 @@ export function ProductFormDialog({
 
 						<Button
 							type="submit"
-							disabled={isSubmitting}
+							disabled={isSubmitting || isUploadingImage}
 							className="h-11 rounded-2xl px-6 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm shadow-xs gap-2"
 						>
 							{isSubmitting ? (
 								<>
 									<Loader2 className="size-4 animate-spin" />
 									<span>Salvando...</span>
+								</>
+							) : isUploadingImage ? (
+								<>
+									<Loader2 className="size-4 animate-spin" />
+									<span>Enviando foto...</span>
 								</>
 							) : isEditing ? (
 								<>
