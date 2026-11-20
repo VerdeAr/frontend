@@ -8,3 +8,4 @@ export * from "./review.service";
 export * from "./sale.service";
 export * from "./seller-products.service";
 export * from "./socket.service";
+export * from "./upload.service";

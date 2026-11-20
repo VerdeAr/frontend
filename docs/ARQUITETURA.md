@@ -169,7 +169,7 @@ O `homeLoader` lê esses parâmetros e busca categorias e produtos em paralelo. 
 - Subtotal, frete e total vêm calculados pela API; o frontend só exibe.
 
 ### Camada de serviços
-`src/services/` concentra as chamadas HTTP, uma função por endpoint ou integração externa: `auth`, `cart`, `catalog`, `cep`, `neighborhood`, `sale` e `seller-products`. Páginas e componentes não chamam o Axios diretamente. Para integrações externas (como a consulta ao ViaCEP em `cep.service.ts`), é utilizado cliente Axios desacoplado, sem os interceptores de autenticação interna nem envio de cookies de sessão da aplicação.
+`src/services/` concentra as chamadas HTTP, uma função por endpoint ou integração externa: `auth`, `cart`, `catalog`, `cep`, `neighborhood`, `sale`, `seller-products` e `upload`. Páginas e componentes não chamam o Axios diretamente. Para integrações externas ou uploads binários para terceiros (como a consulta ao ViaCEP em `cep.service.ts` e o upload binário direto para a Cloudflare R2 em `upload.service.ts`), é utilizado cliente Axios desacoplado, sem os interceptores de autenticação interna nem envio de cookies de sessão da aplicação (evitando que cabeçalhos ou cookies desnecessários invalidem a assinatura SigV4 de Presigned URLs do S3/R2).
 
 ### Cliente HTTP (`lib/api.ts`)
 - `baseURL` vem de `VITE_API_BASEURL`; se vazia, usa `http://localhost:3000`. Timeout de 15 s.
@@ -185,6 +185,7 @@ O `homeLoader` lê esses parâmetros e busca categorias e produtos em paralelo. 
 - Formulários usam React Hook Form com schemas Zod de `src/schemas/` (`auth`, `person`, `product`).
 - CPF e CNPJ são validados com `cpf-cnpj-validator`; máscaras de entrada (incluindo CEP `00000-000` via `maskCep`) ficam em `lib/masks.ts` e formatadores de moeda e data em `lib/formatters.ts`.
 - **Endereçamento estruturado com ViaCEP (VER-64):** O componente `ZipCodeInput` formata o CEP e dispara busca automática ao atingir 8 dígitos. Nos formulários de cadastro (`RegisterForm`) e edição de perfil (`ProfileDataForm`), o retorno preenche imediatamente logradouro, bairro, cidade e UF, substituindo a restrição de bairros pré-cadastrados por endereçamento completo nacional. O card de entrega no checkout (`DeliveryAddressCard`) formata e apresenta os dados de forma legível e completa.
+- **Upload seguro de imagens na Cloudflare R2 (VER-88):** O componente `ImageUploadDropzone` (`src/components/ui/ImageUploadDropzone.tsx`) permite envio de fotos com drag-and-drop, preview instantâneo na memória do navegador e indicador de progresso em tempo real. O upload é feito diretamente do frontend para o Cloudflare R2 através de Presigned URLs (`upload.service.ts`), sem trafegar arquivos pesados pelo servidor da API Node.js. O componente valida tamanho (máx 5MB) e formato (JPG, PNG, WebP) antes do envio e está integrado ao formulário de produtos (`ProductFormDialog`).
 - Regras equivalentes são reaplicadas no backend, que é a autoridade final. O frontend valida para dar resposta imediata ao usuário.
 - Erros da API chegam em `response.data.message`, exibido no formulário ou no resumo do checkout.
 
