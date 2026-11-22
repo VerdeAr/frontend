@@ -30,6 +30,8 @@ export function ChatMessageInput({
 	const [sendError, setSendError] = useState<string | null>(null);
 	const isTypingRef = useRef(false);
 	const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+	const formRef = useRef<HTMLFormElement | null>(null);
+	const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
 	const {
 		register,
@@ -43,6 +45,42 @@ export function ChatMessageInput({
 	});
 
 	const contentLength = watch("content").length;
+
+	const scrollToInput = useCallback(() => {
+		formRef.current?.scrollIntoView({ block: "end", behavior: "smooth" });
+	}, []);
+
+	const handleFocus = () => {
+		// Dá um pequeno atraso para o teclado virtual do celular abrir/animar
+		setTimeout(scrollToInput, 150);
+		setTimeout(scrollToInput, 400);
+	};
+
+	// Monitora mudanças no visualViewport ou rotação da tela mantendo o campo em foco visível
+	useEffect(() => {
+		if (typeof window === "undefined") return;
+
+		const handleViewportChange = () => {
+			if (document.activeElement === textareaRef.current) {
+				setTimeout(scrollToInput, 150);
+			}
+		};
+
+		const vv = window.visualViewport;
+		if (vv) {
+			vv.addEventListener("resize", handleViewportChange);
+			vv.addEventListener("scroll", handleViewportChange);
+		}
+		window.addEventListener("orientationchange", handleViewportChange);
+
+		return () => {
+			if (vv) {
+				vv.removeEventListener("resize", handleViewportChange);
+				vv.removeEventListener("scroll", handleViewportChange);
+			}
+			window.removeEventListener("orientationchange", handleViewportChange);
+		};
+	}, [scrollToInput]);
 
 	const stopTyping = useCallback(() => {
 		if (idleTimerRef.current) {
@@ -101,28 +139,38 @@ export function ChatMessageInput({
 	const feedback = disabled
 		? disabledReason
 		: (sendError ?? errors.content?.message);
-	const { onChange, ...contentField } = register("content");
+	const {
+		onChange,
+		ref: formRegisterRef,
+		...contentField
+	} = register("content");
 
 	return (
 		<form
+			ref={formRef}
 			onSubmit={submit}
 			className={cn(
-				"flex w-full flex-col gap-1.5 border-t border-border/60 bg-background p-3",
+				"flex w-full flex-col gap-1.5 border-t border-border/60 bg-background p-3 landscape:p-1.5 landscape:gap-1",
 				className,
 			)}
 		>
-			<div className="flex items-end gap-2">
+			<div className="flex items-end gap-2 landscape:gap-1.5">
 				<label htmlFor="chat-message" className="sr-only">
 					Mensagem
 				</label>
 				<textarea
 					id="chat-message"
+					ref={(node) => {
+						formRegisterRef(node);
+						textareaRef.current = node;
+					}}
 					rows={1}
 					maxLength={MESSAGE_MAX_LENGTH}
 					placeholder={disabled ? "Envio indisponível" : "Digite sua mensagem"}
 					disabled={disabled}
 					autoComplete="off"
 					aria-invalid={Boolean(errors.content)}
+					onFocus={handleFocus}
 					onKeyDown={handleKeyDown}
 					onChange={(event) => {
 						void onChange(event);
@@ -130,37 +178,39 @@ export function ChatMessageInput({
 					}}
 					{...contentField}
 					// text-base no mobile evita o zoom automático do iOS ao focar
-					className="field-sizing-content max-h-32 min-h-11 w-full flex-1 resize-none rounded-2xl border border-input bg-muted/40 px-4 py-2.5 text-base outline-none transition-colors focus:border-primary focus:bg-background disabled:cursor-not-allowed disabled:opacity-60 md:text-sm"
+					className="field-sizing-content max-h-32 min-h-11 w-full flex-1 resize-none rounded-2xl border border-input bg-muted/40 px-4 py-2.5 text-base outline-none transition-colors focus:border-primary focus:bg-background disabled:cursor-not-allowed disabled:opacity-60 md:text-sm landscape:max-h-16 landscape:min-h-9 landscape:px-3 landscape:py-1.5"
 				/>
 				<button
 					type="submit"
 					disabled={isBlocked}
-					className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xs transition-opacity hover:opacity-90 disabled:opacity-50"
+					className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xs transition-opacity hover:opacity-90 disabled:opacity-50 landscape:size-9"
 					aria-label="Enviar mensagem"
 				>
 					{isSubmitting ? (
-						<Loader2 className="size-5 animate-spin" />
+						<Loader2 className="size-5 animate-spin landscape:size-4" />
 					) : (
-						<SendHorizontal className="size-5" />
+						<SendHorizontal className="size-5 landscape:size-4" />
 					)}
 				</button>
 			</div>
 
-			<div className="flex min-h-4 items-center justify-between gap-2 px-1 text-xs">
-				<span
-					className={cn(
-						disabled ? "text-muted-foreground" : "text-destructive",
-					)}
-					role={feedback && !disabled ? "alert" : undefined}
-				>
-					{feedback}
-				</span>
-				{contentLength > MESSAGE_MAX_LENGTH * 0.9 && (
-					<span className="shrink-0 text-muted-foreground">
-						{contentLength}/{MESSAGE_MAX_LENGTH}
+			{(feedback || contentLength > MESSAGE_MAX_LENGTH * 0.9) && (
+				<div className="flex items-center justify-between gap-2 px-1 text-xs landscape:text-[11px]">
+					<span
+						className={cn(
+							disabled ? "text-muted-foreground" : "text-destructive",
+						)}
+						role={feedback && !disabled ? "alert" : undefined}
+					>
+						{feedback}
 					</span>
-				)}
-			</div>
+					{contentLength > MESSAGE_MAX_LENGTH * 0.9 && (
+						<span className="shrink-0 text-muted-foreground">
+							{contentLength}/{MESSAGE_MAX_LENGTH}
+						</span>
+					)}
+				</div>
+			)}
 		</form>
 	);
 }
