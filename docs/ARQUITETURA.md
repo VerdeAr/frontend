@@ -94,6 +94,7 @@ src/
 │   ├── pdp/            # ProductGallery, ProductHeaderInfo, ProductSellerCard, ProductShippingSimulator, ProductActionsBar
 │   ├── seller/         # Catálogo, formulário de produto e gestão de pedidos do produtor
 │   └── ui/             # Primitivos (Button, Card, Dialog, ConfirmDialog, Input, Select, Switch, Badge, Skeleton...)
+├── hooks/              # useVisualViewport (monitoramento de viewport visual e teclado virtual no mobile)
 ├── lib/                # api.ts (Axios), api-error.ts, route-error.ts, formatters.ts, masks.ts, sale-status.ts, sale-adjustment.ts e utils.ts
 ├── pages/              # Home, ProductDetailPage, Login, Register, CartPage, CheckoutPage, OrderSuccessPage, AccountSettingsPage, SellerOrderDetailPage, NotFoundPage
 ├── router/             # routes.tsx (árvore de rotas) e loaders.ts (dados da Home, do produto, do carrinho e do pedido do vendedor)
@@ -253,7 +254,7 @@ Cada card de pedido leva à página `/vendedor/pedidos/:id` (`GET /vendedor/pedi
 - **Simulador de frete da PDP:** o valor exibido é uma estimativa e pode diferir do frete do carrinho, que soma a taxa de cada produtor.
 - **Sem refresh token** (ver seção 6).
 - **Mapa da rota de entrega:** o detalhe do pedido do vendedor mostra só o endereço em texto; o mapa entra com a VER-92 (Leaflet), ainda fora do `main`.
-- **Sem pasta `hooks/`:** a lógica reutilizável hoje vive nos stores e nos componentes.
+- **Hooks customizados:** a pasta `src/hooks/` abriga hooks compartilhados de infraestrutura visual e reatividade (como `useVisualViewport` para teclado virtual e redimensionamento no mobile).
 
 ---
 

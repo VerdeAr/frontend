@@ -65,7 +65,7 @@ Resultado: os ambientes de **homologação** e **produção** estão no ar, com 
 
 | Tarefa | Status | Frontend | Backend | QA |
 |---|---|---|---|---|
-| VER-58 — Mensagens e chat com WebSocket (Socket.io) | Fazendo | VER-60 Feito (no `main`) | VER-59 Feito | VER-61 **Fazendo** |
+| VER-58 — Mensagens e chat com WebSocket (Socket.io) | Fazendo | VER-60 Feito (no `main`); VER-113 **Revisão** (correção CT-20: campo de mensagem no teclado horizontal) | VER-59 Feito | VER-61 **Fazendo** |
 | VER-62 — Endereços com CEP e autopreenchimento | Fazendo | VER-64 **Revisão** (branch `feat/VER-64-enderecos-com-cep`, ajustada para os schemas da VER-63) | VER-63 A fazer | VER-65 A fazer |
 | VER-74 — Blindagem de autenticação com cookies HTTP-Only | Fazendo | VER-76 Feito (no `main`) | VER-75 Feito | VER-77 **Fazendo** |
 | VER-78 — Avaliação pós-venda | Fazendo | VER-80 Feito | VER-79 Feito | VER-81 A fazer |
@@ -90,6 +90,7 @@ Resultado: os ambientes de **homologação** e **produção** estão no ar, com 
 
 ## 5. Pendências conhecidas
 
+- **VER-113 (bug, frontend, Revisão):** campo de mensagem do chat ficava oculto pelo teclado virtual na orientação horizontal do celular (CT-20). Corrigido na branch `fix/VER-113-campo-mensagem-teclado-horizontal` com hook `useVisualViewport` e layout landscape dinâmico.
 - **VER-108 (bug, backend, A fazer):** os endpoints de chat expõem o hash da senha, o CPF, o e-mail e o telefone do outro participante da conversa. Precisa ser corrigido antes de o chat ser considerado concluído (VER-58).
 - A busca mobile do Header aponta para `/produtos/busca`, que não existe e hoje mostra a página 404 (VER-56). Nenhuma tarefa cobre a busca.
 - O `POST /vendas/checkout` devolve a entidade crua da venda, diferente do `GET /vendas/:id`. A tela de pedido confirmado contorna isso buscando o pedido pelo ID. A correção é do backend e ainda não tem tarefa.
