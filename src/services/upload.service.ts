@@ -7,22 +7,7 @@ import type {
 } from "@/types/upload";
 
 export const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
-export const ALLOWED_IMAGE_TYPES = [
-	"image/jpeg",
-	"image/jpg",
-	"image/png",
-	"image/webp",
-];
-
-interface RawPresignedResponse {
-	uploadUrl?: string;
-	upload_url?: string;
-	url?: string;
-	publicUrl?: string;
-	public_url?: string;
-	fileUrl?: string;
-	file_url?: string;
-}
+export const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 export const uploadService = {
 	/**
@@ -47,39 +32,32 @@ export const uploadService = {
 	},
 
 	/**
-	 * Solicita à API protegida do backend uma presigned URL temporária para upload.
+	 * Solicita à API protegida do backend uma presigned URL temporária para upload (contrato VER-87).
 	 */
 	async getPresignedUrl(
 		filename: string,
 		contentType: string,
+		size: number,
 	): Promise<PresignedUrlResponse> {
-		const payload: PresignedUrlRequest & {
-			file_name: string;
-			content_type: string;
-		} = {
+		const payload: PresignedUrlRequest = {
 			filename,
 			contentType,
-			file_name: filename,
-			content_type: contentType,
+			size,
 		};
 
-		const response = await api.post<RawPresignedResponse>(
+		const response = await api.post<PresignedUrlResponse>(
 			"/upload/presigned-url",
 			payload,
 		);
 
 		const data = response.data;
-		const uploadUrl = data.uploadUrl || data.upload_url || data.url;
-		const publicUrl =
-			data.publicUrl || data.public_url || data.fileUrl || data.file_url;
-
-		if (!uploadUrl || !publicUrl) {
+		if (!data?.uploadUrl || !data?.fileUrl) {
 			throw new Error("Resposta inválida do serviço de upload.");
 		}
 
 		return {
-			uploadUrl,
-			publicUrl,
+			uploadUrl: data.uploadUrl,
+			fileUrl: data.fileUrl,
 		};
 	},
 
@@ -109,7 +87,7 @@ export const uploadService = {
 
 	/**
 	 * Pipeline completo: valida o arquivo, obtém a presigned URL e envia o binário diretamente ao R2.
-	 * Retorna a URL pública final da imagem.
+	 * Retorna a URL final da imagem (fileUrl).
 	 */
 	async uploadImage(
 		file: File,
@@ -121,9 +99,10 @@ export const uploadService = {
 		}
 
 		onProgress?.(5);
-		const { uploadUrl, publicUrl } = await this.getPresignedUrl(
+		const { uploadUrl, fileUrl } = await this.getPresignedUrl(
 			file.name,
 			file.type,
+			file.size,
 		);
 
 		onProgress?.(20);
@@ -134,6 +113,6 @@ export const uploadService = {
 		});
 
 		onProgress?.(100);
-		return publicUrl;
+		return fileUrl;
 	},
 };

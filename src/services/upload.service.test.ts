@@ -61,59 +61,39 @@ describe("uploadService", () => {
 	});
 
 	describe("getPresignedUrl", () => {
-		it("requisita presigned URL com os dados do arquivo e mapeia campos camelCase", async () => {
+		it("requisita presigned URL com filename, contentType e size (contrato VER-87)", async () => {
 			vi.mocked(api.post).mockResolvedValueOnce({
 				data: {
 					uploadUrl:
 						"https://r2.cloudflarestorage.com/bucket/alface.webp?sig=123",
-					publicUrl: "https://cdn.verdear.com.br/alface.webp",
+					fileUrl: "https://cdn.verdear.com.br/alface.webp",
 				},
 			});
 
 			const response = await uploadService.getPresignedUrl(
 				"alface.webp",
 				"image/webp",
+				2048,
 			);
 
-			expect(api.post).toHaveBeenCalledWith(
-				"/upload/presigned-url",
-				expect.objectContaining({
-					filename: "alface.webp",
-					contentType: "image/webp",
-				}),
-			);
+			expect(api.post).toHaveBeenCalledWith("/upload/presigned-url", {
+				filename: "alface.webp",
+				contentType: "image/webp",
+				size: 2048,
+			});
 			expect(response.uploadUrl).toBe(
 				"https://r2.cloudflarestorage.com/bucket/alface.webp?sig=123",
 			);
-			expect(response.publicUrl).toBe("https://cdn.verdear.com.br/alface.webp");
+			expect(response.fileUrl).toBe("https://cdn.verdear.com.br/alface.webp");
 		});
 
-		it("suporta resposta com campos snake_case (upload_url e public_url)", async () => {
-			vi.mocked(api.post).mockResolvedValueOnce({
-				data: {
-					upload_url: "https://r2.cloudflarestorage.com/bucket/cenoura.png",
-					public_url: "https://cdn.verdear.com.br/cenoura.png",
-				},
-			});
-
-			const response = await uploadService.getPresignedUrl(
-				"cenoura.png",
-				"image/png",
-			);
-
-			expect(response.uploadUrl).toBe(
-				"https://r2.cloudflarestorage.com/bucket/cenoura.png",
-			);
-			expect(response.publicUrl).toBe("https://cdn.verdear.com.br/cenoura.png");
-		});
-
-		it("dispara erro se a resposta não contiver URLs válidas", async () => {
+		it("dispara erro se a resposta não contiver uploadUrl ou fileUrl", async () => {
 			vi.mocked(api.post).mockResolvedValueOnce({
 				data: {},
 			});
 
 			await expect(
-				uploadService.getPresignedUrl("cenoura.png", "image/png"),
+				uploadService.getPresignedUrl("cenoura.png", "image/png", 1024),
 			).rejects.toThrow("Resposta inválida do serviço de upload.");
 		});
 	});
@@ -159,11 +139,11 @@ describe("uploadService", () => {
 	});
 
 	describe("uploadImage", () => {
-		it("executa o fluxo completo com sucesso e retorna a publicUrl", async () => {
+		it("executa o fluxo completo com sucesso e retorna a fileUrl", async () => {
 			vi.mocked(api.post).mockResolvedValueOnce({
 				data: {
 					uploadUrl: "https://r2.upload.url",
-					publicUrl: "https://cdn.verdear.com.br/produto.jpg",
+					fileUrl: "https://cdn.verdear.com.br/produto.jpg",
 				},
 			});
 
@@ -178,6 +158,11 @@ describe("uploadService", () => {
 				progressUpdates.push(p);
 			});
 
+			expect(api.post).toHaveBeenCalledWith("/upload/presigned-url", {
+				filename: "produto.jpg",
+				contentType: "image/jpeg",
+				size: file.size,
+			});
 			expect(resultUrl).toBe("https://cdn.verdear.com.br/produto.jpg");
 			expect(progressUpdates).toContain(100);
 		});
