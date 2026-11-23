@@ -74,7 +74,7 @@ Resultado: os ambientes de **homologação** e **produção** estão no ar, com 
 | VER-51 — Data loaders do React Router | A fazer (a tarefa; frontend 100% entregue no VER-53) | VER-53 Feito | VER-52 A fazer | VER-54 A fazer |
 | VER-94 — Painel do vendedor e workflow de pedidos | Fazendo | VER-96 **Revisão** (branch `feat/VER-96-detalhe-pedido-ajuste-consentimento`, ainda sem merge) | VER-95 Feito | VER-97 A fazer |
 | VER-55 — `errorElement` geral e 404 | A fazer (a tarefa; o frontend já foi entregue) | VER-56 **Revisão** (branch `feat/VER-56-error-boundary-pagina-404`, ainda sem merge) | — | VER-57 A fazer |
-| VER-86 — Imagens na Cloudflare R2 | Fazendo | VER-88 **Revisão** (branch `feat/VER-88-upload-imagens-r2`, upload direto com presigned URL e `ImageUploadDropzone`) | VER-87 Feito/Fazendo | VER-89 A fazer |
+| VER-86 — Imagens na Cloudflare R2 | Fazendo | VER-88 **Revisão** (branch `feat/VER-88-upload-imagens-r2`, upload direto com presigned URL e `ImageUploadDropzone`) | VER-87 A fazer | VER-89 A fazer |
 
 ---
 

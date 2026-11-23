@@ -139,7 +139,7 @@ Requisitos do produto, com o estado de cada um. O VerdeAr é um marketplace que 
 | RNF-02 | Segurança | Rotas privadas exigem JWT válido (401 sem token) e rotas de Vendedor validam o papel (403). | Implementado |
 | RNF-03 | Segurança | O JWT fica em cookie `HttpOnly` (`Secure` em produção, `SameSite`), inacessível por `document.cookie` e `localStorage`; o Axios envia com `withCredentials`. | Em desenvolvimento (VER-74) |
 | RNF-04 | Segurança | O CORS libera apenas as origens configuradas em `CORS_ORIGIN`. | Implementado |
-| RNF-05 | Segurança | Upload de imagens por URL assinada e temporária, sem passar o arquivo pelo servidor da API. | Em desenvolvimento (frontend entregue em VER-88) | VER-86 |
+| RNF-05 | Segurança | Upload de imagens por URL assinada e temporária, sem passar o arquivo pelo servidor da API. | Em desenvolvimento (frontend entregue em VER-88) |
 | RNF-06 | Integridade | Operações que mexem em estoque ou em várias tabelas são transacionais, com bloqueio de escrita no produto para evitar venda acima do estoque. | Implementado |
 | RNF-07 | Integridade | Toda entrada é validada com Zod; erros de validação voltam como 400 com a lista de campos inválidos. | Implementado |
 | RNF-08 | Integridade | O histórico de vendas é preservado: produtos vendidos não são apagados e o preço unitário é gravado no item. | Implementado |
