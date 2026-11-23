@@ -93,40 +93,44 @@ describe("ImageUploadDropzone", () => {
 		expect(uploadService.uploadImage).not.toHaveBeenCalled();
 	});
 
-	it("realiza upload com sucesso e chama onChange com a URL final", async () => {
+	it("mostra prévia imediata e barra de progresso com acessibilidade durante o envio", async () => {
+		let resolveUpload: (url: string) => void = () => {};
+		const uploadPromise = new Promise<string>((resolve) => {
+			resolveUpload = resolve;
+		});
+
 		vi.mocked(uploadService.uploadImage).mockImplementationOnce(
 			async (_file, onProgress) => {
-				onProgress?.(50);
-				return "https://cdn.verdear.com.br/produtos/cenoura.webp";
+				onProgress?.(45);
+				return uploadPromise;
 			},
 		);
 
-		const handleChange = vi.fn();
-		const handleStart = vi.fn();
-		const handleEnd = vi.fn();
-
-		render(
-			<ImageUploadDropzone
-				onChange={handleChange}
-				onUploadStart={handleStart}
-				onUploadEnd={handleEnd}
-			/>,
-		);
+		render(<ImageUploadDropzone />);
 
 		const fileInput = screen.getByTestId("image-upload-input");
 		const file = new File(["cenoura"], "cenoura.webp", { type: "image/webp" });
 
 		fireEvent.change(fileInput, { target: { files: [file] } });
 
-		expect(handleStart).toHaveBeenCalled();
+		// A imagem de prévia local deve estar presente na tela durante o envio
+		const previewImg = screen.getByRole("img", {
+			name: /Prévia da imagem do produto/i,
+		});
+		expect(previewImg).toHaveAttribute(
+			"src",
+			"blob:http://localhost/test-preview",
+		);
 
+		// Barra de progresso acessível sobreposta à foto
+		const progressBar = screen.getByRole("progressbar");
+		expect(progressBar).toHaveAttribute("aria-valuenow", "45");
+		expect(screen.getByText("Enviando foto...")).toBeInTheDocument();
+		expect(screen.getByText("45%")).toBeInTheDocument();
+
+		resolveUpload("https://cdn.verdear.com.br/produtos/cenoura.webp");
 		await waitFor(() => {
-			expect(handleChange).toHaveBeenCalledWith(
-				"https://cdn.verdear.com.br/produtos/cenoura.webp",
-			);
-			expect(handleEnd).toHaveBeenCalledWith(
-				"https://cdn.verdear.com.br/produtos/cenoura.webp",
-			);
+			expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
 		});
 	});
 
@@ -151,6 +155,22 @@ describe("ImageUploadDropzone", () => {
 		expect(handleError).toHaveBeenCalledWith(
 			"Falha na conexão com o servidor de armazenamento.",
 		);
+	});
+
+	it("exibe mensagem amigável quando ocorre erro ao carregar a imagem na tag img", () => {
+		render(
+			<ImageUploadDropzone value="https://cdn.verdear.com.br/fotos/inexistente.jpg" />,
+		);
+
+		const img = screen.getByRole("img", {
+			name: /Prévia da imagem do produto/i,
+		});
+
+		fireEvent.error(img);
+
+		expect(
+			screen.getByText("Não foi possível carregar a imagem vinculada."),
+		).toBeInTheDocument();
 	});
 
 	it("suporta drop de arquivo na área de dropzone", async () => {

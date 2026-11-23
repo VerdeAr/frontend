@@ -1,4 +1,5 @@
 import {
+	AlertCircle,
 	ImagePlus,
 	Loader2,
 	RefreshCw,
@@ -47,6 +48,7 @@ export function ImageUploadDropzone({
 	const [isUploading, setIsUploading] = React.useState(false);
 	const [uploadProgress, setUploadProgress] = React.useState(0);
 	const [internalError, setInternalError] = React.useState<string | null>(null);
+	const [imageLoadError, setImageLoadError] = React.useState(false);
 	const [localPreviewUrl, setLocalPreviewUrl] = React.useState<string | null>(
 		null,
 	);
@@ -60,10 +62,18 @@ export function ImageUploadDropzone({
 		};
 	}, [localPreviewUrl]);
 
-	const currentImageUrl = value || localPreviewUrl;
+	// Reseta erro de carregamento caso o valor mude externamente
+	React.useEffect(() => {
+		if (value) {
+			setImageLoadError(false);
+		}
+	}, [value]);
+
+	const currentImageUrl = localPreviewUrl || value;
 
 	const handleFileSelection = async (file: File) => {
 		setInternalError(null);
+		setImageLoadError(false);
 
 		const validation = uploadService.validateImage(file);
 		if (!validation.valid) {
@@ -81,12 +91,12 @@ export function ImageUploadDropzone({
 		onUploadStart?.();
 
 		try {
-			const publicUrl = await uploadService.uploadImage(file, (progress) => {
+			const fileUrl = await uploadService.uploadImage(file, (progress) => {
 				setUploadProgress(progress);
 			});
 
-			onChange?.(publicUrl);
-			onUploadEnd?.(publicUrl);
+			onChange?.(fileUrl);
+			onUploadEnd?.(fileUrl);
 			setInternalError(null);
 		} catch (err) {
 			const msg =
@@ -150,6 +160,7 @@ export function ImageUploadDropzone({
 			URL.revokeObjectURL(localPreviewUrl);
 		}
 		setLocalPreviewUrl(null);
+		setImageLoadError(false);
 		setInternalError(null);
 		onChange?.("");
 		if (fileInputRef.current) {
@@ -179,26 +190,69 @@ export function ImageUploadDropzone({
 				data-testid="image-upload-input"
 			/>
 
-			{/* Imagem Presente ou Upload Concluído */}
-			{currentImageUrl && !isUploading ? (
+			{/* Imagem Presente (Durante Upload com Barra Sobreposta ou Já Carregada) */}
+			{currentImageUrl ? (
 				<div className="relative group overflow-hidden rounded-2xl border border-border/80 bg-muted/20 p-2 transition-all">
 					<div className="relative h-44 sm:h-52 w-full overflow-hidden rounded-xl bg-muted/40">
-						<img
-							src={currentImageUrl}
-							alt="Prévia da imagem do produto"
-							className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-						/>
+						{imageLoadError ? (
+							<div className="flex h-full w-full flex-col items-center justify-center gap-2 p-4 text-center bg-destructive/10 text-destructive">
+								<AlertCircle className="size-6 shrink-0" />
+								<span className="text-xs font-medium">
+									Não foi possível carregar a imagem vinculada.
+								</span>
+							</div>
+						) : (
+							<img
+								src={currentImageUrl}
+								alt="Prévia da imagem do produto"
+								className={cn(
+									"h-full w-full object-cover transition-transform duration-300",
+									!isUploading && "group-hover:scale-105",
+									isUploading && "brightness-60",
+								)}
+								onError={() => setImageLoadError(true)}
+							/>
+						)}
+
+						{/* Overlay de Progresso durante Upload */}
+						{isUploading && (
+							<div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 backdrop-blur-xs p-4 text-white">
+								<Loader2 className="size-6 animate-spin text-emerald-400 mb-2" />
+								<div className="w-full max-w-xs space-y-1.5">
+									<div className="flex justify-between text-xs font-semibold text-white">
+										<span>Enviando foto...</span>
+										<span>{uploadProgress}%</span>
+									</div>
+									<div
+										role="progressbar"
+										aria-valuenow={uploadProgress}
+										aria-valuemin={0}
+										aria-valuemax={100}
+										aria-label="Progresso do envio da imagem"
+										className="h-2 w-full overflow-hidden rounded-full bg-white/30"
+									>
+										<div
+											className="h-full bg-emerald-500 transition-all duration-200"
+											style={{ width: `${uploadProgress}%` }}
+										/>
+									</div>
+								</div>
+								<span className="text-[11px] text-white/80 mt-1">
+									Enviando com segurança para a nuvem
+								</span>
+							</div>
+						)}
 					</div>
 
 					<div className="mt-2.5 flex items-center justify-between gap-2 px-1">
 						<span className="truncate text-xs font-medium text-muted-foreground">
-							Foto carregada
+							{isUploading ? "Enviando arquivo..." : "Foto vinculada"}
 						</span>
 						<div className="flex items-center gap-2">
 							<button
 								type="button"
 								onClick={triggerSelectFile}
-								disabled={disabled}
+								disabled={disabled || isUploading}
 								className="flex h-11 items-center gap-1.5 rounded-xl border border-border/80 bg-background px-3 text-xs font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-emerald-500 disabled:opacity-50"
 								aria-label="Trocar imagem"
 							>
@@ -209,7 +263,7 @@ export function ImageUploadDropzone({
 							<button
 								type="button"
 								onClick={handleRemoveImage}
-								disabled={disabled}
+								disabled={disabled || isUploading}
 								className="flex h-11 items-center gap-1.5 rounded-xl border border-destructive/30 bg-destructive/10 px-3 text-xs font-medium text-destructive transition-colors hover:bg-destructive/20 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-destructive disabled:opacity-50"
 								aria-label="Remover imagem"
 							>
@@ -220,10 +274,10 @@ export function ImageUploadDropzone({
 					</div>
 				</div>
 			) : (
-				/* Dropzone / Estado de Envio */
+				/* Dropzone Vazio */
 				<button
 					type="button"
-					tabIndex={disabled || isUploading ? -1 : 0}
+					tabIndex={disabled ? -1 : 0}
 					onClick={triggerSelectFile}
 					onKeyDown={(e) => {
 						if (e.key === "Enter" || e.key === " ") {
@@ -241,69 +295,44 @@ export function ImageUploadDropzone({
 						isDragging
 							? "border-emerald-500 bg-emerald-50/20 dark:bg-emerald-950/20 ring-4 ring-emerald-500/10"
 							: "border-border/80 bg-muted/10 hover:border-emerald-500/60 hover:bg-muted/20",
-						(disabled || isUploading) && "cursor-not-allowed opacity-75",
+						disabled && "cursor-not-allowed opacity-75",
 						displayError && "border-destructive/50 bg-destructive/5",
 					)}
-					aria-label="Área para envio da foto"
+					aria-label="Área para envio da foto: arraste uma imagem aqui ou clique para escolher (JPG, PNG ou WebP até 5MB)"
 				>
-					{isUploading ? (
-						<div className="flex w-full max-w-xs flex-col items-center gap-3">
-							<div className="relative flex size-12 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600">
-								<Loader2 className="size-6 animate-spin" />
-							</div>
-							<div className="w-full space-y-1.5">
-								<div className="flex justify-between text-xs font-semibold text-foreground">
-									<span>Enviando foto...</span>
-									<span>{uploadProgress}%</span>
-								</div>
-								<div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-									<div
-										className="h-full bg-emerald-600 transition-all duration-200"
-										style={{ width: `${uploadProgress}%` }}
-									/>
-								</div>
-							</div>
-							<span className="text-[11px] text-muted-foreground">
-								Enviando com segurança para a nuvem
-							</span>
+					<div className="flex flex-col items-center gap-2.5">
+						<div
+							className={cn(
+								"flex size-12 items-center justify-center rounded-2xl transition-colors",
+								isDragging
+									? "bg-emerald-500/20 text-emerald-600"
+									: "bg-muted text-muted-foreground group-hover:text-foreground",
+							)}
+						>
+							{isDragging ? (
+								<UploadCloud className="size-6 animate-bounce" />
+							) : (
+								<ImagePlus className="size-6" />
+							)}
 						</div>
-					) : (
-						<div className="flex flex-col items-center gap-2.5">
-							<div
-								className={cn(
-									"flex size-12 items-center justify-center rounded-2xl transition-colors",
-									isDragging
-										? "bg-emerald-500/20 text-emerald-600"
-										: "bg-muted text-muted-foreground group-hover:text-foreground",
-								)}
-							>
+						<div className="space-y-1">
+							<p className="text-xs sm:text-sm font-semibold text-foreground">
 								{isDragging ? (
-									<UploadCloud className="size-6 animate-bounce" />
+									<span className="text-emerald-600">Solte a imagem aqui</span>
 								) : (
-									<ImagePlus className="size-6" />
-								)}
-							</div>
-							<div className="space-y-1">
-								<p className="text-xs sm:text-sm font-semibold text-foreground">
-									{isDragging ? (
-										<span className="text-emerald-600">
-											Solte a imagem aqui
+									<>
+										Arraste uma foto aqui ou{" "}
+										<span className="text-emerald-600 underline underline-offset-2">
+											clique para escolher
 										</span>
-									) : (
-										<>
-											Arraste uma foto aqui ou{" "}
-											<span className="text-emerald-600 underline underline-offset-2">
-												clique para escolher
-											</span>
-										</>
-									)}
-								</p>
-								<p className="text-[11px] text-muted-foreground">
-									Formatos aceitos: JPG, PNG ou WebP até 5MB
-								</p>
-							</div>
+									</>
+								)}
+							</p>
+							<p className="text-[11px] text-muted-foreground">
+								Formatos aceitos: JPG, PNG ou WebP até 5MB
+							</p>
 						</div>
-					)}
+					</div>
 				</button>
 			)}
 		</FormField>
