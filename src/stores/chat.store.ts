@@ -34,6 +34,8 @@ interface ChatState {
 	fetchChats: () => Promise<Chat[]>;
 	fetchChat: (chatId: string) => Promise<Chat | null>;
 	fetchMessages: (chatId: string) => Promise<void>;
+	syncMessages: (chatId: string) => Promise<void>;
+	resyncLoadedChats: () => Promise<void>;
 	startChat: (productId: string) => Promise<Chat>;
 	sendMessage: (chatId: string, content: string) => Promise<void>;
 	markAsRead: (chatId: string) => Promise<void>;
@@ -72,6 +74,27 @@ function appendMessage(list: Message[], message: Message): Message[] {
 		return list;
 	}
 	return [...list, message];
+}
+
+/**
+ * Junta o histórico da tela com o que veio do servidor, sem duplicar por `id`.
+ * A versão do servidor prevalece (ex.: `is_read` atualizado durante a queda) e o
+ * resultado fica em ordem cronológica, como a tela exibe.
+ */
+export function mergeMessages(
+	current: Message[],
+	fetched: Message[],
+): Message[] {
+	const byId = new Map<string, Message>();
+	for (const message of current) {
+		byId.set(message.id, message);
+	}
+	for (const message of fetched) {
+		byId.set(message.id, message);
+	}
+	return [...byId.values()].sort(
+		(a, b) => Date.parse(a.created_at) - Date.parse(b.created_at),
+	);
 }
 
 function sortByLastMessage(chats: Chat[]): Chat[] {
@@ -165,6 +188,42 @@ export const useChatStore = create<ChatState>((set, get) => ({
 				isLoadingMessages: false,
 				error: "Não foi possível carregar as mensagens.",
 			});
+		}
+	},
+
+	// Busca as mensagens recentes e mescla com as da tela, sem o indicador de carregamento:
+	// usada na reconexão para trazer o que chegou enquanto o socket estava fora do ar
+	syncMessages: async (chatId) => {
+		try {
+			const page = await chatService.getMessages(chatId, {
+				limit: MESSAGES_PAGE_LIMIT,
+				order: "DESC",
+			});
+			set((state) => ({
+				messagesByChat: {
+					...state.messagesByChat,
+					[chatId]: mergeMessages(
+						state.messagesByChat[chatId] ?? EMPTY_MESSAGES,
+						page.messages,
+					),
+				},
+			}));
+		} catch (err) {
+			console.error("Erro ao sincronizar as mensagens da conversa:", err);
+		}
+	},
+
+	// O servidor não reenvia o `new_message` perdido durante uma queda (VER-112). Sincroniza
+	// as conversas com histórico em memória; as demais carregam ao serem abertas, e os
+	// contadores de não lidas já vêm do `fetchChats`.
+	resyncLoadedChats: async () => {
+		const chatIds = Object.keys(get().messagesByChat);
+		await Promise.all(chatIds.map((chatId) => get().syncMessages(chatId)));
+
+		// A conversa aberta zera as não lidas e avisa o remetente da leitura (✓✓)
+		const activeChatId = get().activeChatId;
+		if (activeChatId && chatIds.includes(activeChatId)) {
+			await get().markAsRead(activeChatId);
 		}
 	},
 
@@ -288,10 +347,16 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
 		socket.on("connect", () => {
 			set({ connectionStatus: "conectado" });
-			// Recarrega a lista (pode haver conversa nova) e reentra nas salas
+			// Recarrega a lista (pode haver conversa nova), reentra nas salas e só então busca
+			// as mensagens perdidas: o que chegar depois do join vem pelo `new_message`, e a
+			// mesclagem por `id` evita duplicar o que vier pelos dois caminhos
 			void get()
 				.fetchChats()
-				.then(() => get().joinAllChats());
+				.then(() => get().joinAllChats())
+				.then(() => get().resyncLoadedChats())
+				.catch((err: unknown) => {
+					console.error("Erro ao sincronizar o chat após a reconexão:", err);
+				});
 		});
 
 		socket.on("disconnect", (reason) => {
