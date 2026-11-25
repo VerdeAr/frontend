@@ -90,7 +90,7 @@ Resultado: os ambientes de **homologação** e **produção** estão no ar, com 
 
 ## 5. Pendências conhecidas
 
-- **VER-113 (bug, frontend, Revisão):** campo de mensagem do chat ficava oculto pelo teclado virtual na orientação horizontal do celular (CT-20). Corrigido na branch `fix/VER-113-campo-mensagem-teclado-horizontal` com hook `useVisualViewport`, variante Tailwind `@custom-variant short-landscape` e layout dinâmico sem regressões em desktop ou telas verticais.
+- **VER-113 (bug, frontend, Revisão):** campo de mensagem do chat ficava oculto pelo teclado virtual na orientação horizontal do celular (CT-20). Corrigido na branch `fix/VER-113-campo-mensagem-teclado-horizontal` com hook `useVisualViewport`, variante Tailwind `@custom-variant short-landscape`, chat fullscreen em telas baixas e botões com área de toque mínima de 44 px (RNF-10), sem regressões em desktop ou telas verticais.
 - **VER-108 (bug, backend, A fazer):** os endpoints de chat expõem o hash da senha, o CPF, o e-mail e o telefone do outro participante da conversa. Precisa ser corrigido antes de o chat ser considerado concluído (VER-58).
 - A busca mobile do Header aponta para `/produtos/busca`, que não existe e hoje mostra a página 404 (VER-56). Nenhuma tarefa cobre a busca.
 - O `POST /vendas/checkout` devolve a entidade crua da venda, diferente do `GET /vendas/:id`. A tela de pedido confirmado contorna isso buscando o pedido pelo ID. A correção é do backend e ainda não tem tarefa.
