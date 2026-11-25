@@ -8,6 +8,7 @@ import {
 	TypingIndicator,
 } from "@/components/chat";
 import { buttonVariants } from "@/components/ui/button";
+import { useVisualViewport } from "@/hooks";
 import { getChatContact } from "@/lib/chat";
 import { cn } from "@/lib/utils";
 import { socketService } from "@/services/socket.service";
@@ -35,6 +36,8 @@ export default function ChatRoomPage() {
 	const sendMessage = useChatStore((state) => state.sendMessage);
 	const openChat = useChatStore((state) => state.openChat);
 	const closeChat = useChatStore((state) => state.closeChat);
+
+	const { height: visualHeight } = useVisualViewport();
 
 	const [notFound, setNotFound] = useState(false);
 	const endRef = useRef<HTMLDivElement>(null);
@@ -80,6 +83,13 @@ export default function ChatRoomPage() {
 		});
 		hasScrolledRef.current = true;
 	}, [messages.length, isTyping]);
+
+	// Mantém a rolagem ajustada quando a altura visível do viewport muda (ex: teclado virtual abre)
+	useEffect(() => {
+		if (hasScrolledRef.current && visualHeight > 0) {
+			endRef.current?.scrollIntoView({ behavior: "auto", block: "end" });
+		}
+	}, [visualHeight]);
 
 	const handleSend = useCallback(
 		(content: string) => sendMessage(chatId, content),
@@ -128,10 +138,8 @@ export default function ChatRoomPage() {
 			: contact.subtitle;
 
 	return (
-		// Altura da viewport dinâmica menos o Header (4rem) e o respiro do <main> (3rem):
-		// o campo fica sempre visível, inclusive com o teclado virtual aberto
-		<div className="mx-auto flex h-[calc(100dvh-7rem)] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-border/60 bg-card/40 shadow-xs">
-			<div className="flex shrink-0 items-center gap-2 border-b border-border/60 bg-background px-2 py-2">
+		<div className="mx-auto flex h-[calc(100dvh-7rem)] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-border/60 bg-card/40 shadow-xs short-landscape:fixed short-landscape:inset-0 short-landscape:z-[60] short-landscape:h-dvh short-landscape:max-w-none short-landscape:bg-background short-landscape:rounded-none short-landscape:border-0">
+			<div className="flex shrink-0 items-center gap-2 border-b border-border/60 bg-background px-2 py-2 short-landscape:py-1">
 				<Link
 					to="/chat"
 					className="flex size-11 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
@@ -140,13 +148,13 @@ export default function ChatRoomPage() {
 					<ArrowLeft className="size-5" />
 				</Link>
 				<div className="flex min-w-0 flex-col">
-					<h1 className="truncate text-base font-bold text-foreground">
+					<h1 className="truncate font-bold text-foreground text-base short-landscape:text-sm">
 						{contact.name}
 					</h1>
 					{statusText && (
 						<span
 							className={cn(
-								"truncate text-xs",
+								"truncate text-xs short-landscape:text-[11px] short-landscape:leading-tight",
 								isTyping ? "italic text-primary" : "text-muted-foreground",
 							)}
 						>
@@ -162,7 +170,7 @@ export default function ChatRoomPage() {
 			/>
 
 			<div
-				className="flex flex-1 flex-col gap-2 overflow-y-auto overscroll-contain px-3 py-4"
+				className="flex flex-1 flex-col gap-2 short-landscape:gap-1.5 overflow-y-auto overscroll-contain px-3 py-4 short-landscape:py-2"
 				role="log"
 				aria-label={`Mensagens com ${contact.name}`}
 			>

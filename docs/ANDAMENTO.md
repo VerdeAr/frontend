@@ -65,7 +65,7 @@ Resultado: os ambientes de **homologação** e **produção** estão no ar, com 
 
 | Tarefa | Status | Frontend | Backend | QA |
 |---|---|---|---|---|
-| VER-58 — Mensagens e chat com WebSocket (Socket.io) | Fazendo | VER-60 Feito (no `main`) | VER-59 Feito | VER-61 **Fazendo** |
+| VER-58 — Mensagens e chat com WebSocket (Socket.io) | Fazendo | VER-60 Feito (no `main`); VER-113 **Revisão** (correção CT-20: campo de mensagem no teclado horizontal) | VER-59 Feito | VER-61 **Fazendo** |
 | VER-62 — Endereços com CEP e autopreenchimento | Fazendo | VER-64 **Revisão** (branch `feat/VER-64-enderecos-com-cep`, ajustada para os schemas da VER-63) | VER-63 A fazer | VER-65 A fazer |
 | VER-74 — Blindagem de autenticação com cookies HTTP-Only | Fazendo | VER-76 Feito (no `main`) | VER-75 Feito | VER-77 **Fazendo** |
 | VER-78 — Avaliação pós-venda | Fazendo | VER-80 Feito | VER-79 Feito | VER-81 A fazer |
@@ -90,6 +90,7 @@ Resultado: os ambientes de **homologação** e **produção** estão no ar, com 
 
 ## 5. Pendências conhecidas
 
+- **VER-113 (bug, frontend, Revisão):** campo de mensagem do chat ficava oculto pelo teclado virtual na orientação horizontal do celular (CT-20). Corrigido na branch `fix/VER-113-campo-mensagem-teclado-horizontal` com hook `useVisualViewport`, variante Tailwind `@custom-variant short-landscape`, chat fullscreen em telas baixas e botões com área de toque mínima de 44 px (RNF-10), sem regressões em desktop ou telas verticais.
 - **VER-108 (bug, backend, A fazer):** os endpoints de chat expõem o hash da senha, o CPF, o e-mail e o telefone do outro participante da conversa. Precisa ser corrigido antes de o chat ser considerado concluído (VER-58).
 - **VER-112 (bug, Revisão, branch `fix/VER-112-mensagens-apos-reconexao`, ainda sem merge):** mensagens recebidas durante uma queda de conexão só apareciam ao sair e entrar de novo na conversa (CT-16). O servidor não reenvia o `new_message` perdido; na reconexão, o `chat.store` agora entra de novo nas salas e então busca as 50 mensagens mais recentes das conversas já carregadas, mescladas por `id` (também atualiza o ✓✓), e marca a conversa aberta como lida. Uma queda com mais de 50 mensagens recebidas recupera só as 50 mais recentes até a conversa ser reaberta. Depois do merge, retirar este item.
 - A busca mobile do Header aponta para `/produtos/busca`, que não existe e hoje mostra a página 404 (VER-56). Nenhuma tarefa cobre a busca.

@@ -4,6 +4,9 @@
 @import "@fontsource-variable/roboto";
 
 @custom-variant dark (&:is(.dark *));
+@custom-variant short-landscape (
+	@media (orientation: landscape) and (max-height: 500px) and (min-width: 500px)
+);
 
 @theme inline {
 	--font-heading: var(--font-sans);

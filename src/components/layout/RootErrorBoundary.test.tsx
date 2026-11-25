@@ -1,6 +1,6 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { createMemoryRouter, data, RouterProvider } from "react-router";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import RootErrorBoundary from "./RootErrorBoundary";
 
 // Monta uma árvore mínima em que o loader da rota falha com o erro informado
@@ -29,6 +29,10 @@ let consoleError: ReturnType<typeof vi.spyOn>;
 
 beforeEach(() => {
 	consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+});
+
+afterEach(() => {
+	consoleError.mockRestore();
 });
 
 describe("RootErrorBoundary", () => {
@@ -91,9 +95,11 @@ describe("RootErrorBoundary", () => {
 			await screen.findByRole("heading", { name: "Ops! Algo deu errado" }),
 		).toBeInTheDocument();
 		expect(screen.queryByText(/Cannot read/)).not.toBeInTheDocument();
-		expect(consoleError).toHaveBeenCalledWith(
-			"Erro capturado pelo RootErrorBoundary:",
-			erro,
-		);
+		await waitFor(() => {
+			expect(consoleError).toHaveBeenCalledWith(
+				"Erro capturado pelo RootErrorBoundary:",
+				erro,
+			);
+		});
 	});
 });
