@@ -37,12 +37,7 @@ export default function ChatRoomPage() {
 	const openChat = useChatStore((state) => state.openChat);
 	const closeChat = useChatStore((state) => state.closeChat);
 
-	const {
-		height: visualHeight,
-		isLandscape,
-		isKeyboardOpen,
-	} = useVisualViewport();
-	const isCompactLandscape = isLandscape && visualHeight < 600;
+	const { height: visualHeight } = useVisualViewport();
 
 	const [notFound, setNotFound] = useState(false);
 	const endRef = useRef<HTMLDivElement>(null);
@@ -142,53 +137,25 @@ export default function ChatRoomPage() {
 			? "Conversa finalizada"
 			: contact.subtitle;
 
-	// Em orientação horizontal (especialmente com teclado virtual aberto),
-	// fixa a altura do chat ao espaço visível da tela
-	const containerStyle = isCompactLandscape
-		? {
-				height: `${Math.max(visualHeight - (isKeyboardOpen ? 12 : 64), 140)}px`,
-			}
-		: undefined;
-
 	return (
-		<div
-			style={containerStyle}
-			className={cn(
-				"mx-auto flex h-[calc(100dvh-7rem)] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-border/60 bg-card/40 shadow-xs",
-				isCompactLandscape && "rounded-xl border-border/40",
-			)}
-		>
-			<div
-				className={cn(
-					"flex shrink-0 items-center gap-2 border-b border-border/60 bg-background px-2 py-2",
-					isCompactLandscape && "py-1",
-				)}
-			>
+		<div className="mx-auto flex h-[calc(100dvh-7rem)] short-landscape:h-[calc(100dvh-5rem)] w-full max-w-3xl flex-col overflow-hidden rounded-2xl short-landscape:rounded-xl border border-border/60 short-landscape:border-border/40 bg-card/40 shadow-xs">
+			<div className="flex shrink-0 items-center gap-2 border-b border-border/60 bg-background px-2 py-2 short-landscape:py-1">
 				<Link
 					to="/chat"
-					className={cn(
-						"flex size-11 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
-						isCompactLandscape && "size-8",
-					)}
+					className="flex size-11 short-landscape:size-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
 					aria-label="Voltar para mensagens"
 				>
-					<ArrowLeft className={isCompactLandscape ? "size-4" : "size-5"} />
+					<ArrowLeft className="size-5 short-landscape:size-4" />
 				</Link>
 				<div className="flex min-w-0 flex-col">
-					<h1
-						className={cn(
-							"truncate font-bold text-foreground",
-							isCompactLandscape ? "text-sm" : "text-base",
-						)}
-					>
+					<h1 className="truncate font-bold text-foreground text-base short-landscape:text-sm">
 						{contact.name}
 					</h1>
 					{statusText && (
 						<span
 							className={cn(
-								"truncate text-xs",
+								"truncate text-xs short-landscape:text-[11px] short-landscape:leading-tight",
 								isTyping ? "italic text-primary" : "text-muted-foreground",
-								isCompactLandscape && "text-[11px] leading-tight",
 							)}
 						>
 							{statusText}
@@ -203,10 +170,7 @@ export default function ChatRoomPage() {
 			/>
 
 			<div
-				className={cn(
-					"flex flex-1 flex-col gap-2 overflow-y-auto overscroll-contain px-3 py-4",
-					isCompactLandscape && "gap-1.5 py-2",
-				)}
+				className="flex flex-1 flex-col gap-2 short-landscape:gap-1.5 overflow-y-auto overscroll-contain px-3 py-4 short-landscape:py-2"
 				role="log"
 				aria-label={`Mensagens com ${contact.name}`}
 			>

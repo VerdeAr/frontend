@@ -49,6 +49,17 @@ describe("useVisualViewport", () => {
 		expect(result.current.isLandscape).toBe(true);
 	});
 
+	it("não considera landscape em celular em pé com teclado aberto (largura menor que 500px)", () => {
+		window.innerWidth = 360;
+		window.innerHeight = 340;
+
+		const { result } = renderHook(() => useVisualViewport());
+
+		expect(result.current.width).toBe(360);
+		expect(result.current.height).toBe(340);
+		expect(result.current.isLandscape).toBe(false);
+	});
+
 	it("atualiza o estado e detecta teclado virtual aberto ao receber evento de resize no visualViewport", () => {
 		const listeners = new Map<string, () => void>();
 		const mockVisualViewport = {

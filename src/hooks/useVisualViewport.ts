@@ -25,7 +25,7 @@ function getViewportState(): VisualViewportState {
 	const windowHeight = window.innerHeight;
 
 	const isKeyboardOpen = windowHeight - height > KEYBOARD_MIN_DIFF_PX;
-	const isLandscape = width > height;
+	const isLandscape = width >= 500 && width > height;
 
 	return {
 		height,
