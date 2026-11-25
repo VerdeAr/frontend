@@ -91,6 +91,7 @@ Resultado: os ambientes de **homologação** e **produção** estão no ar, com 
 ## 5. Pendências conhecidas
 
 - **VER-108 (bug, backend, A fazer):** os endpoints de chat expõem o hash da senha, o CPF, o e-mail e o telefone do outro participante da conversa. Precisa ser corrigido antes de o chat ser considerado concluído (VER-58).
+- **VER-112 (bug, Revisão, branch `fix/VER-112-mensagens-apos-reconexao`, ainda sem merge):** mensagens recebidas durante uma queda de conexão só apareciam ao sair e entrar de novo na conversa (CT-16). O servidor não reenvia o `new_message` perdido; na reconexão, o `chat.store` agora entra de novo nas salas e então busca as 50 mensagens mais recentes das conversas já carregadas, mescladas por `id` (também atualiza o ✓✓), e marca a conversa aberta como lida. Uma queda com mais de 50 mensagens recebidas recupera só as 50 mais recentes até a conversa ser reaberta. Depois do merge, retirar este item.
 - A busca mobile do Header aponta para `/produtos/busca`, que não existe e hoje mostra a página 404 (VER-56). Nenhuma tarefa cobre a busca.
 - O `POST /vendas/checkout` devolve a entidade crua da venda, diferente do `GET /vendas/:id`. A tela de pedido confirmado contorna isso buscando o pedido pelo ID. A correção é do backend e ainda não tem tarefa.
 
@@ -102,7 +103,7 @@ Quando as tarefas abaixo forem entregues, revise estas partes de `ARQUITETURA.md
 
 | Tarefa | O que muda na documentação |
 |---|---|
-| VER-58 | A VER-60 já está no `main`, mas `ARQUITETURA.md` e `REQUISITOS.md` ainda tratam o chat como em desenvolvimento. Documentar as rotas `/chat`, os stores e o cliente Socket.io, remover o item das rotas órfãs e atualizar o RF-70 a RF-73 depois da QA (VER-61). |
+| VER-58 | A VER-60 já está no `main`, mas `ARQUITETURA.md` e `REQUISITOS.md` ainda tratam o chat como em desenvolvimento. Documentar as rotas `/chat`, os stores, o cliente Socket.io e a sincronização de mensagens na reconexão (VER-112), remover o item das rotas órfãs e atualizar o RF-70 a RF-73 depois da QA (VER-61). |
 | VER-74 | A VER-76 já está no `main`. Depois da QA (VER-77), confirmar a descrição do `auth.store`, do `api.ts` e da restauração de sessão, e atualizar o RNF-03. |
 | VER-78 | Novos componentes de avaliação e exibição de reputação. Remover o item "sem tela". |
 | VER-55 | A VER-56 já documentou a rota `*`, a `NotFoundPage` e o `RootErrorBoundary` revisado em `ARQUITETURA.md` e marcou o RF-80 como implementado. Depois da QA (VER-57), retirar o "QA pendente" do RF-80. |
