@@ -150,11 +150,11 @@ export function ChatMessageInput({
 			ref={formRef}
 			onSubmit={submit}
 			className={cn(
-				"flex w-full flex-col gap-1.5 border-t border-border/60 bg-background p-3 landscape:p-1.5 landscape:gap-1",
+				"flex w-full flex-col gap-1.5 border-t border-border/60 bg-background p-3 short-landscape:p-1.5 short-landscape:gap-1",
 				className,
 			)}
 		>
-			<div className="flex items-end gap-2 landscape:gap-1.5">
+			<div className="flex items-end gap-2 short-landscape:gap-1.5">
 				<label htmlFor="chat-message" className="sr-only">
 					Mensagem
 				</label>
@@ -178,24 +178,24 @@ export function ChatMessageInput({
 					}}
 					{...contentField}
 					// text-base no mobile evita o zoom automático do iOS ao focar
-					className="field-sizing-content max-h-32 min-h-11 w-full flex-1 resize-none rounded-2xl border border-input bg-muted/40 px-4 py-2.5 text-base outline-none transition-colors focus:border-primary focus:bg-background disabled:cursor-not-allowed disabled:opacity-60 md:text-sm landscape:max-h-16 landscape:min-h-9 landscape:px-3 landscape:py-1.5"
+					className="field-sizing-content max-h-32 min-h-11 w-full flex-1 resize-none rounded-2xl border border-input bg-muted/40 px-4 py-2.5 text-base outline-none transition-colors focus:border-primary focus:bg-background disabled:cursor-not-allowed disabled:opacity-60 md:text-sm short-landscape:max-h-16 short-landscape:min-h-9 short-landscape:px-3 short-landscape:py-1.5"
 				/>
 				<button
 					type="submit"
 					disabled={isBlocked}
-					className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xs transition-opacity hover:opacity-90 disabled:opacity-50 landscape:size-9"
+					className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xs transition-opacity hover:opacity-90 disabled:opacity-50 short-landscape:size-9"
 					aria-label="Enviar mensagem"
 				>
 					{isSubmitting ? (
-						<Loader2 className="size-5 animate-spin landscape:size-4" />
+						<Loader2 className="size-5 animate-spin short-landscape:size-4" />
 					) : (
-						<SendHorizontal className="size-5 landscape:size-4" />
+						<SendHorizontal className="size-5 short-landscape:size-4" />
 					)}
 				</button>
 			</div>
 
 			{(feedback || contentLength > MESSAGE_MAX_LENGTH * 0.9) && (
-				<div className="flex items-center justify-between gap-2 px-1 text-xs landscape:text-[11px]">
+				<div className="flex items-center justify-between gap-2 px-1 text-xs short-landscape:text-[11px]">
 					<span
 						className={cn(
 							disabled ? "text-muted-foreground" : "text-destructive",
