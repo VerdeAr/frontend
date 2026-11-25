@@ -138,14 +138,14 @@ export default function ChatRoomPage() {
 			: contact.subtitle;
 
 	return (
-		<div className="mx-auto flex h-[calc(100dvh-7rem)] short-landscape:h-[calc(100dvh-5rem)] w-full max-w-3xl flex-col overflow-hidden rounded-2xl short-landscape:rounded-xl border border-border/60 short-landscape:border-border/40 bg-card/40 shadow-xs">
+		<div className="mx-auto flex h-[calc(100dvh-7rem)] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-border/60 bg-card/40 shadow-xs short-landscape:fixed short-landscape:inset-0 short-landscape:z-[60] short-landscape:h-dvh short-landscape:max-w-none short-landscape:bg-background short-landscape:rounded-none short-landscape:border-0">
 			<div className="flex shrink-0 items-center gap-2 border-b border-border/60 bg-background px-2 py-2 short-landscape:py-1">
 				<Link
 					to="/chat"
-					className="flex size-11 short-landscape:size-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+					className="flex size-11 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
 					aria-label="Voltar para mensagens"
 				>
-					<ArrowLeft className="size-5 short-landscape:size-4" />
+					<ArrowLeft className="size-5" />
 				</Link>
 				<div className="flex min-w-0 flex-col">
 					<h1 className="truncate font-bold text-foreground text-base short-landscape:text-sm">

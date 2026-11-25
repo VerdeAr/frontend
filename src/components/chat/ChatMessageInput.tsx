@@ -178,18 +178,18 @@ export function ChatMessageInput({
 					}}
 					{...contentField}
 					// text-base no mobile evita o zoom automático do iOS ao focar
-					className="field-sizing-content max-h-32 min-h-11 w-full flex-1 resize-none rounded-2xl border border-input bg-muted/40 px-4 py-2.5 text-base outline-none transition-colors focus:border-primary focus:bg-background disabled:cursor-not-allowed disabled:opacity-60 md:text-sm short-landscape:max-h-16 short-landscape:min-h-9 short-landscape:px-3 short-landscape:py-1.5"
+					className="field-sizing-content max-h-32 min-h-11 w-full flex-1 resize-none rounded-2xl border border-input bg-muted/40 px-4 py-2.5 text-base outline-none transition-colors focus:border-primary focus:bg-background disabled:cursor-not-allowed disabled:opacity-60 md:text-sm short-landscape:max-h-16 short-landscape:px-3 short-landscape:py-1.5"
 				/>
 				<button
 					type="submit"
 					disabled={isBlocked}
-					className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xs transition-opacity hover:opacity-90 disabled:opacity-50 short-landscape:size-9"
+					className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xs transition-opacity hover:opacity-90 disabled:opacity-50"
 					aria-label="Enviar mensagem"
 				>
 					{isSubmitting ? (
-						<Loader2 className="size-5 animate-spin short-landscape:size-4" />
+						<Loader2 className="size-5 animate-spin" />
 					) : (
-						<SendHorizontal className="size-5 short-landscape:size-4" />
+						<SendHorizontal className="size-5" />
 					)}
 				</button>
 			</div>
