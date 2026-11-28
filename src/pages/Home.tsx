@@ -10,7 +10,6 @@ import {
 import { useCallback, useState } from "react";
 import {
 	useLoaderData,
-	useLocation,
 	useNavigate,
 	useNavigation,
 	useRevalidator,
@@ -29,7 +28,6 @@ import type { Product } from "@/types";
 
 export default function Home() {
 	const navigate = useNavigate();
-	const location = useLocation();
 	const [searchParams, setSearchParams] = useSearchParams();
 	const navigation = useNavigation();
 	const revalidator = useRevalidator();
@@ -106,7 +104,7 @@ export default function Home() {
 	const handleAddToCart = async (product: Product) => {
 		const { isAuthenticated } = useAuthStore.getState();
 		if (!isAuthenticated) {
-			navigate("/login", { state: { from: location } });
+			navigate("/login", { state: { from: `/produtos/${product.id}` } });
 			return;
 		}
 
