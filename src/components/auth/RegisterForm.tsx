@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { Link, useNavigate } from "react-router";
+import { Link, useLocation, useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
 import { FormInput, FormTextarea } from "@/components/ui/form-input";
 import { Label } from "@/components/ui/label";
@@ -28,6 +28,7 @@ interface RegisterFormProps {
 
 export function RegisterForm({ onSuccess, className }: RegisterFormProps) {
 	const navigate = useNavigate();
+	const location = useLocation();
 	const registerUser = useAuthStore((state) => state.register);
 
 	const [selectedRole, setSelectedRole] = useState<UserRole>("CLIENTE");
@@ -159,7 +160,11 @@ export function RegisterForm({ onSuccess, className }: RegisterFormProps) {
 			if (onSuccess) {
 				onSuccess();
 			} else {
-				navigate("/");
+				const state = location.state as {
+					from?: string | { pathname?: string; search?: string; hash?: string };
+				} | null;
+				const destination = state?.from || "/";
+				navigate(destination, { replace: true });
 			}
 		} catch (err: unknown) {
 			const error = err as {
@@ -481,6 +486,7 @@ export function RegisterForm({ onSuccess, className }: RegisterFormProps) {
 				Já possui uma conta?{" "}
 				<Link
 					to="/login"
+					state={location.state}
 					className="font-semibold text-primary underline-offset-4 hover:underline"
 				>
 					Entrar

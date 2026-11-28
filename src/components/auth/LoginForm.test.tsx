@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { MemoryRouter, Route, Routes } from "react-router";
+import { MemoryRouter, Route, Routes, useLocation } from "react-router";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { authService } from "@/services/auth.service";
 import { useAuthStore } from "@/stores";
@@ -18,13 +18,37 @@ vi.mock("@/services/auth.service", () => ({
 
 const servico = vi.mocked(authService);
 
-function renderizar(onSuccess?: () => void) {
+function StateInspector() {
+	const location = useLocation();
+	const from = (location.state as { from?: string | { pathname?: string } })
+		?.from;
+	const fromString = typeof from === "string" ? from : from?.pathname;
+	return fromString ? (
+		<span data-testid="inherited-from">{fromString}</span>
+	) : null;
+}
+
+function renderizar(
+	onSuccess?: () => void,
+	initialEntries: (string | { pathname: string; state?: unknown })[] = [
+		"/login",
+	],
+) {
 	return render(
-		<MemoryRouter initialEntries={["/login"]}>
+		<MemoryRouter initialEntries={initialEntries}>
 			<Routes>
 				<Route path="/login" element={<LoginForm onSuccess={onSuccess} />} />
 				<Route path="/" element={<p>Página inicial</p>} />
-				<Route path="/cadastro" element={<p>Página de cadastro</p>} />
+				<Route path="/produtos/:id" element={<p>Detalhes do produto</p>} />
+				<Route
+					path="/cadastro"
+					element={
+						<div>
+							<p>Página de cadastro</p>
+							<StateInspector />
+						</div>
+					}
+				/>
 			</Routes>
 		</MemoryRouter>,
 	);
@@ -146,6 +170,37 @@ describe("LoginForm: envio", () => {
 			"Não foi possível realizar o login. Verifique suas credenciais.",
 		);
 	});
+
+	it("redireciona para a rota de origem quando informada como string em state.from", async () => {
+		const usuario = userEvent.setup();
+		servico.login.mockResolvedValue({ user: criarUsuario() });
+		renderizar(undefined, [
+			{ pathname: "/login", state: { from: "/produtos/prod-123" } },
+		]);
+
+		await usuario.type(campoEmail(), "maria@verdear.dev");
+		await usuario.type(campoSenha(), "segredo");
+		await usuario.click(botaoEntrar());
+
+		expect(await screen.findByText("Detalhes do produto")).toBeInTheDocument();
+	});
+
+	it("redireciona para a rota de origem quando informada como objeto Location em state.from", async () => {
+		const usuario = userEvent.setup();
+		servico.login.mockResolvedValue({ user: criarUsuario() });
+		renderizar(undefined, [
+			{
+				pathname: "/login",
+				state: { from: { pathname: "/produtos/prod-123" } },
+			},
+		]);
+
+		await usuario.type(campoEmail(), "maria@verdear.dev");
+		await usuario.type(campoSenha(), "segredo");
+		await usuario.click(botaoEntrar());
+
+		expect(await screen.findByText("Detalhes do produto")).toBeInTheDocument();
+	});
 });
 
 describe("LoginForm: interface", () => {
@@ -169,5 +224,19 @@ describe("LoginForm: interface", () => {
 		await usuario.click(screen.getByRole("link", { name: "Cadastre-se" }));
 
 		expect(await screen.findByText("Página de cadastro")).toBeInTheDocument();
+	});
+
+	it("preserva o estado de navegação ao clicar no link de cadastro", async () => {
+		const usuario = userEvent.setup();
+		renderizar(undefined, [
+			{ pathname: "/login", state: { from: "/produtos/prod-456" } },
+		]);
+
+		await usuario.click(screen.getByRole("link", { name: "Cadastre-se" }));
+
+		expect(await screen.findByText("Página de cadastro")).toBeInTheDocument();
+		expect(screen.getByTestId("inherited-from")).toHaveTextContent(
+			"/produtos/prod-456",
+		);
 	});
 });

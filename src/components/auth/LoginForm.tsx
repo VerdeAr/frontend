@@ -2,7 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertCircle, Eye, EyeOff, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { Link, useNavigate } from "react-router";
+import { Link, useLocation, useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
 import { FormInput } from "@/components/ui/form-input";
 import { cn } from "@/lib/utils";
@@ -16,6 +16,7 @@ interface LoginFormProps {
 
 export function LoginForm({ onSuccess, className }: LoginFormProps) {
 	const navigate = useNavigate();
+	const location = useLocation();
 	const login = useAuthStore((state) => state.login);
 	const [showPassword, setShowPassword] = useState(false);
 	const [serverError, setServerError] = useState<string | null>(null);
@@ -39,7 +40,11 @@ export function LoginForm({ onSuccess, className }: LoginFormProps) {
 			if (onSuccess) {
 				onSuccess();
 			} else {
-				navigate("/");
+				const state = location.state as {
+					from?: string | { pathname?: string; search?: string; hash?: string };
+				} | null;
+				const destination = state?.from || "/";
+				navigate(destination, { replace: true });
 			}
 		} catch (err: unknown) {
 			const error = err as {
@@ -128,6 +133,7 @@ export function LoginForm({ onSuccess, className }: LoginFormProps) {
 				Ainda não tem uma conta?{" "}
 				<Link
 					to="/cadastro"
+					state={location.state}
 					className="font-semibold text-primary underline-offset-4 hover:underline"
 				>
 					Cadastre-se

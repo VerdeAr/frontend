@@ -1,18 +1,23 @@
 import { Sprout } from "lucide-react";
 import { useEffect } from "react";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import { RegisterForm } from "@/components/auth";
 import { useAuthStore } from "@/stores";
 
 export default function Register() {
 	const navigate = useNavigate();
+	const location = useLocation();
 	const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
 	useEffect(() => {
 		if (isAuthenticated) {
-			navigate("/", { replace: true });
+			const state = location.state as {
+				from?: string | { pathname?: string; search?: string; hash?: string };
+			} | null;
+			const destination = state?.from || "/";
+			navigate(destination, { replace: true });
 		}
-	}, [isAuthenticated, navigate]);
+	}, [isAuthenticated, location.state, navigate]);
 
 	return (
 		<div className="relative min-h-[calc(100vh-8rem)] flex items-center justify-center py-10 px-4 sm:px-6">
