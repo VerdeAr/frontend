@@ -203,4 +203,122 @@ describe("ImageUploadDropzone", () => {
 			);
 		});
 	});
+
+	it("ignora o resultado e callbacks se o componente for desmontado durante o envio", async () => {
+		let resolveUpload: (url: string) => void = () => {};
+		const uploadPromise = new Promise<string>((resolve) => {
+			resolveUpload = resolve;
+		});
+
+		vi.mocked(uploadService.uploadImage).mockReturnValueOnce(uploadPromise);
+
+		const handleChange = vi.fn();
+		const handleEnd = vi.fn();
+		const handleError = vi.fn();
+		const { unmount } = render(
+			<ImageUploadDropzone
+				onChange={handleChange}
+				onUploadEnd={handleEnd}
+				onError={handleError}
+			/>,
+		);
+
+		const fileInput = screen.getByTestId("image-upload-input");
+		const file = new File(["abobora"], "abobora.png", { type: "image/png" });
+		fireEvent.change(fileInput, { target: { files: [file] } });
+
+		// Desmonta antes da resolução da promise
+		unmount();
+
+		// Conclui o envio pós-desmontagem
+		resolveUpload("https://cdn.verdear.com.br/produtos/abobora.webp");
+		await new Promise((resolve) => setTimeout(resolve, 50));
+
+		expect(handleChange).not.toHaveBeenCalled();
+		expect(handleEnd).not.toHaveBeenCalled();
+		expect(handleError).not.toHaveBeenCalled();
+	});
+
+	it("ignora erros se o componente for desmontado durante o envio", async () => {
+		let rejectUpload: (err: unknown) => void = () => {};
+		const uploadPromise = new Promise<string>((_resolve, reject) => {
+			rejectUpload = reject;
+		});
+
+		vi.mocked(uploadService.uploadImage).mockReturnValueOnce(uploadPromise);
+
+		const handleError = vi.fn();
+		const { unmount } = render(<ImageUploadDropzone onError={handleError} />);
+
+		const fileInput = screen.getByTestId("image-upload-input");
+		const file = new File(["pepino"], "pepino.png", { type: "image/png" });
+		fireEvent.change(fileInput, { target: { files: [file] } });
+
+		unmount();
+
+		rejectUpload(new Error("Network Error"));
+		await new Promise((resolve) => setTimeout(resolve, 50));
+
+		expect(handleError).not.toHaveBeenCalled();
+	});
+
+	it("usa mensagem amigável de getApiErrorMessage para erro HTTP do axios", async () => {
+		const axiosError = {
+			isAxiosError: true,
+			response: {
+				status: 503,
+				data: { message: "Serviço de upload indisponível temporariamente." },
+			},
+		};
+
+		vi.mocked(uploadService.uploadImage).mockRejectedValueOnce(axiosError);
+
+		const handleError = vi.fn();
+		render(<ImageUploadDropzone onError={handleError} />);
+
+		const fileInput = screen.getByTestId("image-upload-input");
+		const file = new File(["espinafre"], "espinafre.png", {
+			type: "image/png",
+		});
+
+		fireEvent.change(fileInput, { target: { files: [file] } });
+
+		expect(
+			await screen.findByText(
+				"Serviço de upload indisponível temporariamente.",
+			),
+		).toBeInTheDocument();
+		expect(handleError).toHaveBeenCalledWith(
+			"Serviço de upload indisponível temporariamente.",
+		);
+	});
+
+	it("usa mensagem amigável padrão quando erro do axios não traz mensagem no corpo", async () => {
+		const axiosError = {
+			isAxiosError: true,
+			response: {
+				status: 503,
+				data: null,
+			},
+		};
+
+		vi.mocked(uploadService.uploadImage).mockRejectedValueOnce(axiosError);
+
+		const handleError = vi.fn();
+		render(<ImageUploadDropzone onError={handleError} />);
+
+		const fileInput = screen.getByTestId("image-upload-input");
+		const file = new File(["brocolis"], "brocolis.png", { type: "image/png" });
+
+		fireEvent.change(fileInput, { target: { files: [file] } });
+
+		expect(
+			await screen.findByText(
+				"Não foi possível enviar a imagem. Tente novamente.",
+			),
+		).toBeInTheDocument();
+		expect(handleError).toHaveBeenCalledWith(
+			"Não foi possível enviar a imagem. Tente novamente.",
+		);
+	});
 });

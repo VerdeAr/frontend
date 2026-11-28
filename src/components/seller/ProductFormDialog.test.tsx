@@ -176,4 +176,86 @@ describe("ProductFormDialog", () => {
 			screen.getByPlaceholderText("https://exemplo.com/imagem.webp"),
 		).toBeInTheDocument();
 	});
+
+	it("sincroniza preview e formulário ao digitar uma URL manual após envio de foto", async () => {
+		const user = userEvent.setup();
+		const handleSuccess = vi.fn();
+		const handleOpenChange = vi.fn();
+
+		vi.mocked(uploadService.validateImage).mockReturnValue({ valid: true });
+		vi.mocked(uploadService.uploadImage).mockResolvedValueOnce(
+			"https://cdn.verdear.com.br/produtos/foto-enviada.webp",
+		);
+
+		vi.mocked(sellerProductsService.createProduct).mockResolvedValueOnce({
+			...mockProduct,
+			id: "prod-3",
+			name: "Manga Palmer",
+			image_url: "https://externo.com/manga-outra.jpg",
+		});
+
+		render(
+			<ProductFormDialog
+				open={true}
+				onOpenChange={handleOpenChange}
+				onSuccess={handleSuccess}
+			/>,
+		);
+
+		await user.type(screen.getByLabelText(/Nome do Produto/i), "Manga Palmer");
+		await user.type(screen.getByLabelText(/Preço Unitário/i), "12.00");
+		await user.type(screen.getByLabelText(/Quantidade em Estoque/i), "30");
+
+		// 1. Envia uma foto via dropzone
+		const fileInput = screen.getByTestId("image-upload-input");
+		const file = new File(["manga-bytes"], "manga.png", { type: "image/png" });
+		fireEvent.change(fileInput, { target: { files: [file] } });
+
+		await waitFor(() => {
+			expect(uploadService.uploadImage).toHaveBeenCalled();
+		});
+
+		// 2. Abre o campo de URL manual e verifica se refletiu a URL enviada
+		const toggleBtn = screen.getByRole("button", {
+			name: /Ou colar URL de imagem externa/i,
+		});
+		await user.click(toggleBtn);
+
+		const manualUrlInput = screen.getByPlaceholderText(
+			"https://exemplo.com/imagem.webp",
+		);
+		expect(manualUrlInput).toHaveValue(
+			"https://cdn.verdear.com.br/produtos/foto-enviada.webp",
+		);
+
+		// 3. Altera a URL no campo manual
+		await user.clear(manualUrlInput);
+		await user.type(manualUrlInput, "https://externo.com/manga-outra.jpg");
+
+		// A imagem de prévia deve exibir a nova URL digitada
+		const previewImg = screen.getByRole("img", {
+			name: /Prévia da imagem do produto/i,
+		});
+		expect(previewImg).toHaveAttribute(
+			"src",
+			"https://externo.com/manga-outra.jpg",
+		);
+
+		// 4. Submete o formulário
+		const submitBtn = screen.getByRole("button", {
+			name: /Cadastrar Alimento/i,
+		});
+		await user.click(submitBtn);
+
+		await waitFor(() => {
+			expect(sellerProductsService.createProduct).toHaveBeenCalledWith(
+				expect.objectContaining({
+					name: "Manga Palmer",
+					image_url: "https://externo.com/manga-outra.jpg",
+				}),
+			);
+			expect(handleSuccess).toHaveBeenCalled();
+			expect(handleOpenChange).toHaveBeenCalledWith(false);
+		});
+	});
 });
