@@ -59,6 +59,7 @@ export function ProductFormDialog({
 		handleSubmit,
 		reset,
 		control,
+		setValue,
 		formState: { errors, isSubmitting },
 	} = useForm<ProductFormData>({
 		resolver: zodResolver(productFormSchema),
@@ -268,7 +269,12 @@ export function ProductFormDialog({
 									id="product-image-dropzone"
 									label="Foto do Produto (Opcional)"
 									value={field.value}
-									onChange={(url) => field.onChange(url)}
+									onChange={(url) =>
+										setValue("image_url", url, {
+											shouldDirty: true,
+											shouldValidate: true,
+										})
+									}
 									onUploadStart={() => setIsUploadingImage(true)}
 									onUploadEnd={() => setIsUploadingImage(false)}
 									onError={() => setIsUploadingImage(false)}
