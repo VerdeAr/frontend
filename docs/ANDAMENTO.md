@@ -90,6 +90,7 @@ Resultado: os ambientes de **homologação** e **produção** estão no ar, com 
 
 ## 5. Pendências conhecidas
 
+- **VER-114 (bug, frontend, Pronto para revisão):** sistema não retornava ao produto selecionado após login (CT-01). Corrigido na branch `fix/VER-114-retorno-produto-pos-login`: `LoginForm.tsx` e `Login.tsx` passam a respeitar `location.state.from` (seja como string ou objeto `Location`) com navegação `{ replace: true }`, `Home.tsx` passa a enviar a rota do produto selecionado (`/produtos/${product.id}`) ao adicionar item sem autenticação, e `RegisterForm.tsx` e `Register.tsx` preservam o estado e suportam retorno à rota de origem no cadastro.
 - **VER-113 (bug, frontend, Revisão):** campo de mensagem do chat ficava oculto pelo teclado virtual na orientação horizontal do celular (CT-20). Corrigido na branch `fix/VER-113-campo-mensagem-teclado-horizontal` com hook `useVisualViewport`, variante Tailwind `@custom-variant short-landscape`, chat fullscreen em telas baixas e botões com área de toque mínima de 44 px (RNF-10), sem regressões em desktop ou telas verticais.
 - **VER-108 (bug, backend, A fazer):** os endpoints de chat expõem o hash da senha, o CPF, o e-mail e o telefone do outro participante da conversa. Precisa ser corrigido antes de o chat ser considerado concluído (VER-58).
 - A busca mobile do Header aponta para `/produtos/busca`, que não existe e hoje mostra a página 404 (VER-56). Nenhuma tarefa cobre a busca.
