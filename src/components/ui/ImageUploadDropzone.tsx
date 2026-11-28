@@ -1,3 +1,4 @@
+import { isAxiosError } from "axios";
 import {
 	AlertCircle,
 	ImagePlus,
@@ -8,6 +9,7 @@ import {
 } from "lucide-react";
 import * as React from "react";
 import { FormField } from "@/components/ui/form-input";
+import { getApiErrorMessage } from "@/lib/api-error";
 import { cn } from "@/lib/utils";
 import { uploadService } from "@/services/upload.service";
 
@@ -44,6 +46,7 @@ export function ImageUploadDropzone({
 	const dropzoneId = id || generatedId;
 
 	const fileInputRef = React.useRef<HTMLInputElement | null>(null);
+	const isActiveRef = React.useRef(true);
 	const [isDragging, setIsDragging] = React.useState(false);
 	const [isUploading, setIsUploading] = React.useState(false);
 	const [uploadProgress, setUploadProgress] = React.useState(0);
@@ -52,6 +55,13 @@ export function ImageUploadDropzone({
 	const [localPreviewUrl, setLocalPreviewUrl] = React.useState<string | null>(
 		null,
 	);
+
+	React.useEffect(() => {
+		isActiveRef.current = true;
+		return () => {
+			isActiveRef.current = false;
+		};
+	}, []);
 
 	// Limpa URL temporária do navegador para evitar vazamento de memória
 	React.useEffect(() => {
@@ -95,21 +105,29 @@ export function ImageUploadDropzone({
 				setUploadProgress(progress);
 			});
 
+			if (!isActiveRef.current) return;
+
 			onChange?.(fileUrl);
+			setLocalPreviewUrl(null);
 			onUploadEnd?.(fileUrl);
 			setInternalError(null);
 		} catch (err) {
+			if (!isActiveRef.current) return;
+
+			const fallback = "Não foi possível enviar a imagem. Tente novamente.";
 			const msg =
-				err instanceof Error
+				err instanceof Error && !isAxiosError(err)
 					? err.message
-					: "Não foi possível enviar a imagem. Tente novamente.";
+					: getApiErrorMessage(err, fallback);
 			setInternalError(msg);
 			onError?.(msg);
 			setLocalPreviewUrl(null);
 		} finally {
-			setIsUploading(false);
-			if (fileInputRef.current) {
-				fileInputRef.current.value = "";
+			if (isActiveRef.current) {
+				setIsUploading(false);
+				if (fileInputRef.current) {
+					fileInputRef.current.value = "";
+				}
 			}
 		}
 	};
